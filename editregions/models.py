@@ -1,41 +1,13 @@
 # -*- coding: utf-8 -*-
-from django.contrib.contenttypes.generic import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
-from django.db.models.base import Model
-from django.db.models.fields import DateTimeField, CharField, PositiveIntegerField
+from django.db.models.fields import CharField, PositiveIntegerField
 from django.db.models.fields.related import ForeignKey
 from editregions.text import render_label, render_help
 from editregions.utils.regions import validate_region_name
+from helpfulfields.models import Generic, ChangeTracking
 
 
-
-
-class CreatedModifiedBase(Model):
-    """
-    Abstract model for extending custom models with an audit of when things were
-    changed. By extention, allows us to use get_latest_by to establish the most
-    recent things.
-    """
-    created = DateTimeField(auto_now_add=True)
-    modified = DateTimeField(auto_now=True)
-
-    class Meta:
-        abstract = True
-
-
-class GenericBase(Model):
-    """
-    For handling generic relations, here's an abstract base model.
-    """
-    content_type = ForeignKey(ContentType, related_name='+')
-    content_id = CharField(max_length=255, db_index=True)
-    content_object = GenericForeignKey('content_type', 'content_id')
-
-    class Meta:
-        abstract = True
-
-
-class EditRegionChunk(CreatedModifiedBase, GenericBase):
+class EditRegionChunk(ChangeTracking, Generic):
     """
     Every edit region is made up of these, which serve as pointers for other
     models to key off.
