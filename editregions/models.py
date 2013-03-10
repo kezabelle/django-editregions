@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
 from django.contrib.contenttypes.models import ContentType
+from django.db.models import Model
 from django.db.models.fields import CharField, PositiveIntegerField
 from django.db.models.fields.related import ForeignKey
-from editregions.text import render_label, render_help
+from editregions.text import (render_label, render_help,
+                              regionbrowser_vplural, regionbrowser_v)
 from editregions.utils.regions import validate_region_name
 from helpfulfields.models import Generic, ChangeTracking
 
@@ -32,8 +34,22 @@ class EditRegionChunk(ChangeTracking, Generic):
         return u'attached to %(content_object)s via region "%(region)s"' % {
             'content_object': unicode(ct._meta.verbose_name),
             'region': self.region,
-            }
+        }
 
     class Meta:
         abstract = False
         ordering = ['position']
+
+
+class RegionBrowser(Model):
+    """
+    This model exists solely to allow us to mount another admin, for browsing
+    chunk objects attached to regions.
+
+    Just another hack from me, your friendly neighbourhood oh god why did you
+    do this again.
+    """
+    class Meta:
+        managed = False
+        verbose_name = regionbrowser_v
+        verbose_name_plural = regionbrowser_vplural
