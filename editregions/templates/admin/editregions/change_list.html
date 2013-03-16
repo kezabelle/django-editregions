@@ -4,7 +4,7 @@
 
 {% block filters %}
 <div id="changelist-filter">
-    <h2>{% trans 'add new content' %}</h2>
+    <h2>{% trans 'add new content'|capfirst %}</h2>
     {% regroup available_chunks|dictsort:'label' by module as grouped_chunks %}
     {% for chunk_set in grouped_chunks %}
         <h3>{{ chunk_set.grouper|capfirst }}</h3>
@@ -14,12 +14,10 @@
             {% endfor %}
         </ul>
     {% empty %}
-        <h3>{% trans "None available" %}</h3>
+        <h3>{% trans "no content available"|capfirst %}</h3>
         <ul class="add-chunks__available">
             <li>
-                {% blocktrans with name=region.verbose_name %}
-                    Unable to add anything to {{ name }}.
-                {% endblocktrans %}
+                {% trans "unable to add anything here"|capfirst %}
             </li>
         </ul>
     {% endfor %}
