@@ -1,15 +1,11 @@
 # -*- coding: utf-8 -*-
 from django.contrib.contenttypes.models import ContentType
-from django.db.models import Model
 from django.db.models.fields import CharField, PositiveIntegerField
 from django.db.models.fields.related import ForeignKey
-from django.utils.text import truncate_words
-from editregions.utils.rendering import render_one_summary
 from model_utils.managers import PassThroughManager, InheritanceManager
 from editregions.querying import EditRegionChunkQuerySet
-from editregions.text import (render_label, render_help,
-                              regionbrowser_vplural, regionbrowser_v)
-from editregions.utils.regions import validate_region_name, get_pretty_region_name
+from editregions.text import (render_label, render_help, chunk_v, chunk_vplural)
+from editregions.utils.regions import validate_region_name
 from helpfulfields.models import Generic, ChangeTracking
 
 
@@ -50,7 +46,8 @@ class EditRegionChunk(ChangeTracking, Generic):
         abstract = False
         ordering = ['position']
         db_table = 'editregions_editregionchunk'
-
+        verbose_name = chunk_v
+        verbose_name_plural = chunk_vplural
 #
 # class RegionBrowser(Model):
 #     """
