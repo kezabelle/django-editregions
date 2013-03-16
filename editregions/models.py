@@ -9,7 +9,7 @@ from model_utils.managers import PassThroughManager, InheritanceManager
 from editregions.querying import EditRegionChunkQuerySet
 from editregions.text import (render_label, render_help,
                               regionbrowser_vplural, regionbrowser_v)
-from editregions.utils.regions import validate_region_name
+from editregions.utils.regions import validate_region_name, get_pretty_region_name
 from helpfulfields.models import Generic, ChangeTracking
 
 
@@ -42,6 +42,9 @@ class EditRegionChunk(ChangeTracking, Generic):
             'content_object': unicode(ct._meta.verbose_name),
             'region': self.region,
         }
+
+    def region_name(self):
+        return get_pretty_region_name(self.region)
 
     class Meta:
         abstract = False

@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from functools import update_wrapper
 from django.contrib import admin
+from django.contrib.admin import SimpleListFilter
 from django.contrib.admin.options import BaseModelAdmin, InlineModelAdmin, ModelAdmin
 from django.contrib.admin.util import unquote
 from django.contrib.contenttypes.generic import GenericInlineModelAdmin
@@ -12,6 +13,8 @@ from django.utils.encoding import force_unicode
 from django.utils.html import escape
 from django.utils.text import truncate_words
 from django.utils.translation import ugettext_lazy as _
+from editregions.constants import REQUEST_VAR_REGION, REQUEST_VAR_CT, REQUEST_VAR_ID
+from editregions.text import render_label
 from editregions.utils.rendering import render_one_summary
 from editregions.admin.forms import EditRegionChunkForm, EditRegionChunkFormSet
 from editregions.admin.utils import AdminChunkWrapper
@@ -33,48 +36,27 @@ class EditRegionAdmin(ModelAdmin):
     actions = None
 
     list_display = [
-        'subclass_region',
+        'region_name',
         'subclass_label',
         'subclass_summary',
-        'subclass_position',
-        'subclass_modified'
+        'position',
+        'modified'
     ]
     list_filter = [
-        'content_type',
-        'content_id',
         'region',
     ]
-
-    def __init__(self, model, admin_site):
-        self.model = model
-        self.opts = self.model._meta
-        self.admin_site = admin_site
-        super(ModelAdmin, self).__init__()
-
+    # list_editable = [
+    #     'position',
+    # ]
 
 
     # The following methods, all prefixed with `subclass_` all have to be on
-    # this model, because the ChangeList doesn't look for the values on
-    # RegionBrowser because it's not our real object, as we've subclassed them,
-    # down to their EditRegionChunk instances.
-
-    def subclass_region(self, obj):
-        validate_region_name(obj.region)
-        return get_pretty_region_name(obj.region)
-    subclass_region.admin_order_field = 'region'
-    # TODO: export to .text
-    subclass_region.short_description = 'Region'
+    # this object
 
     def subclass_label(self, obj):
         return obj._meta.verbose_name
     # TODO: export to .text
     subclass_label.short_description = 'Type'
-
-    def subclass_position(self, obj):
-        return obj.position
-    subclass_position.admin_order_field = 'position'
-    # TODO: export to .text
-    subclass_position.short_description = 'Display order'
 
     def subclass_summary(self, obj):
         context = {
@@ -84,12 +66,6 @@ class EditRegionAdmin(ModelAdmin):
     subclass_summary.allow_tags = True
     # TODO: export to .text
     subclass_summary.short_description = 'Summary'
-
-    def subclass_modified(self, obj):
-        return _(u'Last modified on %s' % obj.modified)
-    subclass_modified.admin_order_field = 'modified'
-    # TODO: export to .text
-    subclass_modified.short_description = 'Last changed'
 
     # We're finished our list_display fields here.
 
@@ -125,10 +101,21 @@ class EditRegionAdmin(ModelAdmin):
         except KeyError:
             raise Http404(_('SOMETHING BAD'))
 
-    # def __init__(self, model, admin_site):
-    #     self.model = model
-    #     self.opts = model._meta
-    #     self.admin_site = admin_site
+    def changelist_view(self, request, extra_context=None):
+        region_filter = request.GET.get(REQUEST_VAR_REGION, None)
+        ct_filter = request.GET.get(REQUEST_VAR_CT, None)
+        id_filter = request.GET.get(REQUEST_VAR_ID, None)
+        if region_filter is not None:
+            extra_context = extra_context or {}
+            extra_context['available_chunks'] = [AdminChunkWrapper(**{
+                'opts': x._meta,
+                'namespace': self.admin_site.app_name,
+                'region': region_filter,
+                'content_type': ct_filter,
+                'content_id': id_filter,
+            }) for x in get_enabled_chunks_for_region(region_filter)]
+        return super(EditRegionAdmin, self).changelist_view(request, extra_context)
+
 
     def get_model_perms(self, request):
         return {

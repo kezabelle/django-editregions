@@ -17,3 +17,6 @@ from django.conf import settings
 # allowed in the region. None is a special value to indicate infinity.
 EDIT_REGIONS = getattr(settings, 'EDIT_REGIONS', {})
 
+REQUEST_VAR_REGION = 'region'
+REQUEST_VAR_CT = 'content_type'
+REQUEST_VAR_ID = 'content_id'
