@@ -1,0 +1,8 @@
+{{ inline_admin_formset.formset.management_form }}
+{{ inline_admin_formset }}
+{{ inline_admin_formset.formset }}
+{{ inline_admin_formset.formset.forms }}
+1{{ inline_admin_formset.formset|length }}
+{% if inline_admin_formset.formset|length > 0 %}
+editing!
+{% endif %}

@@ -1,0 +1,29 @@
+{% load i18n %}
+<tr class="existing-chunks__item" id="movable-item__{{ chunk.pk }}">
+    <td class="existing-chunks__item__move" nowrap="nowrap">
+        <a href="{{ chunk.get_move_url }}" title="{% trans 'Drag up or down' %}">
+            {% trans 'Move' %}
+        </a>
+        {% if debug %}
+            <span class="existing-chunks__item__moveposition">{{ chunk.position }}</span>
+        {% endif %}
+    </td>
+    <td class="existing-chunks__item__name">
+        <a href="{{ chunk.get_absolute_url }}" title="{% trans 'View or change details' %}">
+            <strong>{{ chunk.label }}</strong>
+            {% if chunk.exists %}: {{ chunk.summary }}{% endif %}
+        </a>
+    </td>
+    {% if debug %}
+        <td class="existing-chunks__item__history">
+            <a href="{{ chunk.get_history_url }}" class="historylink">
+                {% blocktrans with changed=chunk.modified %}
+                    Last changed on {{ changed }}
+                {% endblocktrans %}
+            </a>
+        </td>
+    {% endif %}
+    <td class="existing-chunks__item__delete" nowrap="nowrap">
+        <a href="{{ chunk.get_delete_url }}" class="deletelink" title="{%  trans 'Permanently delete this?' %}">{% trans 'Delete' %}</a>
+    </td>
+</tr>

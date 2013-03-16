@@ -3,6 +3,10 @@ from django.contrib.contenttypes.models import ContentType
 from django.db.models import Model
 from django.db.models.fields import CharField, PositiveIntegerField
 from django.db.models.fields.related import ForeignKey
+from django.utils.text import truncate_words
+from editregions.utils.rendering import render_one_summary
+from model_utils.managers import PassThroughManager, InheritanceManager
+from editregions.querying import EditRegionChunkQuerySet
 from editregions.text import (render_label, render_help,
                               regionbrowser_vplural, regionbrowser_v)
 from editregions.utils.regions import validate_region_name
@@ -19,8 +23,11 @@ class EditRegionChunk(ChangeTracking, Generic):
     """
     region = CharField(max_length=75, validators=[validate_region_name])
     position = PositiveIntegerField(default=None, db_index=True)
-    render_content_type = ForeignKey(ContentType, verbose_name=render_label,
-        help_text=render_help, related_name='+')
+    subcontent_type = ForeignKey(ContentType, verbose_name=render_label,
+                                 help_text=render_help, related_name='+')
+
+    objects = PassThroughManager.for_queryset_class(EditRegionChunkQuerySet)()
+    polymorphs = InheritanceManager()
 
     def __repr__(self):
         return u'%(cls)r attached to %(content_object)s via region "%(region)s"' % {
@@ -39,17 +46,21 @@ class EditRegionChunk(ChangeTracking, Generic):
     class Meta:
         abstract = False
         ordering = ['position']
+        db_table = 'editregions_editregionchunk'
 
-
-class RegionBrowser(Model):
-    """
-    This model exists solely to allow us to mount another admin, for browsing
-    chunk objects attached to regions.
-
-    Just another hack from me, your friendly neighbourhood oh god why did you
-    do this again.
-    """
-    class Meta:
-        managed = False
-        verbose_name = regionbrowser_v
-        verbose_name_plural = regionbrowser_vplural
+#
+# class RegionBrowser(Model):
+#     """
+#     This model exists solely to allow us to mount another admin, for browsing
+#     chunk objects attached to regions.
+#
+#     Just another hack from me, your friendly neighbourhood oh god why did you
+#     do this again.
+#     """
+#
+#
+#     class Meta:
+#         managed = False
+#         verbose_name = regionbrowser_v
+#         verbose_name_plural = regionbrowser_vplural
+#         db_table = 'editregions_editregionchunk'

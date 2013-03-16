@@ -1,0 +1,26 @@
+{% load i18n %}
+<table class="existing-chunks" id="container-{{ region.name }}">
+    <thead>
+    <tr>
+        <th class="required existing-chunks__title__region" colspan="2">
+        {% trans region.verbose_name %}
+        </th>
+        {% if debug %}
+        <th class="existing-chunks__title__history">{% trans "Change history" %}</th>
+        {% endif %}
+        <th class="existing-chunks__title__delete" nowrap="nowrap">{% trans "Delete" %}</th>
+    </th>
+    </thead>
+    <tbody>
+    {% for chunk in existing_chunks %}
+        {% include "admin/editregions/widgets/single_existing_chunk.html" with chunk=chunk only %}
+    {% endfor %}
+        <tr class="existing-chunks__none row2">
+            <td colspan="4" class="nodrag">
+                {% blocktrans with name=region.verbose_name %}
+                    There is currently no content for {{ name }}.
+                {% endblocktrans %}
+            </td>
+        </tr>
+    </tbody>
+</table>
