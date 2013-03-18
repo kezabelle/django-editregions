@@ -1,64 +1,9 @@
-{% if should_display_toolbar %}
-    {% load i18n %}
-    {% load url from future %}
-    <div class="admin-toolbar">
-        <ul class="admin-toolbar-btn-group">
-            <li>
-                <a class="admin-toolbar-btn admin-toolbar-dropdown-toggle" href="#">
-                    {% blocktrans with region_name as name %}
-                    Add to {{ name }}
-                    {% endblocktrans %}
-                </a>
-                <ul class="admin-toolbar-dropdown-menu">
-                    {% regroup available_chunks|dictsort:'label' by module as grouped_chunks %}
-                    {% for chunk_set in grouped_chunks %}
-                        {% if not forloop.first %}<li class="divider"></li>{% endif %}
-                        <li class="admin-toolbar-{{ app_label|slugify }} admin-toolbar-display-title">
-                            <b>{% blocktrans with chunk_set.grouper|capfirst as name %}{{ name }}{% endblocktrans %}</b>
-                        </li>
-                        {% for chunk in chunk_set.list %}
-                        <li class="admin-toolbar-{{ chunk_set.grouper|slugify }}-{{ chunk.label|slugify }}">
-                            <a href="{{ chunk.get_absolute_url }}" class="admin-add">{{ chunk.label|capfirst }}</a>
-                        </li>
-                        {% endfor %}
-                    {% empty %}
-                        <li class="admin-toolbar-none admin-toolbar-display-title">
-                            <b>{% trans "None available" %}</b>
-                        </li>
-                         <li>
-                        {% blocktrans with region_name as name %}
-                            <a href="#">Unable to add anything to {{ name }}.</a>
-                        {% endblocktrans %}
-                        </li>
-                    {% endfor %}
-                </ul>
-            </li>
-        </ul><ul class="admin-toolbar-btn-group">
-            <li>
-                <a class="admin-toolbar-btn admin-toolbar-dropdown-toggle" href="#">
-                    {% blocktrans with region_name as name %}
-                    Edit existing {{ name }}
-                    {% endblocktrans %}
-                </a>
-                <ul class="admin-toolbar-dropdown-menu">
-                    {% for existing_chunk in existing_chunks %}
-                        {% if not forloop.first %}<li class="divider"></li>{% endif %}
-                        <li class="admin-toolbar-{{ existing_chunk.region|slugify }}">
-                            <a href="{{ existing_chunk.get_absolute_url }}" class="admin-add">{{ existing_chunk }}</a>
-                        </li>
-                    {% empty %}
-                        <li class="admin-toolbar-none admin-toolbar-display-title">
-                            <b>{% trans "None available" %}</b>
-                        </li>
-                         <li>
-                        {% blocktrans with region_name as name %}
-                            <a href="#">There is currently no content for {{ name }}.</a>
-                        {% endblocktrans %}
-                        </li>
-                    {% endfor %}
-                </ul>
-            </li>
-        </ul>
-    </div>
+{% if link and verbose_name %}
+{% load i18n %}
+<li class="admin-toolbar-btn">
+    <a href="{{ link }}" class="admin-toolbar-link icon-edit-circled">
+        {% trans "edit" %} {{ verbose_name }}
+    </a>
+</li>
 {% endif %}
 
