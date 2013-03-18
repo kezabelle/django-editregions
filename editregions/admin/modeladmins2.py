@@ -25,6 +25,7 @@ from editregions.utils.regions import get_enabled_chunks_for_region, validate_re
 
 
 class EditRegionAdmin(ModelAdmin):
+    frontend_editing = True
     fields = None
     fieldsets = None
     exclude = None
