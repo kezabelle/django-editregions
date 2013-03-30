@@ -1,8 +1,5 @@
-{{ inline_admin_formset.formset.management_form }}
-{{ inline_admin_formset }}
-{{ inline_admin_formset.formset }}
-{{ inline_admin_formset.formset.forms }}
-1{{ inline_admin_formset.formset|length }}
-{% if inline_admin_formset.formset|length > 0 %}
-editing!
-{% endif %}
+{% load admin_list %}
+{% for cl in inline_admin_formset.formset.region_changelists %}
+    {% include "admin/editregions/change_list_filters.html" with available_chunks=cl.available_chunks %}
+    {% result_list cl %}
+{% endfor %}
