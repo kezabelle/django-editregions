@@ -13,5 +13,12 @@ datetimes_fieldset_label = _(u'dates')
 region_v = _(u'region')
 region_vplural = _(u'regions')
 
+#: Text for the exception raised by
+#: :class:`~editregions.templatetags.editregion.EditRegionTag`. Only raised if
+#: `DEBUG` is :data:`True`
 ttag_no_obj = _(u'no object provided to the "%(tagname)s" template tag for region "%(region)s"')
+
+#: Text for the exception raised by
+#: :class:`~editregions.templatetags.editregion.EditRegionTag`. Only raised if
+#: `DEBUG` is :data:`True`
 ttag_not_model = _(u'"%(tagname)s" expected a Django model, got %(type)s instead')
