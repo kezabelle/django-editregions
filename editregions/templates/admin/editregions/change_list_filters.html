@@ -1,0 +1,20 @@
+{% load i18n %}
+<div id="changelist-filter">
+    <h2>{% trans 'add new content'|capfirst %}</h2>
+    {% regroup available_chunks|dictsort:'label' by module as grouped_chunks %}
+    {% for chunk_set in grouped_chunks %}
+        <h3>{{ chunk_set.grouper|capfirst }}</h3>
+        <ul class="add-chunks__available">
+            {% for chunk in chunk_set.list %}
+                <li><a href="{{ chunk.get_absolute_url }}">{{ chunk.label|capfirst }}</a></li>
+            {% endfor %}
+        </ul>
+    {% empty %}
+        <h3>{% trans "no content available"|capfirst %}</h3>
+        <ul class="add-chunks__available">
+            <li>
+                {% trans "unable to add anything here"|capfirst %}
+            </li>
+        </ul>
+    {% endfor %}
+</div>
