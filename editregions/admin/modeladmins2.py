@@ -199,8 +199,18 @@ class EditRegionInline(GenericInlineModelAdmin):
             # from here on out, we heavily reuse the other modeladmin
             klass = ContentType.objects.get_for_model(self.model).model_class()
             modeladmin = self.admin_site._registry[klass]
+
+            # mutate the querystring and set some data onto it, which will
+            # be passed to the get_changelist_filters method, as well as
+            # being used to filter the ChangeList correctly.
+            new_get = request.GET.copy()
+            new_get[REQUEST_VAR_CT] = ContentType.objects.get_for_model(obj).pk
+            new_get[REQUEST_VAR_ID] = obj.pk
+
             for region in self.get_regions(request, obj):
+                new_get[REQUEST_VAR_REGION] = region
                 ChangeList = modeladmin.get_changelist(request, **kwargs)
+                request.GET = new_get
                 cl = ChangeList(request=request, model=self.model,
                                 list_display=modeladmin.list_display,
                                 list_display_links=modeladmin.list_display_links,
@@ -209,10 +219,7 @@ class EditRegionInline(GenericInlineModelAdmin):
                                 list_select_related=None, list_per_page=100,
                                 list_max_show_all=100, list_editable=None,
                                 model_admin=modeladmin)
-                new_get = request.GET.copy()
-                new_get[REQUEST_VAR_REGION] = region
-                new_get[REQUEST_VAR_CT] = ContentType.objects.get_for_model(obj).pk
-                new_get[REQUEST_VAR_ID] = obj.pk
+
                 cl.available_chunks = modeladmin.get_changelist_filters(new_get)
                 # mirror what the changelist_view does.
                 cl.formset = None
