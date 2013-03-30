@@ -1,12 +1,13 @@
 # -*- coding: utf-8 -*-
 import logging
+from django.core.handlers.base import BaseHandler
 import warnings
 from django.contrib.auth.models import AnonymousUser
 from django.db.models.loading import get_model
 from django.template.loader import render_to_string
 from django.utils.datastructures import SortedDict
 import re
-from django.template.context import Context, RequestContext, get_standard_processors
+from django.template.context import Context, get_standard_processors
 from django.test.client import RequestFactory
 from django.core.validators import RegexValidator, slug_re, MaxLengthValidator
 from django.utils.translation import ugettext_lazy as _
@@ -15,7 +16,7 @@ from editregions.constants import EDIT_REGIONS
 logger = logging.getLogger(__name__)
 
 validate_region_name_error = _(u'Enter a valid placeholder name consisting of '
-        u'letters, numbers, underscores or hyphens.')
+                               u'letters, numbers, underscores or hyphens.')
 
 validate_region_re = RegexValidator(slug_re, validate_region_name_error, 'invalid')
 
@@ -26,7 +27,13 @@ def validate_region_name(name):
     region name cannot violate the maximum length, and saves a trip to the database
     to lookup something horribly incorrect.
 
-    .. testcase: RegionNameValidationTestCase
+    :used by:
+        :attr:`~editregions.models.EditRegionChunk.region`
+        :meth:`~editregions.modeladmins2.EditRegionInline.get_region_name`
+        :meth:`~editregions.templatetags.adminlinks_editregion.EditRegionToolbar.get_context`
+        :meth:`~editregions.templatetags.editregion.EditRegionTag.render_tag`
+
+    :testcase: `~editregions.tests.utils.RegionNameValidationTestCase`
     """
     MaxLengthValidator(75)(name)
     validate_region_re(name)
@@ -85,8 +92,17 @@ def get_enabled_chunks_for_region(name, settings=None):
         logger.debug(u'No chunks types found for "%(region)s"' % {'region': name})
     return resolved
 
-region_comment = r'<!-- placeholder:%s -->'
+#: String used for finding regions in the rendered down template.
+#: Used by :class:`~editregions.templatetags.editregion.EditRegionTag` if the
+#: :attr:`~editregions.utils.regions.fake_context_payload` is found.
+region_comment = r'<!-- region:%s -->'
+
+#: the region finding string, compiled down into a regular expression for
+#: efficient searching.
 region_comment_re = re.compile(region_comment % '([-\w]+)')
+
+#: value put into the context if we're rendering down a template for scanning
+#: Used by :class:`~editregions.templatetags.editregion.EditRegionTag`
 fake_context_payload = u'scanning_for_regions'
 
 class FakedRequestContext(Context):
@@ -105,7 +121,16 @@ class FakedRequestContext(Context):
     def __init__(self, path, *args, **kwargs):
         super(FakedRequestContext, self).__init__(*args, **kwargs)
         req = RequestFactory().get(path)
-        #req.user = self._fake_user_factory()
+        handler = BaseHandler()
+        handler.load_middleware()
+
+        # handlers which might affect the incoming request.
+        for middleware_method in handler._request_middleware:
+            response = middleware_method(req)
+            if response is not None:
+                break
+
+        # all context processors which are defaults.
         for processor in get_standard_processors():
             self.update(processor(req))
         self.update({
