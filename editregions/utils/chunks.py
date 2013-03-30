@@ -28,6 +28,10 @@ def get_limits_for_chunk_in_region(region, chunk):
 def get_chunks_for_region(**base_filters):
     """
     Mostly want to use content_id, content_type(_id) and region.
+
+    :used by:
+        :class:`~editregions.templatetags.editregion.EditRegionTag`
+
     """
     # This makes the same basic optimisation we'd get from `django-model-utils`
     #relations = [rel.var_name for rel in EditRegionChunk._meta.get_all_related_objects()
@@ -116,7 +120,11 @@ def chunk_iteration_context(index, value, iterable):
 
 
 def render_all_chunks(context, region, found_chunks):
+    """
 
+    :used by:
+        :class:`~editregions.templatetags.editregion.EditRegionTag`
+    """
     enabled = get_enabled_chunks_for_region(region)
     # These should cause database queries initially, until the ContentType internal
     # cache is warmed up by fetching them all.
