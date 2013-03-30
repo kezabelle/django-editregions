@@ -160,7 +160,11 @@ class FakedFormSet(object):
     # TODO: move this somewhere else
     initial_forms = []
     extra_forms = []
-    media = Media()
+    media = Media(css={
+        'screen': [
+            'admin/css/editregions.css',
+        ]
+    })
     empty_form = FakedForm()
 
     @classmethod

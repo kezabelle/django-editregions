@@ -1,0 +1,26 @@
+.changelist-as-inline {
+    overflow: hidden;
+}
+
+.changelist-as-inline table {
+    width: 100%;
+}
+
+.changelist-as-inline .results {
+    margin-right: 161px !important;
+    width: auto !important;
+}
+
+.changelist-as-inline .changelist-filter {
+    float: right;
+    z-index: 1000;
+    width: 160px;
+    border-left: 1px solid #ddd;
+    background: #efefef;
+    margin: 0;
+}
+
+.changelist-as-inline .changelist-filter h3 {
+    font-size: 12px;
+    margin-bottom: 0;
+}
