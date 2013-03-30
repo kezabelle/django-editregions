@@ -1,5 +1,5 @@
 {% load i18n %}
-<div id="changelist-filter">
+<div id="changelist-filter{% if iterating %}-{{ iterating }}{% endif %}" class="changelist-filter">
     <h2>{% trans 'add new content'|capfirst %}</h2>
     {% regroup available_chunks|dictsort:'label' by module as grouped_chunks %}
     {% for chunk_set in grouped_chunks %}

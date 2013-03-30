@@ -1,5 +1,7 @@
 {% load admin_list %}
 {% for cl in inline_admin_formset.formset.region_changelists %}
-    {% include "admin/editregions/change_list_filters.html" with available_chunks=cl.available_chunks %}
+    <div class="module filtered changelist-as-inline" id="changelist-{{ forloop.counter }}">
+    {% include "admin/editregions/change_list_filters.html" with available_chunks=cl.available_chunks iterating=forloop.counter %}
     {% result_list cl %}
+    </div>
 {% endfor %}
