@@ -1,32 +1,49 @@
 # -*- coding: utf-8 -*-
 from django.contrib.contenttypes.generic import BaseGenericInlineFormSet
-from django.forms import ModelForm, Textarea
-from django.forms.util import ErrorList
+from django.forms import Form, Media
 from django.http import QueryDict
 import re
-from django.forms.fields import TypedMultipleChoiceField, TypedChoiceField, Field
-from django.forms.forms import Form
-from editregions.admin.widgets import ChunkList
+from django.forms.fields import TypedMultipleChoiceField, TypedChoiceField
 from editregions.models import EditRegionChunk
 from editregions.utils.data import queryset_to_attr_map
 
 
-class EditRegionChunkForm(ModelForm):
-    region = Field(widget=ChunkList)
+class EditRegionInlineForm(object):
+    media = Media()
 
-    def __init__(self, data=None, files=None, auto_id='id_%s', prefix=None,
-                 initial=None, error_class=ErrorList, label_suffix=':',
-                 empty_permitted=False, instance=None, region=None):
-        super(EditRegionChunkForm, self).__init__(data, files, auto_id, prefix,
-            initial, error_class, label_suffix, empty_permitted, instance)
 
-    class Meta:
-        model = EditRegionChunk
-        # Note; this is never used, because formsets are silly.
-        exclude = [] #['content_type', 'content_id', 'subcontent_type', 'position']
+class EditRegionInlineFormSet(object):
+    initial_forms = []
+    extra_forms = []
+    media = Media(css={
+        'screen': [
+            'admin/css/editregions.css',
+        ]
+    })
+    empty_form = EditRegionInlineForm()
 
-class EditRegionChunkFormSet(BaseGenericInlineFormSet):
-    pass
+    # used for constructing change messages
+    new_objects = []
+    changed_objects = []
+    deleted_objects = []
+
+    @classmethod
+    def get_default_prefix(cls):
+        return 'edit_region_chunk_formset'
+
+    def __init__(self, *args, **kwargs):
+        self.args = args
+        self.kwargs = kwargs
+
+    def get_queryset(self, *args, **kwargs):
+        return self.kwargs['queryset']
+
+    def is_valid(self, *args, **kwargs):
+        return True
+
+    def save(self, *args, **kwargs):
+        return True
+
 
 class ReorderChunksForm(Form):
     model = EditRegionChunk

@@ -17,7 +17,7 @@ from django.utils.translation import ugettext_lazy as _
 from editregions.constants import REQUEST_VAR_REGION, REQUEST_VAR_CT, REQUEST_VAR_ID
 from editregions.text import render_label
 from editregions.utils.rendering import render_one_summary
-from editregions.admin.forms import EditRegionChunkForm, EditRegionChunkFormSet
+from editregions.admin.forms import EditRegionInlineFormSet
 from editregions.admin.utils import AdminChunkWrapper
 from editregions.admin.widgets import ChunkList
 from editregions.models import EditRegionChunk
@@ -151,39 +151,9 @@ class EditRegionAdmin(ModelAdmin):
         }
 admin.site.register(EditRegionChunk, EditRegionAdmin)
 
-class FakedForm(object):
-    # TODO: move this somewhere else
-    media = Media()
-
-
-class FakedFormSet(object):
-    # TODO: move this somewhere else
-    initial_forms = []
-    extra_forms = []
-    media = Media(css={
-        'screen': [
-            'admin/css/editregions.css',
-        ]
-    })
-    empty_form = FakedForm()
-
-    @classmethod
-    def get_default_prefix(cls):
-        return 'edit_region_chunk_formset'
-
-    def __init__(self, instance, prefix, queryset):
-        self.instance = instance
-        self.prefix = prefix
-        self.queryset = queryset
-
-
-    def get_queryset(self, *args, **kwargs):
-        return self.queryset
-
 
 class EditRegionInline(GenericInlineModelAdmin):
     model = EditRegionChunk
-    exclude = EditRegionChunkForm._meta.exclude
 
     can_delete = False
     extra = 0
@@ -191,11 +161,9 @@ class EditRegionInline(GenericInlineModelAdmin):
     ct_fk_field = "content_id"
     template = 'admin/editregions/edit_inline/none.html'
 
-    # only methods to use are get_formset and get_fieldsets
-
     def get_formset(self, request, obj=None, **kwargs):
         # sidestep validation which wants to inherit from BaseModelFormSet
-        self.formset = FakedFormSet
+        self.formset = EditRegionInlineFormSet
         changelists = []
 
         # only do all this clever stuff if we're editing
