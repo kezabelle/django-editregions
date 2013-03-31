@@ -7,8 +7,8 @@ from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ObjectDoesNotExist, PermissionDenied, ImproperlyConfigured
 from django.http import Http404
 from django.utils.encoding import force_unicode
-from django.utils.html import escape
-from django.utils.text import truncate_words, truncate_html_words
+from django.utils.html import escape, strip_tags
+from django.utils.text import truncate_words
 from django.utils.translation import ugettext_lazy as _
 
 from editregions.constants import (REQUEST_VAR_REGION, REQUEST_VAR_CT,
@@ -84,7 +84,8 @@ class EditRegionAdmin(ModelAdmin):
         :rtype: string
         """
         context = {'admin_summary': True}
-        return truncate_html_words(render_one_summary(context, obj), 20, '')
+        content = strip_tags(render_one_summary(context, obj))
+        return truncate_words(content, 20)
     get_subclass_summary.allow_tags = True
     get_subclass_summary.short_description = admin_summary_label
 
