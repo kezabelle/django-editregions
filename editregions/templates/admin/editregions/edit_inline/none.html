@@ -5,7 +5,9 @@
     {% include "admin/editregions/change_list_filters.html" with available_chunks=cl.available_chunks iterating=forloop.counter %}
     <p class="paginator">
         <b>{{ cl.region }}:</b>
-        {{ cl.result_count }}
+        <span class="paginator-count" id="paginator-count-{{ forloop.counter }}">
+            {{ cl.result_count }}
+        </span>
         {% ifequal cl.result_count 1 %}
             {{ cl.opts.verbose_name }}
         {% else %}
