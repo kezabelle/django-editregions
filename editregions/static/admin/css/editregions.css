@@ -24,3 +24,19 @@
     font-size: 12px;
     margin-bottom: 0;
 }
+
+.changelist-as-inline .paginator {
+    color: #999;
+    border: 0;
+    border-bottom: 1px solid #ccc;
+    background: white url('../img/nav-bg.gif') 0 100% repeat-x;
+    overflow: hidden;
+    font-size: 11px;
+    padding: 0 1em;
+    line-height: 22px;
+    margin: 0;
+}
+
+.changelist-as-inline .paginator b {
+    color: #666;
+}

@@ -1,31 +1,28 @@
 # -*- coding: utf-8 -*-
-from functools import update_wrapper
 from django.contrib import admin
-from django.contrib.admin import SimpleListFilter
-from django.contrib.admin.options import BaseModelAdmin, InlineModelAdmin, ModelAdmin
-from django.contrib.admin.util import unquote
+from django.contrib.admin.options import ModelAdmin
+from django.contrib.admin.util import unquote, display_for_field
 from django.contrib.contenttypes.generic import GenericInlineModelAdmin
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ObjectDoesNotExist, PermissionDenied, ImproperlyConfigured
-from django.db.models import BLANK_CHOICE_DASH
-from django.forms import Media
 from django.http import Http404
 from django.utils.encoding import force_unicode
 from django.utils.html import escape
-from django.utils.text import truncate_words
+from django.utils.text import truncate_words, truncate_html_words
 from django.utils.translation import ugettext_lazy as _
-from editregions.constants import REQUEST_VAR_REGION, REQUEST_VAR_CT, REQUEST_VAR_ID
-from editregions.text import render_label
+
+from editregions.constants import (REQUEST_VAR_REGION, REQUEST_VAR_CT,
+                                   REQUEST_VAR_ID)
 from editregions.utils.rendering import render_one_summary
 from editregions.admin.forms import EditRegionInlineFormSet
 from editregions.admin.utils import AdminChunkWrapper
-from editregions.admin.widgets import ChunkList
 from editregions.models import EditRegionChunk
-from editregions.utils.chunks import get_chunks_for_region
 from editregions.utils.regions import (get_enabled_chunks_for_region,
                                        validate_region_name, sorted_regions,
                                        get_pretty_region_name,
                                        scan_template_for_named_regions)
+from editregions.text import (admin_chunktype_label, admin_summary_label,
+                              admin_position_label, admin_modified_label, region_v)
 
 
 class EditRegionAdmin(ModelAdmin):
@@ -225,9 +222,19 @@ class EditRegionInline(GenericInlineModelAdmin):
                 new_get[REQUEST_VAR_REGION] = region
                 ChangeList = modeladmin.get_changelist(request, **kwargs)
                 request.GET = new_get
+
+                # we don't want the region name displayed here, because we're
+                # already displaying it in the template.
+                our_list_display = modeladmin.list_display[:]
+                our_list_links = modeladmin.list_display_links[:]
+                try:
+                    our_list_display.remove('get_region_name')
+                    our_list_links.remove('get_region_name')
+                except ValueError as e:
+                    pass
                 cl = ChangeList(request=request, model=self.model,
-                                list_display=modeladmin.list_display,
-                                list_display_links=modeladmin.list_display_links,
+                                list_display=our_list_display,
+                                list_display_links=our_list_links,
                                 list_filter=modeladmin.list_filter,
                                 date_hierarchy=None, search_fields=None,
                                 list_select_related=None, list_per_page=100,
@@ -237,6 +244,7 @@ class EditRegionInline(GenericInlineModelAdmin):
                 cl.available_chunks = modeladmin.get_changelist_filters(new_get)
                 # mirror what the changelist_view does.
                 cl.formset = None
+                cl.region = get_pretty_region_name(region)
                 changelists.append(cl)
         formset = super(EditRegionInline, self).get_formset(request, obj, **kwargs)
         formset.region_changelists = changelists
