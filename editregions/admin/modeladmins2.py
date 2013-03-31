@@ -44,11 +44,7 @@ class EditRegionAdmin(ModelAdmin):
         'get_position',
         'get_last_modified'
     ]
-    list_display_links = [
-        'get_region_name',
-        'get_subclass_type',
-        # 'get_subclass_summary',
-    ]
+    list_display_links = list_display
     list_filter = [
         'region',
     ]
