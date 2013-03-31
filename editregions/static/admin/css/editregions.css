@@ -40,3 +40,20 @@
 .changelist-as-inline .paginator b {
     color: #666;
 }
+
+.changelist-as-inline .add-chunks__available {
+    margin-left: 10px;
+    padding-left: 0;
+}
+
+.changelist-as-inline .add-chunks__available li {
+    list-style: none;
+}
+
+.changelist-as-inline .add-chunks__available a {
+    color: #999;
+}
+
+.changelist-as-inline .add-chunks__available a:hover {
+    color: #036;
+}
