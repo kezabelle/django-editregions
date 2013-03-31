@@ -41,47 +41,89 @@ class EditRegionAdmin(ModelAdmin):
     actions = None
 
     list_display = [
-        'region_name',
-        'subclass_label',
-        'subclass_summary',
-        'subclass_position',
-        'subclass_modified'
+        'get_region_name',
+        'get_subclass_type',
+        'get_subclass_summary',
+        'get_position',
+        'get_last_modified'
     ]
     list_display_links = [
-        'region_name',
-        'subclass_label',
-        'subclass_summary',
+        'get_region_name',
+        'get_subclass_type',
+        # 'get_subclass_summary',
     ]
     list_filter = [
         'region',
     ]
 
-    # The following methods, all prefixed with `subclass_` all have to be on
-    # this object
+    def get_region_name(self, obj):
+        """
+        get the prettified name of this region, if possible.
+        :return: the region name
+        :rtype: string
+        """
+        return get_pretty_region_name(obj.region)
+    get_region_name.short_description = region_v
 
-    def subclass_label(self, obj):
+    def get_subclass_type(self, obj):
+        """
+        get the verbose name of the given object, which is likely a subclass
+
+        .. note::
+            By using this callable, we avoid the problem of being able to
+            sort by headers in the changelists (including on the change form)
+
+        :return: the subclass object's verbose name
+        :rtype: string
+        """
         return obj._meta.verbose_name
-    # TODO: export to .text
-    subclass_label.short_description = 'Type'
+    get_subclass_type.short_description = admin_chunktype_label
 
-    def subclass_summary(self, obj):
-        context = {
-            'admin_summary': True,
-            }
-        return truncate_words(render_one_summary(context, obj), 20)
-    subclass_summary.allow_tags = True
-    # TODO: export to .text
-    subclass_summary.short_description = 'Summary'
+    def get_subclass_summary(self, obj):
+        """
+        show a brief, HTML aware summary of the content.
 
-    def subclass_position(self, obj):
+        .. note::
+            By using this callable, we avoid the problem of being able to
+            sort by headers in the changelists (including on the change form)
+
+        :return: short representation of the data, HTML included.
+        :rtype: string
+        """
+        context = {'admin_summary': True}
+        return truncate_html_words(render_one_summary(context, obj), 20, '')
+    get_subclass_summary.allow_tags = True
+    get_subclass_summary.short_description = admin_summary_label
+
+    def get_position(self, obj):
+        """
+        Show the position of the object when it is rendered on the frontend.
+
+        .. note::
+            By using this callable, we avoid the problem of being able to
+            sort by headers in the changelists (including on the change form)
+
+        :return: the order this will be shown in.
+        :rtype: integer
+        """
         return obj.position
-    # TODO: export to .text
-    subclass_position.short_description = '#'
+    get_position.short_description = admin_position_label
 
-    def subclass_modified(self, obj):
-        return obj.modified
-    # TODO: export to .text
-    subclass_modified.short_description = 'last changed'
+    def get_last_modified(self, obj):
+        """
+        Show when this was last changed.
+
+        .. note::
+            By using this callable, we avoid the problem of being able to
+            sort by headers in the changelists (including on the change form)
+
+        :return: the date and time this was last changed, formatted in the
+                 standard admin style
+        :rtype: string
+        """
+        fld = obj._meta.get_field_by_name('modified')[0]
+        return display_for_field(obj.modified, fld)
+    get_last_modified.short_description = admin_modified_label
 
     # We're finished our list_display fields here.
 

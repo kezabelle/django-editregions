@@ -39,8 +39,7 @@ class EditRegionChunk(ChangeTracking, Generic):
             'region': self.region,
         }
 
-    def region_name(self):
-        return get_pretty_region_name(self.region)
+
 
     class Meta:
         abstract = False

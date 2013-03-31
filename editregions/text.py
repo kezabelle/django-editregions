@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from django.utils.translation import ugettext_lazy as _
+from helpfulfields.text import modified_label
 
 chunk_v = _(u'content block')
 chunk_vplural = _(u'content blocks')
@@ -22,3 +23,8 @@ ttag_no_obj = _(u'no object provided to the "%(tagname)s" template tag for regio
 #: :class:`~editregions.templatetags.editregion.EditRegionTag`. Only raised if
 #: `DEBUG` is :data:`True`
 ttag_not_model = _(u'"%(tagname)s" expected a Django model, got %(type)s instead')
+
+admin_chunktype_label = _(u'type')
+admin_summary_label = _(u'summary')
+admin_position_label = _(u'#')
+admin_modified_label = modified_label
