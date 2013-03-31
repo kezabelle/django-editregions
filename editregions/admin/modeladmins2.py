@@ -123,7 +123,30 @@ class EditRegionAdmin(ModelAdmin):
 
 
     def queryset(self, *args, **kwargs):
-        qs = self.model.polymorphs.select_subclasses()
+
+        # try to find the request in the arguments.
+        request = None
+        if len(args) > 0:
+            request = args[0]
+        elif 'request' in kwargs:
+            request = kwargs['request']
+
+        # try to pull the region out of the request
+        region = None
+        if request is not None:
+            region = request.GET.get(REQUEST_VAR_REGION, None)
+
+        # try and limit the number of LEFT OUTER JOINs we do using the
+        # inheritance query manager. This is going to be problematic post 1.6
+        # probably, if using grandchildren.
+        filtered_subclasses = ()
+        if region is not None:
+            available_chunks = get_enabled_chunks_for_region(region)
+            filtered_subclasses = (x._meta.module_name
+                                   for x in available_chunks.keys())
+
+        # this is the important part, where we get the real queryset.
+        qs = self.model.polymorphs.select_subclasses(*filtered_subclasses)
         ordering = self.get_ordering(*args, **kwargs)
         if ordering:
             qs = qs.order_by(*ordering)
