@@ -39,6 +39,11 @@ class EditRegionChunk(ChangeTracking, Generic):
             'region': self.region,
         }
 
+    def move(self, requested_position):
+        form = MovementForm(data={'move_to': requested_position, 'obj': self})
+        if form.is_valid():
+            return form.save()
+        return form.errors
 
 
     class Meta:
@@ -47,19 +52,4 @@ class EditRegionChunk(ChangeTracking, Generic):
         db_table = 'editregions_editregionchunk'
         verbose_name = chunk_v
         verbose_name_plural = chunk_vplural
-#
-# class RegionBrowser(Model):
-#     """
-#     This model exists solely to allow us to mount another admin, for browsing
-#     chunk objects attached to regions.
-#
-#     Just another hack from me, your friendly neighbourhood oh god why did you
-#     do this again.
-#     """
-#
-#
-#     class Meta:
-#         managed = False
-#         verbose_name = regionbrowser_v
-#         verbose_name_plural = regionbrowser_vplural
-#         db_table = 'editregions_editregionchunk'
+

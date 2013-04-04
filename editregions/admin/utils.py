@@ -1,38 +1,22 @@
 # -*- coding: utf-8 -*-
 import logging
 from django.core.urlresolvers import reverse
-from django.forms.models import BaseInlineFormSet
 from django.utils.http import urlencode
 from django.utils.text import truncate_words
-
-from editregions.text import datetimes_fieldset_label
 from editregions.utils.rendering import render_one_summary
+from helpfulfields.admin import changetracking_readonlys, changetracking_fieldset
 
 
 logger = logging.getLogger(__name__)
 
+# TODO: is this needed?
 exclude_content_type_fields = ['content_type', 'content_id']
-datetimes_fields = ['created', 'modified']
 
-datetimes_fieldset = [
-    (datetimes_fieldset_label, {
-        'fields': datetimes_fields,
-        'classes': ['collapse'],
-        'description': None,
-    })
-]
+# TODO: is this needed?
+datetimes_fields = changetracking_readonlys
 
-class RequiredInlineFormSet(BaseInlineFormSet):
-    def _construct_form(self, *args, **kwargs):
-        form = super(RequiredInlineFormSet, self)._construct_form(*args, **kwargs)
-        form.empty_permitted = False
-        return form
-
-
-def one_to_one_inline_factory(**kwargs):
-    from editregions.admin.modeladmins import OneToOneStackedInline
-    class_name = kwargs.get('model').__name__ + 'Inline'
-    return type(class_name, (OneToOneStackedInline,), kwargs)
+# TODO: is this still needed?
+datetimes_fieldset = changetracking_fieldset
 
 
 class AdminChunkWrapper(object):

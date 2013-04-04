@@ -9,7 +9,7 @@ position_label = _(u'position')
 position_help = _(u'position in which this content appears. 1 is highest.')
 render_label = _(u'renderer')
 render_help = _(u'how to render this chunk.')
-datetimes_fieldset_label = _(u'dates')
+# datetimes_fieldset_label = _(u'dates')
 
 region_v = _(u'region')
 region_vplural = _(u'regions')
