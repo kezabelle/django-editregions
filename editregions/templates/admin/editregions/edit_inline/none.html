@@ -1,10 +1,10 @@
 {% load admin_list %}
 {% load i18n %}
 {% for cl in inline_admin_formset.formset.region_changelists %}
-    <div class="module filtered changelist-as-inline" id="changelist-{{ forloop.counter }}">
+    <div class="module filtered changelist-as-inline" id="changelist-{{ forloop.counter }}" data-region="{{ cl.region }}">
     {% include "admin/editregions/change_list_filters.html" with available_chunks=cl.available_chunks iterating=forloop.counter %}
     <p class="paginator">
-        <b>{{ cl.region }}:</b>
+        <b>{{ cl.get_region_display }}:</b>
         <span class="paginator-count" id="paginator-count-{{ forloop.counter }}">
             {{ cl.result_count }}
         </span>
@@ -13,8 +13,6 @@
         {% else %}
             {{ cl.opts.verbose_name_plural }}
         {% endifequal %}
-
-
     </p>
     {% result_list cl %}
     </div>
