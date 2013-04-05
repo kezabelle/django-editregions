@@ -23,7 +23,7 @@ from editregions.constants import (REQUEST_VAR_REGION, REQUEST_VAR_CT,
 from editregions.utils.chunks import get_last_chunk_position
 from editregions.utils.rendering import render_one_summary
 from editregions.admin.forms import EditRegionInlineFormSet
-from editregions.admin.utils import AdminChunkWrapper
+from editregions.admin.utils import AdminChunkWrapper, shared_media
 from editregions.models import EditRegionChunk
 from editregions.utils.regions import (get_enabled_chunks_for_region,
                                        sorted_regions, get_pretty_region_name,
@@ -48,15 +48,20 @@ class EditRegionAdmin(ModelAdmin):
     actions = None
 
     list_display = [
+        'get_position',
         'get_region_name',
         'get_subclass_type',
         'get_subclass_summary',
-        'get_position',
         'get_last_modified',
         # this should always be last, and not be in the list_display_links
         'get_object_tools',
     ]
-    list_display_links = list_display[:-1]
+    list_display_links = [
+        'get_region_name',
+        'get_subclass_type',
+        'get_subclass_summary',
+        'get_last_modified',
+    ]
     list_filter = [
         'region',
     ]
@@ -140,7 +145,7 @@ class EditRegionAdmin(ModelAdmin):
         :rtype: string
         """
         return ' '.join([
-            u'<div class="drag_handle"></div>',
+            u'<div class="drag_handle" data-pk="%s"></div>' % obj.pk,
         ])
     get_object_tools.allow_tags = True
     get_object_tools.short_description = ''
@@ -234,6 +239,82 @@ class EditRegionAdmin(ModelAdmin):
             'change': True,
             'delete': True,
         }
+
+    def get_regions_for_object(self, request, obj, **kwargs):
+        """
+        We only want to get regions once an object has been initially saved, so
+        that we can access the appropriate ContentType and Object ID pair.
+
+        If editing an existing object, regions found by scanning a template
+        will be returned, and sorted into a unique list in the order they appear
+        in the compiled template.
+        """
+        try:
+            templates = obj.get_edit_template_names()
+        except AttributeError as e:
+            raise ImproperlyConfigured(u'%(obj)r must have a '
+                                       u'`get_edit_template_names` method to '
+                                       u'be used with %(cls)r' % {
+                                           'obj': obj.__class__,
+                                           'cls': EditRegionInline
+                                       })
+        regions = scan_template_for_named_regions(templates)
+        return sorted_regions(regions)
+
+    def get_changelists_for_object(self, request, obj, **kwargs):
+        changelists = []
+
+        # only do all this clever stuff if we're editing
+        if obj is not None:
+            # from here on out, we heavily reuse the other modeladmin
+            # self.model should be EditRegionChunk
+            klass = ContentType.objects.get_for_model(self.model).model_class()
+            modeladmin = self.admin_site._registry[klass]
+
+            # mutate the querystring and set some data onto it, which will
+            # be passed to the get_changelist_filters method, as well as
+            # being used to filter the ChangeList correctly.
+            new_get = request.GET.copy()
+            new_get[REQUEST_VAR_CT] = ContentType.objects.get_for_model(obj).pk
+            new_get[REQUEST_VAR_ID] = obj.pk
+
+            for region in self.get_regions_for_object(request, obj):
+                new_get[REQUEST_VAR_REGION] = region
+                ChangeList = self.get_changelist(request, **kwargs)
+                request.GET = new_get
+
+                # we don't want the region name displayed here, because we're
+                # already displaying it in the template.
+                our_list_display = self.list_display[:]
+                our_list_links = self.list_display_links[:]
+                try:
+                    our_list_display.remove('get_region_name')
+                    our_list_links.remove('get_region_name')
+                except ValueError as e:
+                    pass
+                cl = ChangeList(request=request, model=self.model,
+                                list_display=our_list_display,
+                                list_display_links=our_list_links,
+                                list_filter=self.list_filter,
+                                date_hierarchy=None, search_fields=None,
+                                list_select_related=None, list_per_page=100,
+                                list_max_show_all=100, list_editable=None,
+                                model_admin=self)
+                cl.available_chunks = modeladmin.get_changelist_filters(new_get)
+                # mirror what the changelist_view does.
+                cl.formset = None
+                cl.get_region_display = get_pretty_region_name(region)
+                cl.region = region
+                changelists.append(cl)
+        return changelists
+
+    def render_changelists_for_object(self):
+        return render_to_response(EditRegionInline.template, {})
+
+    @property
+    def media(self):
+        base_media = super(EditRegionAdmin, self).media
+        return base_media + shared_media
 admin.site.register(EditRegionChunk, EditRegionAdmin)
 
 
@@ -249,76 +330,13 @@ class EditRegionInline(GenericInlineModelAdmin):
     def get_formset(self, request, obj=None, **kwargs):
         # sidestep validation which wants to inherit from BaseModelFormSet
         self.formset = EditRegionInlineFormSet
-        changelists = []
-
-        # only do all this clever stuff if we're editing
-        if obj is not None:
-            # from here on out, we heavily reuse the other modeladmin
-            klass = ContentType.objects.get_for_model(self.model).model_class()
-            modeladmin = self.admin_site._registry[klass]
-
-            # mutate the querystring and set some data onto it, which will
-            # be passed to the get_changelist_filters method, as well as
-            # being used to filter the ChangeList correctly.
-            new_get = request.GET.copy()
-            new_get[REQUEST_VAR_CT] = ContentType.objects.get_for_model(obj).pk
-            new_get[REQUEST_VAR_ID] = obj.pk
-
-            for region in self.get_regions(request, obj):
-                new_get[REQUEST_VAR_REGION] = region
-                ChangeList = modeladmin.get_changelist(request, **kwargs)
-                request.GET = new_get
-
-                # we don't want the region name displayed here, because we're
-                # already displaying it in the template.
-                our_list_display = modeladmin.list_display[:]
-                our_list_links = modeladmin.list_display_links[:]
-                try:
-                    our_list_display.remove('get_region_name')
-                    our_list_links.remove('get_region_name')
-                except ValueError as e:
-                    pass
-                cl = ChangeList(request=request, model=self.model,
-                                list_display=our_list_display,
-                                list_display_links=our_list_links,
-                                list_filter=modeladmin.list_filter,
-                                date_hierarchy=None, search_fields=None,
-                                list_select_related=None, list_per_page=100,
-                                list_max_show_all=100, list_editable=None,
-                                model_admin=modeladmin)
-
-                cl.available_chunks = modeladmin.get_changelist_filters(new_get)
-                # mirror what the changelist_view does.
-                cl.formset = None
-                cl.get_region_display = get_pretty_region_name(region)
-                cl.region = region
-                changelists.append(cl)
         formset = super(EditRegionInline, self).get_formset(request, obj, **kwargs)
-        formset.region_changelists = changelists
+        klass = ContentType.objects.get_for_model(self.model).model_class()
+        modeladmin = self.admin_site._registry[klass]
+        formset.region_changelists = modeladmin.get_changelists_for_object(request, obj)
         return formset
 
-    def get_regions(self, request, obj=None):
-        """
-        We only want to get regions once an object has been initially saved, so
-        that we can access the appropriate ContentType and Object ID pair.
 
-        If editing an existing object, regions found by scanning a template
-        will be returned, and sorted into a unique list in the order they appear
-        in the compiled template.
-        """
-        if obj is None:
-            return []
-        try:
-            templates = obj.get_edit_template_names()
-        except AttributeError as e:
-            raise ImproperlyConfigured(u'%(obj)r must have a '
-                                       u'`get_edit_template_names` method to '
-                                       u'be used with %(cls)r' % {
-                                        'obj': obj.__class__,
-                                        'cls': EditRegionInline
-                                       })
-        regions = scan_template_for_named_regions(templates)
-        return sorted_regions(regions)
 
 
 class ChunkAdmin(AdminlinksMixin):
@@ -376,17 +394,17 @@ class ChunkAdmin(AdminlinksMixin):
             return extras
         return self.readonly_fields
         #
-    # def get_chunk_renderer_content_type(self):
-    #     """
-    #     Someone else should render this chunk, rather than the regiterered model.
-    #     :return: The content type for the renderer
-    #     :rtype: :class:ContentType
-    #     """
-    #     opts = self.model._meta
-    #     if getattr(self, 'chunk_renderer', None) is not None:
-    #         opts = self.chunk_renderer._meta
-    #     return ContentType.objects.get_by_natural_key(app_label=opts.app_label,
-    #         model=opts.module_name)
+    def get_chunk_renderer_content_type(self):
+        """
+        Someone else should render this chunk, rather than the regiterered model.
+        :return: The content type for the renderer
+        :rtype: :class:ContentType
+        """
+        opts = self.model._meta
+        if getattr(self, 'chunk_renderer', None) is not None:
+            opts = self.chunk_renderer._meta
+        return ContentType.objects.get_by_natural_key(app_label=opts.app_label,
+            model=opts.module_name)
 
     def save_model(self, request, obj, form, change):
         """
@@ -397,7 +415,7 @@ class ChunkAdmin(AdminlinksMixin):
         obj.content_type = ContentType.objects.get_for_id(request.GET.get('content_type'))
         obj.content_id = int(request.GET.get('content_id'))
         obj.region = str(request.GET.get('region'))
-        # obj.subcontent_type = self.get_chunk_renderer_content_type()
+        obj.subcontent_type = self.get_chunk_renderer_content_type()
 
         # If the position is not set,
         # it's easiest to assume it's going on the end of the chunk list.

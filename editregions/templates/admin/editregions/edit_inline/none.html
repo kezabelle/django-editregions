@@ -1,4 +1,5 @@
-{% load admin_list %}
+<div class="region-inline-wrapper">
+    {% load admin_list %}
 {% load i18n %}
 {% for cl in inline_admin_formset.formset.region_changelists %}
     <div class="module filtered changelist-as-inline" id="changelist-{{ forloop.counter }}" data-region="{{ cl.region }}">
@@ -14,6 +15,11 @@
             {{ cl.opts.verbose_name_plural }}
         {% endifequal %}
     </p>
-    {% result_list cl %}
+    {% if cl.result_list|length > 0 %}
+        {% result_list cl %}
+    {% else %}
+
+    {% endif %}
     </div>
 {% endfor %}
+</div>

@@ -1,0 +1,25 @@
+/*
+much of this is borrowed from django-treeadmin, which itself is based on
+django-feincms
+*/
+
+.drag_handle {
+    width: 16px;
+    height: 16px;
+    background: url('../img/arrow-move.png');
+    display: inline-block;
+    vertical-align: middle;
+}
+
+.drag_handle:hover {
+    cursor: move;
+}
+
+.ui-sortable .ui-sortable-placeholder {
+    background: #efefef;
+    -moz-opacity: 0.40;
+    -khtml-opacity: 0.40;
+    opacity: 0.40;
+    -ms-filter:"progid:DXImageTransform.Microsoft.Alpha"(Opacity=40);
+    visibility: visible !important;
+}

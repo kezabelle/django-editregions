@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import logging
 from django.core.urlresolvers import reverse
+from django.forms import Media
 from django.utils.http import urlencode
 from django.utils.text import truncate_words
 from editregions.utils.rendering import render_one_summary
@@ -18,6 +19,22 @@ datetimes_fields = changetracking_readonlys
 # TODO: is this still needed?
 datetimes_fieldset = changetracking_fieldset
 
+shared_media = Media(
+    css={
+        'screen': [
+            'editregions/css/inlines.css',
+            'editregions/css/changelist-extras.css',
+        ]
+    },
+    js=[
+        'admin/js/jquery.rebind.js',
+        'editregions/js/jquery.ui.core.js',
+        'editregions/js/jquery.ui.widget.js',
+        'editregions/js/jquery.ui.mouse.js',
+        'editregions/js/jquery.ui.sortable.js',
+        'editregions/js/dragging.js',
+    ],
+)
 
 class AdminChunkWrapper(object):
     """ An object for chunking an existing data type into, and getting out something

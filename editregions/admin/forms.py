@@ -5,6 +5,7 @@ from django.http import QueryDict
 import re
 from django.forms.fields import TypedMultipleChoiceField, TypedChoiceField
 from editregions.models import EditRegionChunk
+from editregions.admin.utils import shared_media
 from editregions.utils.data import queryset_to_attr_map
 
 
@@ -15,11 +16,7 @@ class EditRegionInlineForm(object):
 class EditRegionInlineFormSet(object):
     initial_forms = []
     extra_forms = []
-    media = Media(css={
-        'screen': [
-            'admin/css/editregions.css',
-        ]
-    })
+    media = shared_media
     empty_form = EditRegionInlineForm()
 
     # used for constructing change messages
