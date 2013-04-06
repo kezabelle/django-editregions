@@ -1,5 +1,6 @@
 ;(function($, undefined) {
 
+    var handle = 'div.drag_handle';
     var sortable_targets = '.results';
 
     var maybe_move_region = function(e, ui){
@@ -28,8 +29,12 @@
             $('td:nth-child(1)', this).html(i+1);
         });
         var new_position = Math.min(1, ui.item.prevUntil().length + 1);
-        var handle = $(e.srcElement).attr('data-pk');
-        update_remote_object(handle, new_position);
+        var obj_id = ui.item.find(handle).eq(0).attr('data-pk');
+        if (obj_id === void 0) {
+            alert('error grabbing unique ID');
+        } else {
+            update_remote_object(obj_id, new_position);
+        };
     };
 
     var start_changelist_changes = function(e, ui) {
@@ -48,7 +53,7 @@
         items: 'tbody > tr',
         connectWith: sortable_targets,
         dropOnEmpty: true,
-        handle: 'div.drag_handle',
+        handle: handle,
         tolerance: 'pointer',
         cursor: 'move'
     };
