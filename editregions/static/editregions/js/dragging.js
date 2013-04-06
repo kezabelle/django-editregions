@@ -16,8 +16,8 @@
         return $helper;
     };
 
-    var update_remote_object = function(obj, requested_position) {
-        alert('making ' + obj + ' be at position ' + requested_position);
+    var update_remote_object = function(obj, requested_position, region) {
+        alert('making ' + obj + ' be at position ' + requested_position + ' in "' + region + '"');
     };
 
     var finish_changelist_changes = function(e, ui) {
@@ -30,10 +30,11 @@
         });
         var new_position = Math.min(1, ui.item.prevUntil().length + 1);
         var obj_id = ui.item.find(handle).eq(0).attr('data-pk');
-        if (obj_id === void 0) {
-            alert('error grabbing unique ID');
+        var target_region = $(this).parent().attr('data-region');
+        if (obj_id === void 0 || target_region === void 0) {
+            alert('error grabbing required data');
         } else {
-            update_remote_object(obj_id, new_position);
+            update_remote_object(obj_id, new_position, target_region);
         };
     };
 
