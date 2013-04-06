@@ -1,6 +1,10 @@
 ;(function($, undefined) {
 
-    var sortable_targets = '.results tbody';
+    var sortable_targets = '.results';
+
+    var maybe_move_region = function(e, ui){
+        $(this).find("tbody").append(ui.item);
+    };
 
     var table_helper = function(e, tr) {
         var $originals = tr.children();
@@ -38,12 +42,15 @@
         helper: table_helper,
         stop: finish_changelist_changes,
         start: start_changelist_changes,
+        receive: maybe_move_region,
         forcePlaceholderSize: true,
         containment: '.region-inline-wrapper, #changelist-form',
+        items: 'tbody > tr',
         connectWith: sortable_targets,
         dropOnEmpty: true,
         handle: 'div.drag_handle',
-        tolerance: 'pointer'
+        tolerance: 'pointer',
+        cursor: 'move'
     };
 
     var ready_up = function() {
