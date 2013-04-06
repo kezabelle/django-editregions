@@ -3,6 +3,7 @@ import logging
 from adminlinks.admin import AdminlinksMixin
 from django.contrib import admin
 from django.contrib.admin.options import ModelAdmin
+from django.contrib.admin.templatetags.admin_list import result_headers
 from django.contrib.admin.util import unquote, display_for_field
 from django.contrib.contenttypes.generic import GenericInlineModelAdmin
 from django.contrib.contenttypes.models import ContentType
@@ -305,6 +306,8 @@ class EditRegionAdmin(ModelAdmin):
                 cl.formset = None
                 cl.get_region_display = get_pretty_region_name(region)
                 cl.region = region
+                if cl.result_count < 1:
+                    cl.headers_for_template = list(result_headers(cl))
                 changelists.append(cl)
         return changelists
 
