@@ -28,10 +28,12 @@ shared_media = Media(
     },
     js=[
         'admin/js/jquery.rebind.js',
-        'editregions/js/jquery.ui.core.js',
-        'editregions/js/jquery.ui.widget.js',
-        'editregions/js/jquery.ui.mouse.js',
-        'editregions/js/jquery.ui.sortable.js',
+        'editregions/js/jquery.ui.1-8-24.custom.js',
+        # 'editregions/js/jquery.ui.core.js',
+        # 'editregions/js/jquery.ui.widget.js',
+        # 'editregions/js/jquery.ui.mouse.js',
+        # 'editregions/js/jquery.ui.touch-punch.js',
+        # 'editregions/js/jquery.ui.sortable.js',
         'editregions/js/dragging.js',
     ],
 )
