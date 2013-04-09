@@ -13,6 +13,7 @@ from django.http import Http404
 from django.shortcuts import render_to_response
 from django.template import RequestContext
 from django.template.loader import render_to_string
+from django.utils import simplejson
 from django.utils.encoding import force_unicode
 from django.utils.html import escape, strip_tags
 from django.utils.safestring import mark_safe
@@ -311,8 +312,12 @@ class EditRegionAdmin(ModelAdmin):
                 changelists.append(cl)
         return changelists
 
-    def render_changelists_for_object(self):
-        return render_to_response(EditRegionInline.template, {})
+    def render_changelists_for_object(self, request, obj):
+        return render_to_string(EditRegionInline.template, {
+            'inline_admin_formset': {
+                'formset': self.get_changelists_for_object(request, obj)
+            }
+        })
 
     @property
     def media(self):
@@ -334,12 +339,9 @@ class EditRegionInline(GenericInlineModelAdmin):
         # sidestep validation which wants to inherit from BaseModelFormSet
         self.formset = EditRegionInlineFormSet
         formset = super(EditRegionInline, self).get_formset(request, obj, **kwargs)
-        klass = ContentType.objects.get_for_model(self.model).model_class()
-        modeladmin = self.admin_site._registry[klass]
+        modeladmin = self.admin_site._registry[EditRegionChunk]
         formset.region_changelists = modeladmin.get_changelists_for_object(request, obj)
         return formset
-
-
 
 
 class ChunkAdmin(AdminlinksMixin):
@@ -518,44 +520,34 @@ class ChunkAdmin(AdminlinksMixin):
         """
         return AdminChunkWrapper
 
-    def get_response_add_context(self, request, obj):
+    def get_response_extra_context(self, request, obj, action):
         """
         This method allows us to add custom data to any success template displayed
         because we're in our admin popup.
-        TODO: refactor!
         """
-        klass = self.get_admin_wrapper_class()
-        opts = ContentType.objects.get_for_id(obj.chunk_content_type_id).model_class()._meta
-        html = render_to_string('admin/editregions/widgets/single_existing_chunk.html', {
-            'chunk': klass(opts=opts, namespace=self.admin_site.app_name,
-                           region=obj.region, content_type=obj.content_type,
-                           content_id=obj.content_id, obj=obj)
-        })
-        html = mark_safe(normalize_newlines(html).replace("\n", ""))
-        return {'attached_to': self._guarded, 'html': html}
-        #
-    # def get_response_change_context(self, request, obj):
-    #     """
-    #     This method allows us to add custom data to any success template displayed
-    #     because we're in our admin popup.
-    #     TODO: refactor!
-    #     """
-    #     klass = self.get_admin_wrapper_class()
-    #     opts = ContentType.objects.get_for_id(obj.chunk_content_type_id).model_class()._meta
-    #     html = render_to_string('admin/editregions/widgets/single_existing_chunk.html', {
-    #         'chunk': klass(opts=opts, namespace=self.admin_site.app_name,
-    #             region=obj.region, content_type=obj.content_type,
-    #             content_id=obj.content_id, obj=obj)
-    #     })
-    #     html = mark_safe(normalize_newlines(html).replace("\n", ""))
-    #     return {'attached_to': self._guarded, 'html': html}
+        modeladmin = self.admin_site._registry[EditRegionChunk]
+        json_data = {
+            'action': action,
+            'primary_key': obj.pk,
+            'html': modeladmin.render_changelists_for_obj(request, obj)
+        }
+        return simplejson.dumps(json_data)
+
+    def get_response_add_context(self, request, obj):
+        return self.get_response_extra_context(request, obj, 'add')
+
+    def get_response_add_context(self, request, obj):
+        return self.get_response_extra_context(request, obj, 'change')
 
     def get_response_delete_context(self, request, obj_id):
-        """
-        This method allows us to add custom data to any success template displayed
-        because we're in our admin popup.
-        Note that unlike get_response_add_context and get_response_change_context,
-        we do not have access to `obj`,
-        because it will probably already have been deleted by this point.
-        """
-        return {'attached_to': self._guarded}
+
+        # we have to use a fake object to simulate the original, as it no longer
+        # can be guaranteed to exist. We expose only the very specific values we
+        # need for get_response_extra_context to work.
+        class FakeObj(object):
+            def __init__(self, obj_id):
+                self.pk = obj_id
+                self.id = obj_id
+
+        fake_obj = FakeObj(obj_id)
+        return self.get_response_extra_context(request, fake_obj, 'delete')
