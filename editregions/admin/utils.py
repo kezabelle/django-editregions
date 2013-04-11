@@ -22,12 +22,14 @@ datetimes_fieldset = changetracking_fieldset
 shared_media = Media(
     css={
         'screen': [
+            'adminlinks/css/fancyiframe-custom.css',
             'editregions/css/inlines.css',
             'editregions/css/changelist-extras.css',
         ]
     },
     js=[
         'admin/js/jquery.rebind.js',
+        'adminlinks/js/jquery.fancyiframe.js',
         'editregions/js/jquery.ui.1-8-24.custom.js',
         # 'editregions/js/jquery.ui.core.js',
         # 'editregions/js/jquery.ui.widget.js',
@@ -35,6 +37,7 @@ shared_media = Media(
         # 'editregions/js/jquery.ui.touch-punch.js',
         # 'editregions/js/jquery.ui.sortable.js',
         'editregions/js/dragging.js',
+        'editregions/js/editing.js',
     ],
 )
 
