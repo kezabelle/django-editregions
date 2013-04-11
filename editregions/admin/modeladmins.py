@@ -24,6 +24,7 @@ from editregions.constants import (REQUEST_VAR_REGION, REQUEST_VAR_CT,
                                    REQUEST_VAR_ID)
 from editregions.utils.chunks import get_last_chunk_position
 from editregions.utils.rendering import render_one_summary
+from editregions.admin.changelist import EditRegionChangeList
 from editregions.admin.forms import EditRegionInlineFormSet
 from editregions.admin.utils import AdminChunkWrapper, shared_media
 from editregions.models import EditRegionChunk
@@ -192,6 +193,9 @@ class EditRegionAdmin(ModelAdmin):
         except ObjectDoesNotExist:
             return None
 
+    def get_changelist(self, *args, **kwargs):
+        return EditRegionChangeList
+
     def change_view(self, request, object_id, form_url='', extra_context=None):
 
         obj = self.get_object(request, unquote(object_id))
@@ -282,7 +286,6 @@ class EditRegionAdmin(ModelAdmin):
 
             for region in self.get_regions_for_object(request, obj):
                 new_get[REQUEST_VAR_REGION] = region
-                ChangeList = self.get_changelist(request, **kwargs)
                 request.GET = new_get
 
                 # we don't want the region name displayed here, because we're
@@ -294,6 +297,7 @@ class EditRegionAdmin(ModelAdmin):
                     our_list_links.remove('get_region_name')
                 except ValueError as e:
                     pass
+                ChangeList = self.get_changelist(request, **kwargs)
                 cl = ChangeList(request=request, model=self.model,
                                 list_display=our_list_display,
                                 list_display_links=our_list_links,
@@ -302,13 +306,6 @@ class EditRegionAdmin(ModelAdmin):
                                 list_select_related=None, list_per_page=100,
                                 list_max_show_all=100, list_editable=None,
                                 model_admin=self)
-                cl.available_chunks = modeladmin.get_changelist_filters(new_get)
-                # mirror what the changelist_view does.
-                cl.formset = None
-                cl.get_region_display = get_pretty_region_name(region)
-                cl.region = region
-                if cl.result_count < 1:
-                    cl.headers_for_template = list(result_headers(cl))
                 changelists.append(cl)
         return changelists
 
