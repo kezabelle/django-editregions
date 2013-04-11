@@ -1,14 +1,15 @@
 # -*- coding: utf-8 -*-
+from functools import update_wrapper
 import logging
 from adminlinks.admin import AdminlinksMixin
 from django.contrib import admin
 from django.contrib.admin.options import ModelAdmin
-from django.contrib.admin.templatetags.admin_list import result_headers
 from django.contrib.admin.util import unquote, display_for_field
 from django.contrib.contenttypes.generic import GenericInlineModelAdmin
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import (ObjectDoesNotExist, PermissionDenied,
                                     ImproperlyConfigured, SuspiciousOperation)
+from django.core.urlresolvers import reverse
 from django.http import Http404
 from django.shortcuts import render_to_response
 from django.template import RequestContext
@@ -16,8 +17,7 @@ from django.template.loader import render_to_string
 from django.utils import simplejson
 from django.utils.encoding import force_unicode
 from django.utils.html import escape, strip_tags
-from django.utils.safestring import mark_safe
-from django.utils.text import truncate_words, normalize_newlines
+from django.utils.text import truncate_words
 from django.utils.translation import ugettext_lazy as _
 
 from editregions.constants import (REQUEST_VAR_REGION, REQUEST_VAR_CT,
@@ -147,14 +147,43 @@ class EditRegionAdmin(ModelAdmin):
         :return: the list of actions or tools available for this object
         :rtype: string
         """
-        return ' '.join([
-            u'<div class="drag_handle" data-pk="%s"></div>' % obj.pk,
-        ])
+        url_to_move = u'%(admin)s:%(app)s_%(chunkhandler)s_move' % {
+            'admin': self.admin_site.name,
+            'app': self.model._meta.app_label,
+            'chunkhandler': self.model._meta.module_name,
+        }
+        url_to_move2 = reverse(url_to_move)
+        html = (u'<div class="drag_handle" data-pk="%(pk)s" data-href="%(url)s">'
+                u'</div>' % {
+                    'pk': obj.pk,
+                    'url': url_to_move2,
+                })
+        return html
     get_object_tools.allow_tags = True
     get_object_tools.short_description = ''
 
     # We're finished our list_display fields here.
 
+    def get_custom_urls(self):
+        # why this isn't a separate method in Django, I don't know.
+        from django.conf.urls import patterns, url
+
+        def wrap(view):
+            def wrapper(*args, **kwargs):
+                return self.admin_site.admin_view(view)(*args, **kwargs)
+            return update_wrapper(wrapper, view)
+
+        info = self.model._meta.app_label, self.model._meta.module_name
+        urlpatterns = patterns('',
+                               url(r'^move/$',
+                                   wrap(self.move_view),
+                                   name='%s_%s_move' % info))
+        return urlpatterns + self.get_urls()
+
+    urls = property(get_custom_urls)
+
+    def move_view(self):
+        return 1
 
     def queryset(self, *args, **kwargs):
 
