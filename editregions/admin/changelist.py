@@ -1,15 +1,17 @@
 # -*- coding: utf-8 -*-
-from django.core.urlresolvers import reverse
-from django.utils.datastructures import MultiValueDictKeyError
-from editregions.constants import REQUEST_VAR_REGION
+from editregions.constants import (REQUEST_VAR_REGION, REQUEST_VAR_CT,
+                                   REQUEST_VAR_ID)
 from django.contrib.admin.views.main import ChangeList
 from editregions.utils.regions import get_pretty_region_name
 
-_real_edit_url = '%(admin)s:%(app)s_%(model)s_change'
 
 class EditRegionChangeList(ChangeList):
 
     def __init__(self, *args, **kwargs):
+        """
+        Stash a bunch of extra stuff on the changelist. Note that this used to
+        be inlined in the EditRegionChunk ModelAdmin.
+        """
         super(EditRegionChangeList, self).__init__(*args, **kwargs)
         try:
             request = kwargs['request']
@@ -18,21 +20,28 @@ class EditRegionChangeList(ChangeList):
 
         self.available_chunks = self.model_admin.get_changelist_filters(request.GET)
         self.formset = None
+        self.region = request.GET.get(REQUEST_VAR_REGION, None)
+        self.parent_content_type = request.GET.get(REQUEST_VAR_CT, None)
+        self.parent_content_id = request.GET.get(REQUEST_VAR_ID, None)
         try:
-            self.region = request.GET[REQUEST_VAR_REGION]
             self.get_region_display = get_pretty_region_name(self.region)
-        except MultiValueDictKeyError as e:
-            self.region = None
-            self.get_region_display = None
+        except TypeError as e:
+            # unable to parse with the re module because self.region is None
+            # and re expected string or buffer
+            self.get_region_display = self.region
 
     def url_for_result(self, result):
         """
         We need to override this so that the changelists as inlines get the
         proper URLs.
+
+        :return: the subclass (result) url
+        :rtype: string
         """
-        bits = {
-            'admin': self.model_admin.admin_site.name,
-            'app': result._meta.app_label,
-            'model': result._meta.module_name,
-        }
-        return reverse(_real_edit_url % bits, args=(result.pk,))
+        klass = self.model_admin.get_admin_wrapper_class()
+        wrapped_obj = klass(opts=result._meta, obj=result,
+                            namespace=self.model_admin.admin_site.name,
+                            content_id=self.parent_content_id,
+                            content_type=self.parent_content_type,
+                            region=self.region)
+        return wrapped_obj.get_absolute_url()

@@ -83,9 +83,9 @@ class AdminChunkWrapper(object):
             'view': view,
         }
         querystring_parts = {
-            'content_id': self.content_pk,
-            'content_type': self.content_type,
-            'region': self.region,
+            'content_id': self.content_pk or 0,
+            'content_type': self.content_type or 0,
+            'region': self.region or '__error__',
         }
         reverse_args = [self.chunk.pk] if self.exists else []
         endpoint = reverse('%(admin)s:%(app)s_%(model)s_%(view)s' % url_parts,
@@ -105,7 +105,6 @@ class AdminChunkWrapper(object):
         return self._get_admin_url(view=u'history')
 
     def get_move_url(self):
-        import pdb; pdb.set_trace()
         return self._get_admin_url(view=u'move')
 
     def get_absolute_url(self):
