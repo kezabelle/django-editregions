@@ -253,7 +253,7 @@ class EditRegionAdmin(ModelAdmin):
         id_filter = request_querydict.get(REQUEST_VAR_ID, None)
         filters = []
         if region_filter is not None:
-            filters = [AdminChunkWrapper(**{
+            filters = [self.get_admin_wrapper_class()(**{
                 'opts': x._meta,
                 'namespace': self.admin_site.app_name,
                 'region': region_filter,
@@ -261,6 +261,9 @@ class EditRegionAdmin(ModelAdmin):
                 'content_id': id_filter,
             }) for x in get_enabled_chunks_for_region(region_filter)]
         return filters
+
+    def get_admin_wrapper_class(self):
+        return AdminChunkWrapper
 
     def changelist_view(self, request, extra_context=None):
         extra_context = extra_context or {}
