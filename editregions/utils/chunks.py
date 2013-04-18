@@ -29,18 +29,9 @@ def get_chunks_for_region(**base_filters):
     """
     Mostly want to use content_id, content_type(_id) and region.
 
-    :used by:
-        :class:`~editregions.templatetags.editregion.EditRegionTag`
-
+    .. seealso:: :class:`~editregions.templatetags.editregion.EditRegionTag`
     """
-    # This makes the same basic optimisation we'd get from `django-model-utils`
-    #relations = [rel.var_name for rel in EditRegionChunk._meta.get_all_related_objects()
-    #    if isinstance(rel.field, OneToOneField)]
-    chunks = EditRegionChunk.objects.filter(**base_filters)
-    types = list(chunks.values_list('pk', 'subcontent_type'))
-    def get_resolved_object(pk, ct):
-        return ContentType.objects.get_for_id(ct).model_class().objects.get(pk=pk)
-    return [get_resolved_object(pk, ct) for pk, ct in types]
+    return EditRegionChunk.polymorphs.filter(**base_filters).select_subclasses()
 
 def get_last_chunk_position(content_type, content_id, region_name, model=None):
     if model is None:
@@ -126,14 +117,19 @@ def render_all_chunks(context, region, found_chunks):
         :class:`~editregions.templatetags.editregion.EditRegionTag`
     """
     enabled = get_enabled_chunks_for_region(region)
-    # These should cause database queries initially, until the ContentType internal
-    # cache is warmed up by fetching them all.
-    to_render = [x for x in found_chunks
-        if ContentType.objects.get_for_id(x.subcontent_type_id).model_class() in enabled.keys()]
-    output = []
-    new_context = convert_context_to_dict(context)
-    for index, chunk in enumerate(to_render):
-        new_context.update(chunk_iteration_context(index, chunk, to_render))
-        output.append(render_one_chunk(new_context, chunk))
-    return output
 
+    # filter our chunks which are no long enabled ...
+    # this'll hit the ContentType cache after a while ...
+    to_render = [x for x in found_chunks
+                 if ContentType.objects.get_for_model(x).model_class() in enabled]
+    # output = []
+
+    # In the future, it'd be nice to be able to just use the existing context and
+    # do context.push()/pop() ... but we can't, because otherwise nothing
+    # shows up in debug_toolbar, because Context() has no items() attribute.
+    # See https://code.djangoproject.com/ticket/20287#ticket
+    # LAME.
+    for index, chunk in enumerate(to_render):
+        new_context = convert_context_to_dict(context)
+        new_context.update(chunk_iteration_context(index, chunk, to_render))
+        yield render_one_chunk(new_context, chunk)

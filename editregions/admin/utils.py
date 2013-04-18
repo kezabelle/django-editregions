@@ -6,6 +6,8 @@ from django.utils.http import urlencode
 from django.utils.text import truncate_words
 from editregions.utils.rendering import render_one_summary
 from helpfulfields.admin import changetracking_readonlys, changetracking_fieldset
+from editregions.utils.regions import validate_region_name
+from adminlinks.templatetags.utils import modeladmin_reverse
 
 
 logger = logging.getLogger(__name__)
@@ -42,13 +44,33 @@ shared_media = Media(
 )
 
 class AdminChunkWrapper(object):
-    """ An object for chunking an existing data type into, and getting out something
+    """
+    An object for chunking an existing data type into, and getting out something
     we can reliably use in the admin widgets.
     """
     def __init__(self, opts, namespace, content_id, content_type, region, obj=None):
+        """
+
+        :param opts: the `_meta` for resolving the admin view to call ...
+                     should usually be :class:`~editregions.models.EditRegionChunk`
+                     or a subclass.
+        :param namespace: the admin site name
+        :param content_id: The parent object id
+        :param content_type: The parent object type
+        :param region: string region name
+        :param obj: The :class:`~editregions.models.EditRegionChunk` subclass
+        :return:
+        """
+
+
         self.opts = opts
         self.admin_namespace = namespace
-        self.content_type = content_type
+        try:
+            self.content_type = content_type.pk
+        except AttributeError as e:
+            # if we got an error, it wasn't a ContentType, but the PK of
+            # a content type ...
+            self.content_type = content_type
         self.content_pk = content_id
         self.region = region
         self.label = opts.verbose_name
@@ -58,6 +80,8 @@ class AdminChunkWrapper(object):
         self.module = opts.app_label
         if self.exists:
             self.module = obj._meta.app_label
+        if self.region is not None:
+            validate_region_name(region)
 
     def __unicode__(self):
         if self.exists:
@@ -77,9 +101,9 @@ class AdminChunkWrapper(object):
 
     def _get_admin_url(self, view=u'add'):
         url_parts = {
-            'admin': self.admin_namespace,
+            'namespace': self.admin_namespace,
             'app': self.opts.app_label,
-            'model': self.opts.module_name,
+            'module': self.opts.module_name,
             'view': view,
         }
         querystring_parts = {
@@ -88,12 +112,15 @@ class AdminChunkWrapper(object):
             'region': self.region or '__error__',
         }
         reverse_args = [self.chunk.pk] if self.exists else []
-        endpoint = reverse('%(admin)s:%(app)s_%(model)s_%(view)s' % url_parts,
+        endpoint = reverse(modeladmin_reverse % url_parts,
             args=reverse_args)
         return u'%s?%s' % (endpoint, urlencode(querystring_parts))
 
     def get_delete_url(self):
         return self._get_admin_url(view=u'delete')
+
+    def get_manage_url(self):
+        return self._get_admin_url(view=u'changelist')
 
     def get_change_url(self):
         return self._get_admin_url(view=u'change')

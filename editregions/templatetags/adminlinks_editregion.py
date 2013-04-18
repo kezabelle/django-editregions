@@ -45,36 +45,18 @@ class EditRegionToolbar(InclusionTag):
         site = get_admin_site(admin_site)
         if context_passes_test(context) and site is not None:
             link = _add_custom_link_to_context(admin_site, context['request'],
-                                        EditRegionChunk._meta, 'change',
-                                        'changelist', None)
+                                               EditRegionChunk._meta, 'change',
+                                               'changelist', None)
+            if link['link']:
+                wrapped = AdminChunkWrapper(opts=EditRegionChunk._meta,
+                                            namespace=site.name,
+                                            content_id=content_object.pk,
+                                            content_type=ContentType.objects.get_for_model(content_object),
+                                            region=name)
+                # replace the default values with our own, better ones :\
+                link.update(link=wrapped.get_manage_url(),
+                            verbose_name=get_pretty_region_name(name))
             context.update(link)
-            context.update({u'verbose_name': get_pretty_region_name(name)})
-            # modeladmins = get_registered_modeladmins(context['request'], site)
-            # TODO: fix this to be more DRY, as it's a copy-paste from admin.
-#            available_chunks = [AdminChunkWrapper(**{
-#                'opts': x._meta,
-#                'namespace': site.app_name,
-#                'region': name,
-#                'content_type': ContentType.objects.get_for_model(content_object).pk,
-#                'content_id': content_object.pk,
-#            }) for x in get_enabled_chunks_for_region(name)]
-#            existing_chunks = [AdminChunkWrapper(**{
-#                # Using get_for_id to ensure that proxy models etc are handled nicely.
-#                # Even under Django < 1.5
-#                'opts': ContentType.objects.get_for_id(x.chunk_content_type_id).model_class()._meta,
-#                'namespace': site.app_name,
-#                'region': name,
-#                'content_type': ContentType.objects.get_for_model(content_object).pk,
-#                'content_id': content_object.pk,
-#                'obj': x,
-#            }) for x in get_chunks_for_region(content_id=content_object.pk, region=name)]
-#            context.update({
-#                'should_display_toolbar': True,
-#                'app_list': ['aaaa'],
-#                'region_name': get_pretty_region_name(name),
-#                'available_chunks': available_chunks,
-#                'existing_chunks': existing_chunks,
-#            })
         return context
 register.tag(name='render_adminlinks_editregion',
              compile_function=EditRegionToolbar)
