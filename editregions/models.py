@@ -19,8 +19,8 @@ class EditRegionChunk(ChangeTracking, Generic):
     """
     region = CharField(max_length=75, validators=[validate_region_name])
     position = PositiveIntegerField(default=None, db_index=True)
-    subcontent_type = ForeignKey(ContentType, verbose_name=render_label,
-                                 help_text=render_help, related_name='+')
+    #subcontent_type = ForeignKey(ContentType, verbose_name=render_label,
+    #                             help_text=render_help, related_name='+')
 
     objects = PassThroughManager.for_queryset_class(EditRegionChunkQuerySet)()
     polymorphs = InheritanceManager()
@@ -45,11 +45,9 @@ class EditRegionChunk(ChangeTracking, Generic):
             return form.save()
         return form.errors
 
-
     class Meta:
         abstract = False
         ordering = ['position']
         db_table = 'editregions_editregionchunk'
         verbose_name = chunk_v
         verbose_name_plural = chunk_vplural
-

@@ -306,8 +306,7 @@ class EditRegionAdmin(ModelAdmin):
         if obj is not None:
             # from here on out, we heavily reuse the other modeladmin
             # self.model should be EditRegionChunk
-            klass = ContentType.objects.get_for_model(self.model).model_class()
-            modeladmin = self.admin_site._registry[klass]
+            modeladmin = self.admin_site._registry[self.model]
 
             # mutate the querystring and set some data onto it, which will
             # be passed to the get_changelist_filters method, as well as
@@ -379,8 +378,7 @@ class ChunkAdmin(AdminlinksMixin):
     actions_on_bottom = False
     save_as = False
     save_on_top = False
-    exclude = ['content_type', 'content_id', 'region', 'position',
-               'subcontent_type']
+    exclude = ['content_type', 'content_id', 'region', 'position']
     change_readonly_fields = ['created', 'modified']
     #
     # def _get_wrap(self):
@@ -427,18 +425,6 @@ class ChunkAdmin(AdminlinksMixin):
             extras.extend(self.change_readonly_fields)
             return extras
         return self.readonly_fields
-        #
-    def get_chunk_renderer_content_type(self):
-        """
-        Someone else should render this chunk, rather than the regiterered model.
-        :return: The content type for the renderer
-        :rtype: :class:ContentType
-        """
-        opts = self.model._meta
-        if getattr(self, 'chunk_renderer', None) is not None:
-            opts = self.chunk_renderer._meta
-        return ContentType.objects.get_by_natural_key(app_label=opts.app_label,
-            model=opts.module_name)
 
     def save_model(self, request, obj, form, change):
         """
@@ -449,7 +435,7 @@ class ChunkAdmin(AdminlinksMixin):
         obj.content_type = ContentType.objects.get_for_id(request.GET.get('content_type'))
         obj.content_id = int(request.GET.get('content_id'))
         obj.region = str(request.GET.get('region'))
-        obj.subcontent_type = self.get_chunk_renderer_content_type()
+        #obj.subcontent_type = self.get_chunk_renderer_content_type()
 
         # If the position is not set,
         # it's easiest to assume it's going on the end of the chunk list.
