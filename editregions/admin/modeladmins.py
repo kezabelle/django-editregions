@@ -2,6 +2,7 @@
 from functools import update_wrapper
 import logging
 from adminlinks.admin import AdminlinksMixin
+from adminlinks.constants import POPUP_QS_VAR
 from django.contrib import admin
 from django.contrib.admin.options import ModelAdmin
 from django.contrib.admin.util import unquote, display_for_field
@@ -37,6 +38,7 @@ from editregions.text import (admin_chunktype_label, admin_summary_label,
                               region_v)
 
 logger = logging.getLogger(__name__)
+
 
 class EditRegionAdmin(ModelAdmin):
     frontend_editing = True
@@ -367,8 +369,11 @@ class EditRegionInline(GenericInlineModelAdmin):
         # sidestep validation which wants to inherit from BaseModelFormSet
         self.formset = EditRegionInlineFormSet
         formset = super(EditRegionInline, self).get_formset(request, obj, **kwargs)
-        modeladmin = self.admin_site._registry[EditRegionChunk]
-        formset.region_changelists = modeladmin.get_changelists_for_object(request, obj)
+        # dependency on adminlinks here to see if we're in a popup.
+        # if we are, don't show any of these.
+        if POPUP_QS_VAR not in request.REQUEST:
+            modeladmin = self.admin_site._registry[EditRegionChunk]
+            formset.region_changelists = modeladmin.get_changelists_for_object(request, obj)
         return formset
 
 
