@@ -22,19 +22,21 @@
         }
         $doc.bind('fancyiframe-close', on_popup_close);
 
-        $fancyiframe_links.fancyiframe({
-            elements: {
-                prefix: 'django-adminlinks',
-                classes: 'adminlinks'
-            },
-            fades: {
-                opacity: 0.85,
-                overlayIn: 100,
-                overlayOut: 250,
-                wrapperIn: 0,
-                wrapperOut: 250
-            }
-        });
+        if (window.location.search.indexOf('pop=') === -1 && window.location.search.indexOf('_popop=') === -1) {
+            $fancyiframe_links.fancyiframe({
+                elements: {
+                    prefix: 'django-adminlinks',
+                    classes: 'adminlinks'
+                },
+                fades: {
+                    opacity: 0.85,
+                    overlayIn: 100,
+                    overlayOut: 250,
+                    wrapperIn: 0,
+                    wrapperOut: 250
+                }
+            });
+        };
     });
 
 })(typeof django !== 'undefined' && django.jQuery || window.jQuery, document);
