@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from __future__ import unicode_literals
 import logging
 from django.core.urlresolvers import reverse
 from django.forms import Media
@@ -99,7 +100,7 @@ class AdminChunkWrapper(object):
 
     def __unicode__(self):
         if self.exists:
-            return u'%(label)s: %(object)s' % {
+            return '%(label)s: %(object)s' % {
                 'label': self.label,
                 'object': self.summary()
             }
@@ -108,40 +109,40 @@ class AdminChunkWrapper(object):
     def summary(self):
         if self.exists:
             context = {
-            'admin_summary': True,
+                'admin_summary': True,
             }
             return truncate_words(render_one_summary(context, self.chunk), 20)
-        return u''
+        return ''
 
-    def _get_admin_url(self, view=u'add'):
+    def _get_admin_url(self, view='add'):
         self.url_parts.update(view=view)
         reverse_args = [self.chunk.pk] if self.exists else []
         endpoint = reverse(MODELADMIN_REVERSE % self.url_parts,
                            args=reverse_args)
-        return u'%s?%s' % (endpoint, self.querydict.urlencode())
+        return '%s?%s' % (endpoint, self.querydict.urlencode())
 
     def get_delete_url(self):
-        return self._get_admin_url(view=u'delete')
+        return self._get_admin_url(view='delete')
 
     def get_manage_url(self):
-        return self._get_admin_url(view=u'changelist')
+        return self._get_admin_url(view='changelist')
 
     def get_change_url(self):
-        return self._get_admin_url(view=u'change')
+        return self._get_admin_url(view='change')
 
     def get_add_url(self):
-        return self._get_admin_url(view=u'add')
+        return self._get_admin_url(view='add')
 
     def get_history_url(self):
-        return self._get_admin_url(view=u'history')
+        return self._get_admin_url(view='history')
 
     def get_move_url(self):
-        return self._get_admin_url(view=u'move')
+        return self._get_admin_url(view='move')
 
     def get_absolute_url(self):
         if self.exists:
-            return self._get_admin_url(view=u'change')
-        return self._get_admin_url(view=u'add')
+            return self._get_admin_url(view='change')
+        return self._get_admin_url(view='add')
 
     def __getattr__(self, attr):
         """Pass lookups back to the object, if provided."""

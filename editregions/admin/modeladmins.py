@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from __future__ import unicode_literals
 from functools import update_wrapper
 import logging
 from adminlinks.admin import AdminlinksMixin
@@ -149,14 +150,14 @@ class EditRegionAdmin(ModelAdmin):
         :return: the list of actions or tools available for this object
         :rtype: string
         """
-        url_to_move = u'%(admin)s:%(app)s_%(chunkhandler)s_move' % {
+        url_to_move = '%(admin)s:%(app)s_%(chunkhandler)s_move' % {
             'admin': self.admin_site.name,
             'app': self.model._meta.app_label,
             'chunkhandler': self.model._meta.module_name,
         }
         url_to_move2 = reverse(url_to_move)
-        html = (u'<div class="drag_handle" data-pk="%(pk)s" data-href="%(url)s">'
-                u'</div>' % {
+        html = ('<div class="drag_handle" data-pk="%(pk)s" data-href="%(url)s">'
+                '</div>' % {
                     'pk': obj.pk,
                     'url': url_to_move2,
                 })
@@ -292,9 +293,9 @@ class EditRegionAdmin(ModelAdmin):
         try:
             templates = obj.get_edit_template_names()
         except AttributeError as e:
-            raise ImproperlyConfigured(u'%(obj)r must have a '
-                                       u'`get_edit_template_names` method to '
-                                       u'be used with %(cls)r' % {
+            raise ImproperlyConfigured('%(obj)r must have a '
+                                       '`get_edit_template_names` method to '
+                                       'be used with %(cls)r' % {
                                            'obj': obj.__class__,
                                            'cls': EditRegionInline
                                        })
