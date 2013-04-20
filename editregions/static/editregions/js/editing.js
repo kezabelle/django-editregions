@@ -23,15 +23,6 @@
         $doc.bind('fancyiframe-close', on_popup_close);
 
         $fancyiframe_links.fancyiframe({
-            callbacks: {
-                href: function($el) {
-                    var href = $el.attr('href');
-                    var parts = href.split('?', 2);
-                    var link = parts[0];
-                    var qs = (parts[1] || '') + '&_popup=1&_backend_editing=1&_frontend_editing=1';
-                    return link + '?' + qs;
-                }
-            },
             elements: {
                 prefix: 'django-adminlinks',
                 classes: 'adminlinks'

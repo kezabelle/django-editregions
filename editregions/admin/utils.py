@@ -2,12 +2,13 @@
 import logging
 from django.core.urlresolvers import reverse
 from django.forms import Media
+from django.http import QueryDict
 from django.utils.http import urlencode
 from django.utils.text import truncate_words
 from editregions.utils.rendering import render_one_summary
 from helpfulfields.admin import changetracking_readonlys, changetracking_fieldset
 from editregions.utils.regions import validate_region_name
-from adminlinks.templatetags.utils import modeladmin_reverse
+from adminlinks.templatetags.utils import MODELADMIN_REVERSE
 
 
 logger = logging.getLogger(__name__)
@@ -83,6 +84,19 @@ class AdminChunkWrapper(object):
         if self.region is not None:
             validate_region_name(region)
 
+        self.url_parts = {
+            'namespace': self.admin_namespace,
+            'app': self.opts.app_label,
+            'module': self.opts.module_name,
+            'view': '__error__',
+        }
+        self.querydict = QueryDict('', mutable=True)
+        self.querydict.update({
+            'content_id': self.content_pk or 0,
+            'content_type': self.content_type or 0,
+            'region': self.region or '__error__',
+        })
+
     def __unicode__(self):
         if self.exists:
             return u'%(label)s: %(object)s' % {
@@ -100,21 +114,11 @@ class AdminChunkWrapper(object):
         return u''
 
     def _get_admin_url(self, view=u'add'):
-        url_parts = {
-            'namespace': self.admin_namespace,
-            'app': self.opts.app_label,
-            'module': self.opts.module_name,
-            'view': view,
-        }
-        querystring_parts = {
-            'content_id': self.content_pk or 0,
-            'content_type': self.content_type or 0,
-            'region': self.region or '__error__',
-        }
+        self.url_parts.update(view=view)
         reverse_args = [self.chunk.pk] if self.exists else []
-        endpoint = reverse(modeladmin_reverse % url_parts,
-            args=reverse_args)
-        return u'%s?%s' % (endpoint, urlencode(querystring_parts))
+        endpoint = reverse(MODELADMIN_REVERSE % self.url_parts,
+                           args=reverse_args)
+        return u'%s?%s' % (endpoint, self.querydict.urlencode())
 
     def get_delete_url(self):
         return self._get_admin_url(view=u'delete')
