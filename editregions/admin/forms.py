@@ -1,12 +1,9 @@
 # -*- coding: utf-8 -*-
-from django.contrib.contenttypes.generic import BaseGenericInlineFormSet
 from django.forms import Form, Media
-from django.http import QueryDict
-import re
-from django.forms.fields import TypedMultipleChoiceField, TypedChoiceField
+from django.forms.util import ErrorList
+from django.forms.fields import TypedChoiceField
 from editregions.models import EditRegionChunk
 from editregions.admin.utils import shared_media
-from editregions.utils.data import queryset_to_attr_map
 
 
 class EditRegionInlineForm(object):
@@ -26,6 +23,7 @@ class EditRegionInlineFormSet(object):
     extra_forms = []
     media = shared_media
     empty_form = EditRegionInlineForm()
+    errors = {}
 
     # used for constructing change messages
     new_objects = []
@@ -48,6 +46,9 @@ class EditRegionInlineFormSet(object):
 
     def save(self, *args, **kwargs):
         return True
+
+    def non_form_errors(self):
+        return ErrorList()
 #
 #
 # class ReorderChunksForm(Form):
