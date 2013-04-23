@@ -1,10 +1,12 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
+import functools
 import logging
+from django.core.exceptions import SuspiciousOperation, ValidationError
 from django.core.urlresolvers import reverse
 from django.forms import Media
 from django.http import QueryDict
-from django.utils.http import urlencode
+from django.utils.decorators import method_decorator, available_attrs
 from django.utils.text import truncate_words
 from editregions.utils.rendering import render_one_summary
 from helpfulfields.admin import changetracking_readonlys, changetracking_fieldset
@@ -44,6 +46,45 @@ shared_media = Media(
         'editregions/js/editing.js',
     ],
 )
+
+
+def guard_querystring(function):
+    @functools.wraps(function, assigned=available_attrs(function))
+    def wrapped(request, *args, **kwargs):
+        fields_to_search = ('content_type', 'content_id', 'region')
+        fields = {}
+        for field in ('content_type', 'content_id'):
+            fieldval = request.GET.get(field, 0)
+            try:
+                fields.update(field=int(fieldval))
+            except (ValueError, TypeError) as e:
+                # ValueError: got string which was unconvertable to integer.
+                # TypeError: got none, shut up!
+                msg = 'Invalid parameter "%s" with value: %s' % (field, fieldval)
+                logger.warning(msg, extra={'status_code': 405,
+                                           'request': request})
+                # get out of this loop as early as possible.
+                break
+
+        regionval = request.GET.get('region', '__error__')
+        try:
+            validate_region_name(regionval)
+            fields.update(region=regionval)
+        except ValidationError as e:
+            # invalid region name
+            logger.warning('Invalid region value: %s' % regionval,
+                           extra={'status_code': 405, 'request': request})
+
+        if len(fields) < 3 or not all(fields.values()):
+            missing_params = [x for x in fields_to_search if x not in fields]
+            msg = ', '.join(missing_params)
+            msg += ' missing from request'
+            raise SuspiciousOperation(msg)
+        else:
+            return function(request, *args, **kwargs)
+    return wrapped
+
+guard_querystring_m = method_decorator(guard_querystring)
 
 class AdminChunkWrapper(object):
     """
