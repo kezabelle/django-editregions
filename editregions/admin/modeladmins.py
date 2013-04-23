@@ -386,27 +386,6 @@ class ChunkAdmin(AdminlinksMixin):
     save_on_top = False
     exclude = ['content_type', 'content_id', 'region', 'position']
     change_readonly_fields = ['created', 'modified']
-    #
-    # def _get_wrap(self):
-    #     def wrap(view):
-    #         def wrapper(*args, **kwargs):
-    #             return self.admin_site.admin_view(view)(*args, **kwargs)
-    #         return update_wrapper(wrapper, view)
-    #     return wrap
-    #
-    # def get_urls(self):
-    #     original_urls = super(ChunkAdmin, self).get_urls()
-    #     from django.conf.urls.defaults import patterns, url
-    #     wrap = self._get_wrap()
-    #     info = self.model._meta.app_label, self.model._meta.module_name
-    #     extra_urls = patterns('',
-    #         url(r'^(?P<obj_id>.+)/move/$',
-    #             wrap(self.move_view),
-    #             name='%s_%s_move' % info)
-    #     )
-    #     # extras have to come first, otherwise everything is gobbled by the
-    #     # greedy nature of (.+) for the changelist view.
-    #     return extra_urls + original_urls
 
     def get_model_perms(self, request, *args, **kwargs):
         """
