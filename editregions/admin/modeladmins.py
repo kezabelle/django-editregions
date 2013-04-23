@@ -409,7 +409,8 @@ class ChunkAdmin(AdminlinksMixin):
     #     return extra_urls + original_urls
 
     def get_model_perms(self, request, *args, **kwargs):
-        """ Shadow method for the default ModelAdmin. Allows us to hide chunks.
+        """
+        Shadow method for the default ModelAdmin. Allows us to hide chunks.
         By using an empty dictionary, permissions still work, but chunk administration
         views are hidden from the default AdminSite index.
 
@@ -419,7 +420,8 @@ class ChunkAdmin(AdminlinksMixin):
         return {}
 
     def get_readonly_fields(self, request, obj=None):
-        """ Shadow method for the default ModelAdmin.
+        """
+        Shadow method for the default ModelAdmin.
         Allows us to view created/modified fields as read only.
 
         :param request: The WSGIRequest.
@@ -459,11 +461,7 @@ class ChunkAdmin(AdminlinksMixin):
         self._guarded = dict(self._guarded)
         if not all(self._guarded.values()):
             logger.warning('Parameter missing from request: %s' % request.path,
-                           extra={
-                               'status_code': 405,
-                               'request': request
-                           }
-            )
+                           extra={'status_code': 405, 'request': request})
             raise SuspiciousOperation('Parameter missing from request')
 
     def response_max(self, request, limit, found):
