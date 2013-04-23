@@ -473,7 +473,7 @@ class ChunkAdmin(AdminlinksMixin):
             'admin/editregions/limit_reached.html'
         ]
         context = {
-            'is_popup': "_popup" in request.REQUEST,
+            'is_popup': POPUP_QS_VAR in request.REQUEST,
             'found': found,
             'limit': limit,
             }
