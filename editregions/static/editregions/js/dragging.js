@@ -26,6 +26,11 @@
 
     var update_remote_object = function(sortable, event, ui, id, position, region) {
         alert('making ' + id + ' be at position ' + position + ' in "' + region + '"');
+        var url = $(event.srcElement).attr('data-href');
+        var data = {pk: id, position: position, region: region}
+        $.get(url, data, function(resp, status) {
+            alert('yay!');
+        })
     };
 
     var finish_changelist_changes = function(e, ui) {

@@ -10,9 +10,9 @@ from django.contrib.admin.util import unquote, display_for_field
 from django.contrib.contenttypes.generic import GenericInlineModelAdmin
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import (ObjectDoesNotExist, PermissionDenied,
-                                    ImproperlyConfigured, SuspiciousOperation)
+                                    ImproperlyConfigured)
 from django.core.urlresolvers import reverse
-from django.http import Http404
+from django.http import Http404, HttpResponse, HttpResponseBadRequest
 from django.shortcuts import render_to_response
 from django.template import RequestContext
 from django.template.loader import render_to_string
@@ -27,7 +27,7 @@ from editregions.constants import (REQUEST_VAR_REGION, REQUEST_VAR_CT,
 from editregions.utils.chunks import get_last_chunk_position
 from editregions.utils.rendering import render_one_summary
 from editregions.admin.changelist import EditRegionChangeList
-from editregions.admin.forms import EditRegionInlineFormSet
+from editregions.admin.forms import EditRegionInlineFormSet, MovementForm
 from editregions.admin.utils import (AdminChunkWrapper, shared_media,
                                      guard_querystring_m)
 from editregions.models import EditRegionChunk
@@ -186,8 +186,12 @@ class EditRegionAdmin(ModelAdmin):
 
     urls = property(get_custom_urls)
 
-    def move_view(self):
-        return 1
+    def move_view(self, request):
+        form = MovementForm(data=request.GET, files=None, initial=None)
+        if form.is_valid():
+            form.save()
+            return HttpResponse('1')
+        return HttpResponseBadRequest(simplejson.dumps(form.errors))
 
     def queryset(self, *args, **kwargs):
 
