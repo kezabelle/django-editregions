@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import logging
+from django.core.exceptions import ValidationError
 from django.core.handlers.base import BaseHandler
-import warnings
 from django.contrib.auth.models import AnonymousUser
 from django.db.models.loading import get_model
 from django.template.loader import render_to_string
@@ -15,10 +15,15 @@ from editregions.constants import EDIT_REGIONS
 
 logger = logging.getLogger(__name__)
 
-validate_region_name_error = _(u'Enter a valid placeholder name consisting of '
-                               u'letters, numbers, underscores or hyphens.')
+validate_region_name_error = _(u'Enter a valid region name consisting of '
+                               u'letters, numbers, underscores and hyphens.')
 
-validate_region_re = RegexValidator(slug_re, validate_region_name_error, 'invalid')
+region_name_startswith = _(u'Region names may not begin with "_"')
+region_name_endswith = _(u'Region names may not end with "_"')
+
+validate_region_re = RegexValidator(slug_re, validate_region_name_error,
+                                    'invalid')
+
 
 def validate_region_name(name):
     """
@@ -35,6 +40,10 @@ def validate_region_name(name):
 
     :testcase: `~editregions.tests.utils.RegionNameValidationTestCase`
     """
+    if name.startswith('_'):
+        raise ValidationError(region_name_startswith)
+    if name.endswith('_'):
+        raise ValidationError(region_name_endswith)
     MaxLengthValidator(75)(name)
     validate_region_re(name)
     return True
@@ -104,6 +113,7 @@ region_comment_re = re.compile(region_comment % '([-\w]+)')
 #: value put into the context if we're rendering down a template for scanning
 #: Used by :class:`~editregions.templatetags.editregion.EditRegionTag`
 fake_context_payload = u'scanning_for_regions'
+
 
 class FakedRequestContext(Context):
     """
