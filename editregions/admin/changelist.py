@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
+from adminlinks.constants import POPUP_QS_VAR
 from editregions.constants import (REQUEST_VAR_REGION, REQUEST_VAR_CT,
                                    REQUEST_VAR_ID)
-from django.contrib.admin.views.main import ChangeList
+from django.contrib.admin.views.main import ChangeList, IS_POPUP_VAR
 from editregions.utils.regions import get_pretty_region_name
 
 
@@ -23,6 +24,7 @@ class EditRegionChangeList(ChangeList):
         self.region = request.GET.get(REQUEST_VAR_REGION, None)
         self.parent_content_type = request.GET.get(REQUEST_VAR_CT, None)
         self.parent_content_id = request.GET.get(REQUEST_VAR_ID, None)
+        self.querydict = request.GET.copy()
         try:
             self.get_region_display = get_pretty_region_name(self.region)
         except TypeError as e:
@@ -38,10 +40,15 @@ class EditRegionChangeList(ChangeList):
         :return: the subclass (result) url
         :rtype: string
         """
+        # we pass a whole bunch of data back to AdminChunkWrapper and get
+        # querydict updated and get the real URL we want, not the rubbish
+        # the default changelist provides.
         klass = self.model_admin.get_admin_wrapper_class()
         wrapped_obj = klass(opts=result._meta, obj=result,
                             namespace=self.model_admin.admin_site.name,
                             content_id=self.parent_content_id,
                             content_type=self.parent_content_type,
                             region=self.region)
+        if not self.is_popup and POPUP_QS_VAR not in wrapped_obj.querydict:
+            wrapped_obj.querydict.update({POPUP_QS_VAR: 1})
         return wrapped_obj.get_absolute_url()
