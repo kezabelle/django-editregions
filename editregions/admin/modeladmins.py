@@ -28,7 +28,8 @@ from editregions.utils.chunks import get_last_chunk_position
 from editregions.utils.rendering import render_one_summary
 from editregions.admin.changelist import EditRegionChangeList
 from editregions.admin.forms import EditRegionInlineFormSet
-from editregions.admin.utils import AdminChunkWrapper, shared_media
+from editregions.admin.utils import (AdminChunkWrapper, shared_media,
+                                     guard_querystring_m)
 from editregions.models import EditRegionChunk
 from editregions.utils.regions import (get_enabled_chunks_for_region,
                                        sorted_regions, get_pretty_region_name,
@@ -432,17 +433,6 @@ class ChunkAdmin(AdminlinksMixin):
             obj.position = new_position + 1
         super(ChunkAdmin, self).save_model(request, obj, form, change)
 
-
-    def guard_querystring(self, request):
-        extra_fields = []
-        fields = ['content_type', 'content_id', 'region'] + extra_fields
-        self._guarded = [(field, request.GET.get(field, None)) for field in fields]
-        self._guarded = dict(self._guarded)
-        if not all(self._guarded.values()):
-            logger.warning('Parameter missing from request: %s' % request.path,
-                           extra={'status_code': 405, 'request': request})
-            raise SuspiciousOperation('Parameter missing from request')
-
     def response_max(self, request, limit, found):
         """
         If a chunk limit has been reached,
@@ -459,11 +449,13 @@ class ChunkAdmin(AdminlinksMixin):
         return render_to_response(possible_templates, context,
                                   context_instance=RequestContext(request))
 
-    #    @csrf_protect_m
-    #    @transaction.commit_on_success
-    #    @guard_querystring_m
+    @guard_querystring_m
     def add_view(self, request, *args, **kwargs):
-        self.guard_querystring(request)
+        """
+        At this point, our querystring should be 'safe', and we can discover
+        if we need to stop early because of a chunk limit being reached.
+
+        """
         available_chunks = get_enabled_chunks_for_region(str(request.GET.get('region')))
         limit = available_chunks[self.model]
         # if there's a limit (no infinity set) ensure we haven't it it yet.
@@ -473,12 +465,20 @@ class ChunkAdmin(AdminlinksMixin):
                 return self.response_max(request, limit, already_created)
         return super(ChunkAdmin, self).add_view(request, *args, **kwargs)
 
+    @guard_querystring_m
     def change_view(self, request, *args, **kwargs):
-        #self.guard_querystring(request)
+        """
+        This override only exists because I have no idea how to forceably guard
+        the super() change_view without doing so.
+        """
         return super(ChunkAdmin, self).change_view(request, *args, **kwargs)
 
+    @guard_querystring_m
     def delete_view(self, request, *args, **kwargs):
-        self.guard_querystring(request)
+        """
+        This override only exists because I have no idea how to forceably guard
+        the super() change_view without doing so.
+        """
         return super(ChunkAdmin, self).delete_view(request, *args, **kwargs)
 
     def get_success_templates(self, request):
