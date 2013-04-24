@@ -274,7 +274,6 @@ class EditRegionAdmin(ModelAdmin):
         extra_context['available_chunks'] = self.get_changelist_filters(request.GET)
         return super(EditRegionAdmin, self).changelist_view(request, extra_context)
 
-
     def get_model_perms(self, request):
         return {
             'add': True,
@@ -445,7 +444,7 @@ class ChunkAdmin(AdminlinksMixin):
             'is_popup': POPUP_QS_VAR in request.REQUEST,
             'found': found,
             'limit': limit,
-            }
+        }
         return render_to_response(possible_templates, context,
                                   context_instance=RequestContext(request))
 
@@ -500,14 +499,14 @@ class ChunkAdmin(AdminlinksMixin):
         templates = [
             "admin/editregions/%s/%s/success.html" % (app_label, model_name),
             "admin/editregions/%s/success.html" % app_label,
-            ]
+        ]
         for parent in any_parents:
             app_label = parent._meta.app_label
             model_name = parent._meta.object_name.lower()
             templates.extend([
                 "admin/editregions/%s/%s/success.html" % (app_label, model_name),
                 "admin/editregions/%s/success.html" % app_label,
-                ])
+            ])
         templates.extend(['admin/editregions/success.html'])
         templates.extend(super(ChunkAdmin, self).get_success_templates(request))
         return templates
