@@ -154,13 +154,16 @@ class AdminChunkWrapper(object):
 
         self.opts = opts
         self.admin_namespace = namespace
+
+        # attempt to accept either ContentType instances or primary keys
+        # representing them.
         try:
-            self.content_type = content_type.pk
+            self.content_type = int(content_type.pk)
         except AttributeError as e:
-            # if we got an error, it wasn't a ContentType, but the PK of
-            # a content type ...
+            # Not an object, instead should be an integer
             self.content_type = content_type
-        self.content_pk = content_id
+
+        self.content_id = content_id
         self.region = region
         self.label = opts.verbose_name
         self.exists = obj is not None
@@ -179,11 +182,20 @@ class AdminChunkWrapper(object):
             'view': '__error__',
         }
         self.querydict = QueryDict('', mutable=True)
-        self.querydict.update({
-            'content_id': self.content_pk or 0,
-            'content_type': self.content_type or 0,
-            'region': self.region or '__error__',
-        })
+
+        # if the object already exists in the database, we're probably safe
+        # to assume it's data is the most trustworthy.
+        if self.exists:
+            self.content_type = self.chunk.content_type.pk
+            self.content_id = self.chunk.content_id
+            self.region = self.chunk.region
+
+        # update the querystring if they're not already in there.
+        # possibly this is wrong, and should override any that are there?
+        # I'm somewhat confused by it all now.
+        for field in ('content_type', 'content_id', 'region'):
+            if field not in self.querydict:
+                self.querydict.update({field: getattr(self, field) or 0})
 
     def __unicode__(self):
         if self.exists:
