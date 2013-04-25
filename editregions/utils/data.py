@@ -10,7 +10,7 @@ def queryset_to_attr_map(queryset, attr):
 def convert_context_to_dict(context):
     dicts = context.dicts
     out = {}
-    for dict in dicts:
-        for key, value in dict.items():
+    for d in dicts:
+        for key, value in d.items():
             out[key] = value
     return out
