@@ -32,7 +32,7 @@ from editregions.admin.utils import (AdminChunkWrapper, shared_media,
                                      guard_querystring_m)
 from editregions.models import EditRegionChunk
 from editregions.utils.regions import (get_enabled_chunks_for_region,
-                                       sorted_regions, get_pretty_region_name,
+                                       get_pretty_region_name,
                                        scan_template_for_named_regions,
                                        validate_region_name)
 from editregions.text import (admin_chunktype_label, admin_summary_label,
