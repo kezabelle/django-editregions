@@ -1,21 +1,27 @@
 <div class="region-inline-wrapper">
     {% load editregion_result_list %}
 {% load i18n %}
-{% for cl in inline_admin_formset.formset.region_changelists %}
-    <div class="module filtered changelist-as-inline" id="changelist-{{ forloop.counter }}" data-region="{{ cl.region }}">
-    {% include "admin/editregions/change_list_filters.html" with available_chunks=cl.available_chunks iterating=forloop.counter %}
-    <p class="paginator">
-        <b>{{ cl.get_region_display }}:</b>
-        <span class="paginator-count" id="paginator-count-{{ forloop.counter }}">
-            {{ cl.result_count }}
-        </span>
-        {% ifequal cl.result_count 1 %}
-            {{ cl.opts.verbose_name }}
-        {% else %}
-            {{ cl.opts.verbose_name_plural }}
-        {% endifequal %}
-    </p>
-    {% editregion_result_list cl %}
+{% if is_popup %}
+    <div class="already-in-popup">
+        <span>{% trans "Unable to edit regions while inside a popup window" %}</span>
     </div>
-{% endfor %}
+{% else %}
+    {% for cl in inline_admin_formset.formset.region_changelists %}
+        <div class="module filtered changelist-as-inline" id="changelist-{{ forloop.counter }}" data-region="{{ cl.region }}">
+        {% include "admin/editregions/change_list_filters.html" with available_chunks=cl.available_chunks iterating=forloop.counter %}
+        <p class="paginator">
+            <b>{{ cl.get_region_display }}:</b>
+            <span class="paginator-count" id="paginator-count-{{ forloop.counter }}">
+                {{ cl.result_count }}
+            </span>
+            {% ifequal cl.result_count 1 %}
+                {{ cl.opts.verbose_name }}
+            {% else %}
+                {{ cl.opts.verbose_name_plural }}
+            {% endifequal %}
+        </p>
+        {% editregion_result_list cl %}
+        </div>
+    {% endfor %}
+{% endif %}
 </div>

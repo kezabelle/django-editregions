@@ -57,3 +57,17 @@
 .changelist-as-inline .add-chunks__available a:hover {
     color: #036;
 }
+
+.already-in-popup {
+    /* combo of system-message and changelink */
+    background: url('../../admin/img/nav-bg.gif') 0 0 repeat;
+    padding: 6px 8px;
+    font-size: .8em;
+    color: #999;
+    border: 1px solid #ccc;
+}
+
+.already-in-popup span {
+    background: url('../../admin/img/icon_changelink.gif') 0 0 no-repeat;
+    padding-left: 12px;
+}
