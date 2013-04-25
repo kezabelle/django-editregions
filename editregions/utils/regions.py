@@ -68,7 +68,7 @@ def get_pretty_region_name(name, settings=None):
         return re.sub(fallback_region_name_re, string=name, repl=' ')
 
 
-def get_enabled_chunks_for_region(name, settings=None):
+def get_enabled_chunks_for_region(template, name, settings=None):
     """
     Get the list of available chunks. This allows chunks to exist in the database
     but get turned off after the fact, without deleting them.
@@ -80,9 +80,10 @@ def get_enabled_chunks_for_region(name, settings=None):
     if settings is None:
         settings = EDIT_REGIONS
     resolved = SortedDict()
-    if name in settings.keys():
+    if template in settings:
+        chunktypes = [x[2] for x in settings[template] if x[0] == name][0]
         # Replace the dotted app_label/model_name combo with the actual model.
-        for chunk, count in settings[name]['chunks'].items():
+        for chunk, count in chunktypes.items():
             chunked = chunk.split('.')[0:2]
             model = get_model(*chunked)
             # Once we have a model and there's no stupid limit set,
