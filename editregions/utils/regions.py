@@ -149,11 +149,18 @@ class FakedRequestContext(Context):
         })
 
 
-def scan_template_for_named_regions(template_name, request_path='/'):
-    given_context = {}
-    fake_context = FakedRequestContext(path=request_path)
-    compiled_template = render_to_string(template_name, given_context, fake_context)
-    return region_comment_re.findall(compiled_template)
+def scan_template_for_named_regions(template_names, request_path='/'):
+    try:
+        for template_name in template_names:
+            if template_name in EDIT_REGIONS:
+                template_settings = EDIT_REGIONS[template_name]
+                break
+    except KeyError as e:
+        # template has not been set up :\
+        return []
+
+    # the template_settings should be a list of 3-tuples
+    return [x[0] for x in template_settings]
 
 
 def sorted_regions(items):

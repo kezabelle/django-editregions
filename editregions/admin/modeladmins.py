@@ -303,8 +303,7 @@ class EditRegionAdmin(ModelAdmin):
                                            'obj': obj.__class__,
                                            'cls': EditRegionInline
                                        })
-        regions = scan_template_for_named_regions(templates)
-        return sorted_regions(regions)
+        return scan_template_for_named_regions(templates)
 
     def get_changelists_for_object(self, request, obj, **kwargs):
         changelists = []
