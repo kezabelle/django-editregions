@@ -187,8 +187,20 @@ class EditRegionAdmin(ModelAdmin):
     urls = property(get_custom_urls)
 
     def move_view(self, request):
+        """
+        Allows us to move a Chunk from one place to another.
+        Yes, it accepts request.GET, because I can't be bothered to monkey
+        patch the jQuery ajax sending to send a CSRF token. Screw it.
+
+        Data received in the request should be:
+            * `pk`
+            * `position`
+            * `region`
+
+        The form then handles moving everything in .save()
+        """
         form = MovementForm(data=request.GET, files=None, initial=None)
-        if form.is_valid():
+        if form.is_valid() and self.has_change_permission(request, form.obj_cache):
             form.save()
             return HttpResponse('1')
         return HttpResponseBadRequest(simplejson.dumps(form.errors))

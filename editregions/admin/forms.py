@@ -55,9 +55,14 @@ class EditRegionInlineFormSet(object):
 
 
 class MovementForm(Form):
+    """
+    Move a chunk from one place to another.
+    """
     pk = IntegerField(min_value=1)
-    position = IntegerField(min_value=0)
-    region = TypedChoiceField(coerce=unicode, choices=(), validators=[validate_region_name])
+    position = IntegerField(min_value=1)
+    region = TypedChoiceField(coerce=unicode, choices=(),
+                              validators=[validate_region_name])
+    obj_cache = None
 
     def __init__(self, *args, **kwargs):
         super(MovementForm, self).__init__(*args, **kwargs)
@@ -77,24 +82,35 @@ class MovementForm(Form):
         # minus 1, I think.
 
     def clean_pk(self):
+        """
+        Checks we received a valid object identifier.
+        """
         pk = self.cleaned_data.get('pk', 0)
         try:
-            return self.Meta.model.objects.get(pk=pk)
+            obj = self.Meta.model.objects.get(pk=pk).only('content_type',
+                                                          'content_id', 'pk',
+                                                          'region', 'position')
+            self.obj_cache = obj
+            return obj
         except self.Meta.model.DoesNotExist as e:
             raise ValidationError(e.msg)
 
     def save(self):
+        """
+        Updates the current object, and all other objects in the same region.
+        """
         obj = self.cleaned_data['pk']
         obj.position = self.cleaned_data['position']
         obj.region = self.cleaned_data['region']
 
-
         chunks = get_chunks_for_region(content_type=obj.content_type,
                                        content_id=obj.content_id,
-                                       region=obj.region,
-                                       position__gte=obj.position)
-        for base_index, chunk in enumerate(chunks, start=0):
-            chunk.position = obj.position + base_index
+                                       region=obj.region)
+        for position, chunk in enumerate(chunks, start=1):
+            if position >= obj.position:
+                chunk.position = obj.position + position
+            else:
+                chunk.position = position
             chunk.save()
         obj.save()
         return obj
