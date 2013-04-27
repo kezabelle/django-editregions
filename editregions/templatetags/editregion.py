@@ -64,10 +64,11 @@ class EditRegionTag(Tag):
             return u''
 
         results = get_chunks_for_region(content_id=content_object.pk,
-            content_type=content_type, region=name)
+                                        content_type=content_type, region=name)
+        template = content_object.get_live_template_names()[0]
         # if it's being used as an `as x` output tag,
         # return the unjoined list.
         #if kwargs.pop(self.varname_name):
         #    return render_all_chunks(context, name, results)
-        return u'\n'.join(render_all_chunks(context, name, results))
+        return u'\n'.join(render_all_chunks(template, context, name, results))
 register.tag('editregion', EditRegionTag)
