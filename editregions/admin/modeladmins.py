@@ -204,8 +204,16 @@ class EditRegionAdmin(ModelAdmin):
         form = MovementForm(data=request.GET, files=None, initial=None)
         if form.is_valid() and self.has_change_permission(request, form.obj_cache):
             form.save()
-            return HttpResponse('1')
-        return HttpResponseBadRequest(simplejson.dumps(form.errors))
+            json_data = {
+                'action': 'move',
+                'primary_key': form.obj_cache.content_id,
+                'html': self.render_changelists_for_object(request,
+                                                           form.obj_cache.content_object)
+            }
+            return HttpResponse(simplejson.dumps(json_data),
+                                mimetype='application/json')
+        return HttpResponseBadRequest(simplejson.dumps(form.errors),
+                                      mimetype='application/json')
 
     def queryset(self, *args, **kwargs):
 
@@ -370,8 +378,11 @@ class EditRegionAdmin(ModelAdmin):
     def render_changelists_for_object(self, request, obj):
         return render_to_string(EditRegionInline.template, {
             'inline_admin_formset': {
-                'formset': self.get_changelists_for_object(request, obj)
-            }
+                'formset': {
+                    'region_changelists': self.get_changelists_for_object(request,
+                                                                          obj)
+                },
+            },
         })
 
     @property
@@ -550,7 +561,7 @@ class ChunkAdmin(AdminlinksMixin):
         json_data = {
             'action': action,
             'primary_key': obj.pk,
-            'html': modeladmin.render_changelists_for_obj(request, obj)
+            'html': modeladmin.render_changelists_for_object(request, obj)
         }
         return simplejson.dumps(json_data)
 
