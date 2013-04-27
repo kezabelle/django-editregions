@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-from django.core.exceptions import ValidationError
 from django.db.models import F
 from django.forms import Form, Media
 from django.forms.util import ErrorList
@@ -80,17 +79,22 @@ class MovementForm(Form):
         # TODO: maximum position should be count() of those in region for this
         # minus 1, I think.
 
-    def clean_pk(self):
-        """
-        Checks we received a valid object identifier.
-        """
-        pk = self.cleaned_data.get('pk', 0)
+    def clean(self):
+        cd = super(MovementForm, self).clean()
+        pk = cd.get('pk', 0)
         try:
-            obj = self.Meta.model.objects.get(pk=pk)
-            self.obj_cache = obj
-            return obj
+            cd['pk'] = self.Meta.model.objects.get(pk=pk)
         except self.Meta.model.DoesNotExist as e:
-            raise ValidationError(e.msg)
+            cd['pk'] = None
+            self._errors['pk'] = e.msg
+
+        if 'region' in cd and cd['pk'] is not None:
+            template = cd['pk'].content_object.get_edit_template_names()[0]
+            regions = get_regions_for_template(template)
+            if cd['region'] not in regions:
+                self._errors['region'] = 'Invalid region'
+
+        return cd
 
     def save(self):
         """
