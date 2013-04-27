@@ -49,6 +49,12 @@ def validate_region_name(name):
 fallback_region_name_re = re.compile(r'[_\W]+')
 
 
+def get_regions_for_template(template, settings=None):
+    if settings is None:
+        settings = EDIT_REGIONS
+    return [x[0] for x in settings[template]]
+
+
 def get_pretty_region_name(template, name, settings=None):
     """
     Try and find a not-machine-oriented name for this region, potentially
