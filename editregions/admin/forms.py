@@ -89,9 +89,7 @@ class MovementForm(Form):
         """
         pk = self.cleaned_data.get('pk', 0)
         try:
-            obj = self.Meta.model.objects.get(pk=pk).only('content_type',
-                                                          'content_id', 'pk',
-                                                          'region', 'position')
+            obj = self.Meta.model.objects.get(pk=pk)
             self.obj_cache = obj
             return obj
         except self.Meta.model.DoesNotExist as e:
