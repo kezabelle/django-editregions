@@ -46,7 +46,6 @@ shared_media = Media(
         # 'editregions/js/jquery.ui.touch-punch.js',
         # 'editregions/js/jquery.ui.sortable.js',
         'editregions/js/dragging.js',
-        'editregions/js/editing.js',
     ],
 )
 
