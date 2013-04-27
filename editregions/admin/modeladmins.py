@@ -24,7 +24,7 @@ from django.utils.translation import ugettext_lazy as _
 
 from editregions.constants import (REQUEST_VAR_REGION, REQUEST_VAR_CT,
                                    REQUEST_VAR_ID)
-from editregions.utils.chunks import get_last_chunk_position, get_chunks_for_region
+from editregions.utils.chunks import get_chunks_for_region
 from editregions.utils.data import get_modeladmin, get_content_type
 from editregions.utils.rendering import render_one_summary
 from editregions.admin.changelist import EditRegionChangeList

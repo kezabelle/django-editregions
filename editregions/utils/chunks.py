@@ -25,6 +25,7 @@ def get_limits_for_chunk_in_region(region, chunk):
             pass
     return None
 
+
 def get_chunks_for_region(**base_filters):
     """
     Mostly want to use content_id, content_type(_id) and region.
@@ -32,19 +33,6 @@ def get_chunks_for_region(**base_filters):
     .. seealso:: :class:`~editregions.templatetags.editregion.EditRegionTag`
     """
     return EditRegionChunk.polymorphs.filter(**base_filters).select_subclasses()
-
-def get_last_chunk_position(content_type, content_id, region_name, model=None):
-    if model is None:
-        model = EditRegionChunk
-    positions = model.objects.filter(content_type=content_type, content_id=content_id,
-        region=region_name).values_list('position', flat=True)
-    try:
-        max_position = max(positions)
-    except ValueError:
-        # max() received an empty sequence.
-        # Usually because this is the first chunk added to the region.
-        max_position = 0
-    return max_position
 
 
 def chunk_iteration_context(index, value, iterable):
