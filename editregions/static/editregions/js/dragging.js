@@ -48,7 +48,7 @@
         target_position = target_position || ui.item.index();
 
         if (target_position !== start_position || target_region !== start_region) {
-            update_remote_object(this, e, ui, obj_id, target_position, target_region);
+            update_remote_object(this, e, ui, obj_id, target_position+1, target_region);
         }
     };
 
