@@ -3,6 +3,7 @@ from django.db.models import F
 from django.forms import Form, Media
 from django.forms.util import ErrorList
 from django.forms.fields import IntegerField, CharField
+from django.utils.encoding import force_unicode
 from editregions.models import EditRegionChunk
 from editregions.admin.utils import shared_media
 from editregions.utils.chunks import get_chunks_for_region
@@ -84,7 +85,7 @@ class MovementForm(Form):
         cd = super(MovementForm, self).clean()
         pk = cd.get('pk', 0)
         try:
-            cd['pk'] = self.Meta.model.objects.get(pk=pk)
+            cd['pk'] = self.Meta.model.polymorphs.get_subclass(pk=pk)
         except self.Meta.model.DoesNotExist as e:
             cd['pk'] = None
             self._errors['pk'] = e.msg
@@ -128,6 +129,19 @@ class MovementForm(Form):
             if obj.position != new_position:
                 get_chunks_for_region(pk=obj.pk).update(position=new_position)
         return obj
+
+    def change_message(self):
+        obj = self.cleaned_data['pk']
+        data = (obj.position, obj.region)
+        msg = 'Moved to position %d in region "%s"' % data
+        return obj, msg
+
+    def parent_change_message(self):
+        obj = self.cleaned_data['pk']
+        data = (force_unicode(obj._meta.verbose_name), obj.pk, obj.position,
+                obj.region)
+        msg = 'Moved %s (pk:%s) to position %d in region "%s"' % data
+        return obj.content_object, msg
 
     class Meta:
         model = EditRegionChunk

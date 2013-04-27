@@ -209,6 +209,8 @@ class EditRegionAdmin(ModelAdmin):
                 'primary_key': form.cleaned_data['pk'].pk,
                 'html': html,
             }
+            self.log_change(request, *form.change_message())
+            self.log_change(request, *form.parent_change_message())
             return HttpResponse(simplejson.dumps(json_data),
                                 mimetype='application/json')
         return HttpResponseBadRequest(simplejson.dumps(form.errors),
