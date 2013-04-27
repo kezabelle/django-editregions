@@ -6,7 +6,8 @@ from django.forms.fields import IntegerField, CharField
 from editregions.models import EditRegionChunk
 from editregions.admin.utils import shared_media
 from editregions.utils.chunks import get_chunks_for_region
-from editregions.utils.regions import validate_region_name, get_pretty_region_name
+from editregions.utils.regions import (validate_region_name,
+                                       get_regions_for_template)
 
 
 class EditRegionInlineForm(object):

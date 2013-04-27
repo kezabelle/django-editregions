@@ -8,7 +8,6 @@ from django.contrib import admin
 from django.contrib.admin.options import ModelAdmin
 from django.contrib.admin.util import unquote, display_for_field
 from django.contrib.contenttypes.generic import GenericInlineModelAdmin
-from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import (ObjectDoesNotExist, PermissionDenied,
                                     ImproperlyConfigured)
 from django.core.urlresolvers import reverse
@@ -202,13 +201,13 @@ class EditRegionAdmin(ModelAdmin):
         The form then handles moving everything in .save()
         """
         form = MovementForm(data=request.GET, files=None, initial=None)
-        if form.is_valid() and self.has_change_permission(request, form.obj_cache):
+        if form.is_valid() and self.has_change_permission(request, form.cleaned_data['pk']):
             form.save()
+            html = self.render_changelists_for_object(request, form.cleaned_data['pk'].content_object)
             json_data = {
                 'action': 'move',
-                'primary_key': form.obj_cache.content_id,
-                'html': self.render_changelists_for_object(request,
-                                                           form.obj_cache.content_object)
+                'primary_key': form.cleaned_data['pk'].pk,
+                'html': html,
             }
             return HttpResponse(simplejson.dumps(json_data),
                                 mimetype='application/json')
