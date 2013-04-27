@@ -110,13 +110,13 @@ def chunk_iteration_context(index, value, iterable):
     return {'chunk': plugin_context}
 
 
-def render_all_chunks(context, region, found_chunks):
+def render_all_chunks(template, context, region, found_chunks):
     """
 
     :used by:
         :class:`~editregions.templatetags.editregion.EditRegionTag`
     """
-    enabled = get_enabled_chunks_for_region(region)
+    enabled = get_enabled_chunks_for_region(template=template, name=region)
 
     # filter our chunks which are no long enabled ...
     # this'll hit the ContentType cache after a while ...

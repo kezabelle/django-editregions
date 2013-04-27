@@ -33,7 +33,7 @@ from editregions.admin.utils import (AdminChunkWrapper, shared_media,
                                      guard_querystring_m)
 from editregions.models import EditRegionChunk
 from editregions.utils.regions import (get_enabled_chunks_for_region,
-                                       sorted_regions, get_pretty_region_name,
+                                       get_pretty_region_name,
                                        scan_template_for_named_regions,
                                        validate_region_name)
 from editregions.text import (admin_chunktype_label, admin_summary_label,
@@ -266,26 +266,33 @@ class EditRegionAdmin(ModelAdmin):
     def get_changelist_filters(self, request_querydict):
         """
         Get the list of chunks for the changelist sidebar.
+        Should only get called with a decent querydict, hopefully.
 
         :return: list of available chunk types
         """
-        region_filter = request_querydict.get(REQUEST_VAR_REGION, None)
-        ct_filter = request_querydict.get(REQUEST_VAR_CT, None)
-        id_filter = request_querydict.get(REQUEST_VAR_ID, None)
-        filters = []
-        if region_filter is not None:
-            filters = [self.get_admin_wrapper_class()(**{
-                'opts': x._meta,
-                'namespace': self.admin_site.app_name,
-                'region': region_filter,
-                'content_type': ct_filter,
-                'content_id': id_filter,
-            }) for x in get_enabled_chunks_for_region(region_filter)]
+        region = request_querydict[REQUEST_VAR_REGION]
+        ct = request_querydict[REQUEST_VAR_CT]
+        pk = request_querydict[REQUEST_VAR_ID]
+        try:
+            parent_obj = get_content_type(ct).model_class().objects.get(pk=pk)
+        except ObjectDoesNotExist as e:
+            return HttpResponseBadRequest('something went wrong')
+
+        template_name = parent_obj.get_edit_template_names()[0]
+        ChunkWrapper = self.get_admin_wrapper_class()
+        filters = (ChunkWrapper(**{
+            'opts': x._meta,
+            'namespace': self.admin_site.app_name,
+            'region': region,
+            'content_type': ct,
+            'content_id': pk,
+        }) for x in get_enabled_chunks_for_region(template_name, region))
         return filters
 
     def get_admin_wrapper_class(self):
         return AdminChunkWrapper
 
+    @guard_querystring_m
     def changelist_view(self, request, extra_context=None):
         extra_context = extra_context or {}
         extra_context['available_chunks'] = self.get_changelist_filters(request.GET)
@@ -316,8 +323,7 @@ class EditRegionAdmin(ModelAdmin):
                                            'obj': obj.__class__,
                                            'cls': EditRegionInline
                                        })
-        regions = scan_template_for_named_regions(templates)
-        return sorted_regions(regions)
+        return scan_template_for_named_regions(templates)
 
     def get_changelists_for_object(self, request, obj, **kwargs):
         changelists = []

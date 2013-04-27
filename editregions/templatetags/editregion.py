@@ -8,8 +8,7 @@ from django.core.exceptions import ImproperlyConfigured
 from editregions.models import EditRegionChunk
 from editregions.text import ttag_no_obj, ttag_not_model
 from editregions.utils.chunks import get_chunks_for_region, render_all_chunks
-from editregions.utils.regions import (region_comment, fake_context_payload,
-                                       validate_region_name)
+from editregions.utils.regions import validate_region_name
 from editregions.utils.data import get_content_type
 
 register = template.Library()
@@ -36,8 +35,6 @@ class EditRegionTag(Tag):
         validate_region_name(name)
         # if we're in a fake request to this template, assume we're scanning
         # for placeholders, and set the appropriate string to read back.
-        if fake_context_payload in context:
-            return region_comment % name
 
         _tag_name = 'editregion'
 
@@ -65,10 +62,11 @@ class EditRegionTag(Tag):
             return u''
 
         results = get_chunks_for_region(content_id=content_object.pk,
-            content_type=content_type, region=name)
+                                        content_type=content_type, region=name)
+        template = content_object.get_live_template_names()[0]
         # if it's being used as an `as x` output tag,
         # return the unjoined list.
         #if kwargs.pop(self.varname_name):
         #    return render_all_chunks(context, name, results)
-        return u'\n'.join(render_all_chunks(context, name, results))
+        return u'\n'.join(render_all_chunks(template, context, name, results))
 register.tag('editregion', EditRegionTag)
