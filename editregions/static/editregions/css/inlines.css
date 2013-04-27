@@ -30,7 +30,7 @@
     color: #999;
     border: 0;
     border-bottom: 1px solid #ccc;
-    background: white url('../img/nav-bg.gif') 0 100% repeat-x;
+    background: white url('../../admin/img/nav-bg.gif') 0 100% repeat-x;
     overflow: hidden;
     font-size: 11px;
     padding: 0 1em;
