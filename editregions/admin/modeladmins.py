@@ -80,7 +80,8 @@ class EditRegionAdmin(ModelAdmin):
         :return: the region name
         :rtype: string
         """
-        return get_pretty_region_name(obj.region)
+        pboj = obj.content_object.get_edit_template_names()[0]
+        return get_pretty_region_name(pboj, obj.region)
     get_region_name.short_description = region_v
 
     def get_subclass_type(self, obj):

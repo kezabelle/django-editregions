@@ -29,9 +29,10 @@ class EditRegionChangeList(ChangeList):
 
         parent_obj = (get_content_type(self.parent_content_type).model_class()
                       .objects.get(pk=self.parent_content_id))
-        template = parent_obj.get_live_template_names()[0]
+        self.template = parent_obj.get_live_template_names()[0]
         try:
-            self.get_region_display = get_pretty_region_name(template, self.region)
+            self.get_region_display = get_pretty_region_name(self.template,
+                                                             self.region)
         except TypeError as e:
             # unable to parse with the re module because self.region is None
             # and re expected string or buffer
