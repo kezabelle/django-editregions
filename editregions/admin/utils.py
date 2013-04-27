@@ -8,6 +8,7 @@ from django.forms import Media
 from django.http import QueryDict
 from django.utils.decorators import method_decorator, available_attrs
 from django.utils.text import truncate_words
+from editregions.constants import REQUEST_VAR_REGION, REQUEST_VAR_ID, REQUEST_VAR_CT
 from editregions.utils.rendering import render_one_summary
 from helpfulfields.admin import changetracking_readonlys, changetracking_fieldset
 from editregions.utils.regions import validate_region_name
@@ -53,7 +54,7 @@ shared_media = Media(
 def guard_querystring(function):
     @functools.wraps(function, assigned=available_attrs(function))
     def wrapped(request, *args, **kwargs):
-        fields_to_search = ('content_type', 'content_id', 'region')
+        fields_to_search = (REQUEST_VAR_CT, REQUEST_VAR_ID, REQUEST_VAR_REGION)
         fields = {}
 
         # By default, assume we're looking in the querystring; if it's a POST
@@ -64,9 +65,9 @@ def guard_querystring(function):
 
         # Convert content type field into an integer, because that's what
         # Django uses internally.
-        content_type = lookup.get('content_type', 0)
+        content_type = lookup.get(REQUEST_VAR_CT, 0)
         try:
-            fields.update({'content_type': int(content_type)})
+            fields.update({REQUEST_VAR_CT: int(content_type)})
         except (ValueError, TypeError) as e:
             # ValueError: got string which was unconvertable to integer.
             # TypeError: got none, shut up!
@@ -75,19 +76,19 @@ def guard_querystring(function):
 
         # Content identifier can be anything as long as it isn't 0 and fits
         # within our DB storage max_length.
-        content_id = lookup.get('content_id', '0')
-        max_length = EditRegionChunk._meta.get_field_by_name('content_id')[0].max_length
+        content_id = lookup.get(REQUEST_VAR_ID, '0')
+        max_length = EditRegionChunk._meta.get_field_by_name(REQUEST_VAR_ID)[0].max_length
         if content_id != '0' and len(content_id) <= max_length:
-            fields.update({'content_id': content_id})
+            fields.update({REQUEST_VAR_ID: content_id})
         else:
             msg = 'Invalid parameter "content_id" with value: %s' % content_type
             logger.warning(msg, extra={'status_code': 405, 'request': request})
 
         # Our region gets validated using the same format we always use.
-        regionval = lookup.get('region', '__error__')
+        regionval = lookup.get(REQUEST_VAR_REGION, '__error__')
         try:
             validate_region_name(regionval)
-            fields.update(region=regionval)
+            fields.update({REQUEST_VAR_REGION: regionval})
         except ValidationError as e:
             # invalid region name
             logger.warning('Invalid region value: %s' % regionval,
@@ -103,31 +104,6 @@ def guard_querystring(function):
         else:
             return function(request, *args, **kwargs)
     return wrapped
-
-# def guard_querystring(function, fields=None):
-#     fields = fields or ('content_type', 'content_id', 'region')
-#     @functools.wraps(function)
-#     def function_wrapper(*args, **kwargs):
-#         import pdb; pdb.set_trace()
-#         thing_to_be_baked = function(*args, **kwargs)
-#         return bake(thing_to_be_baked)
-#     return function_wrapper
-# #
-# def guard_querystring(view_func):
-#     """
-#     Guard the querystring looking for our important values.
-#     """
-#     @functools.wraps(view_func, assigned=available_attrs(view_func))
-#     def _wrapped_view(request, *args, **kwargs):
-#         import pdb; pdb.set_trace()
-#         fields = fields or ('content_type', 'content_id', 'region')
-#         fields2 = [(x, request.GET.get(x, None)) for x in fields]
-#         fields3 = dict(fields2)
-#         if not all(fields3.values()):
-#             logger.warning('Parameter missing from request: %s' % request.path,
-#                            extra={'status_code': 405, 'request': request})
-#             raise SuspiciousOperation('Parameter missing from request')
-#     return _wrapped_view
 
 guard_querystring_m = method_decorator(guard_querystring)
 
