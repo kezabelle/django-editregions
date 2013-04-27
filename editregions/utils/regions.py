@@ -49,7 +49,7 @@ def validate_region_name(name):
 fallback_region_name_re = re.compile(r'[_\W]+')
 
 
-def get_pretty_region_name(name, settings=None):
+def get_pretty_region_name(template, name, settings=None):
     """
     Try and find a not-machine-oriented name for this region, potentially
     localized. If none exists, use the given regular expression to provide
@@ -60,7 +60,7 @@ def get_pretty_region_name(name, settings=None):
     if settings is None:
         settings = EDIT_REGIONS
     try:
-        return settings[name]['name']
+        return [x[1] for x in settings[template] if x[0] == name][0]
     except KeyError:
         logbits = {'region': name}
         logger.debug(u'No declared name for "%(region)s" in your EDIT_REGIONS '

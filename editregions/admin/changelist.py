@@ -4,6 +4,7 @@ from editregions.constants import (REQUEST_VAR_REGION, REQUEST_VAR_CT,
                                    REQUEST_VAR_ID)
 from django.contrib.admin.views.main import ChangeList, IS_POPUP_VAR
 from editregions.utils.regions import get_pretty_region_name
+from editregions.utils.data import get_content_type
 
 
 class EditRegionChangeList(ChangeList):
@@ -25,8 +26,12 @@ class EditRegionChangeList(ChangeList):
         self.parent_content_type = request.GET.get(REQUEST_VAR_CT, None)
         self.parent_content_id = request.GET.get(REQUEST_VAR_ID, None)
         self.querydict = request.GET.copy()
+
+        parent_obj = (get_content_type(self.parent_content_type).model_class()
+                      .objects.get(pk=self.parent_content_id))
+        template = parent_obj.get_live_template_names()[0]
         try:
-            self.get_region_display = get_pretty_region_name(self.region)
+            self.get_region_display = get_pretty_region_name(template, self.region)
         except TypeError as e:
             # unable to parse with the re module because self.region is None
             # and re expected string or buffer
