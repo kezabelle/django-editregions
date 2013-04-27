@@ -70,7 +70,7 @@ class MovementForm(Form):
         super(MovementForm, self).__init__(*args, **kwargs)
         # set the choices to be anything in the database already.
         # TODO: refactor this to be only regions available on the current template
-        self.fields['region'].choices = ((x.region, get_pretty_region_name(x.region))
+        self.fields['region'].choices = ((x.region, x.region)
                                          for x in self.Meta.model.objects.all().only('region'))
         try:
             self.fields['pk'].max_value = (self.Meta.model.objects.all().only('pk')
