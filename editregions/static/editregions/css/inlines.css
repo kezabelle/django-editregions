@@ -72,3 +72,20 @@
     background: url('../../admin/img/icon_changelink.gif') 0 0 no-repeat;
     padding-left: 12px;
 }
+
+.region-inline-progress-wrapper .waiting,
+.region-inline-progress-wrapper .success {
+    position: fixed;
+    top: 0;
+    right: 0;
+    padding: 1.2em 10px;
+    font-size: 11px;
+    text-align: right;
+    width: 100%;
+    display: none;
+}
+
+.region-inline-progress-wrapper .waiting {
+    background-color: #ffc;
+    color: #417690;
+}
