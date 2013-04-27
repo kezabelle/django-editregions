@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from django.core.exceptions import ValidationError
+from django.db.models import F
 from django.forms import Form, Media
 from django.forms.util import ErrorList
 from django.forms.fields import TypedChoiceField, IntegerField
@@ -101,18 +102,30 @@ class MovementForm(Form):
         """
         obj = self.cleaned_data['pk']
         obj.position = self.cleaned_data['position']
-        obj.region = self.cleaned_data['region']
+        region = obj.region
+        if self.cleaned_data.get('region', False):
+            region = self.cleaned_data['region']
 
-        chunks = get_chunks_for_region(content_type=obj.content_type,
-                                       content_id=obj.content_id,
-                                       region=obj.region)
-        for position, chunk in enumerate(chunks, start=1):
-            if position >= obj.position:
-                chunk.position = obj.position + position
-            else:
-                chunk.position = position
-            chunk.save()
+
+        next_chunks = get_chunks_for_region(content_type=obj.content_type,
+                                            content_id=obj.content_id,
+                                            region=region, position__gte=obj.position)
+        # push those that should be affected, down by 1 each. Including the one
+        # in the position we want!
+        next_chunks.update(position=F('position') + 1)
+        # we don't mind updating the `modified` field for this one, because
+        # we moved it explicitly, and we may've also changed region ...
         obj.save()
+
+        all_chunks = get_chunks_for_region(content_type=obj.content_type,
+                                           content_id=obj.content_id,
+                                           region=region)
+        # find all the existing objects and iterate over each of them,
+        # doing an update (rather than save, to avoid changing the `modified`
+        # field) if they're not in the correct position.
+        for new_position, obj in enumerate(all_chunks.iterator(), 1):
+            if obj.position != new_position:
+                get_chunks_for_region(pk=obj.pk).update(position=new_position)
         return obj
 
     class Meta:
