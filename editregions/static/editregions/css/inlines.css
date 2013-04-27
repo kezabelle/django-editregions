@@ -1,5 +1,6 @@
 .changelist-as-inline {
     overflow: hidden;
+    background: white url('../../admin/img/changelist-bg.gif') top right repeat-y !important;
 }
 
 .changelist-as-inline table {
