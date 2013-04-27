@@ -12,7 +12,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import (ObjectDoesNotExist, PermissionDenied,
                                     ImproperlyConfigured)
 from django.core.urlresolvers import reverse
-from django.http import Http404, HttpResponse, HttpResponseBadRequest
+from django.http import Http404, HttpResponse, HttpResponseBadRequest, QueryDict
 from django.shortcuts import render_to_response
 from django.template import RequestContext
 from django.template.loader import render_to_string
@@ -346,7 +346,8 @@ class EditRegionAdmin(ModelAdmin):
             # mutate the querystring and set some data onto it, which will
             # be passed to the get_changelist_filters method, as well as
             # being used to filter the ChangeList correctly.
-            new_get = request.GET.copy()
+            # new_get = request.GET.copy()
+            new_get = QueryDict('', mutable=True)
             new_get[REQUEST_VAR_CT] = get_content_type(obj).pk
             new_get[REQUEST_VAR_ID] = obj.pk
 
