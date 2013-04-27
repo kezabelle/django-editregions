@@ -5,6 +5,7 @@ from django.db.models.fields.related import ForeignKey
 from model_utils.managers import PassThroughManager, InheritanceManager
 from editregions.querying import EditRegionChunkQuerySet
 from editregions.text import (render_label, render_help, chunk_v, chunk_vplural)
+from editregions.utils.data import get_content_type
 from editregions.utils.regions import validate_region_name, get_pretty_region_name
 from helpfulfields.models import Generic, ChangeTracking
 
@@ -33,7 +34,7 @@ class EditRegionChunk(ChangeTracking, Generic):
         }
 
     def __unicode__(self):
-        ct = ContentType.objects.get_for_id(self.content_type_id).model_class()
+        ct = get_content_type(self.content_type_id).model_class()
         return u'attached to %(content_object)s via region "%(region)s"' % {
             'content_object': unicode(ct._meta.verbose_name),
             'region': self.region,

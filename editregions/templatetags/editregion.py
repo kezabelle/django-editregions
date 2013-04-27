@@ -10,6 +10,7 @@ from editregions.text import ttag_no_obj, ttag_not_model
 from editregions.utils.chunks import get_chunks_for_region, render_all_chunks
 from editregions.utils.regions import (region_comment, fake_context_payload,
                                        validate_region_name)
+from editregions.utils.data import get_content_type
 
 register = template.Library()
 
@@ -48,7 +49,7 @@ class EditRegionTag(Tag):
             })
 
         try:
-            content_type = ContentType.objects.get_for_model(content_object)
+            content_type = get_content_type(content_object)
         except ContentType.DoesNotExist:
             # the model doesn't exist in the content types table. I don'
             #  know why.

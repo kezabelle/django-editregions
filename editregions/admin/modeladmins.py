@@ -25,6 +25,7 @@ from django.utils.translation import ugettext_lazy as _
 from editregions.constants import (REQUEST_VAR_REGION, REQUEST_VAR_CT,
                                    REQUEST_VAR_ID)
 from editregions.utils.chunks import get_last_chunk_position
+from editregions.utils.data import get_modeladmin, get_content_type
 from editregions.utils.rendering import render_one_summary
 from editregions.admin.changelist import EditRegionChangeList
 from editregions.admin.forms import EditRegionInlineFormSet, MovementForm
@@ -257,7 +258,7 @@ class EditRegionAdmin(ModelAdmin):
             raise Http404(_('%(name)s object with primary key %(key)r does not exist.') % {'name': force_unicode(opts.verbose_name), 'key': escape(object_id)})
 
         try:
-            klass = self.admin_site._registry[obj.__class__]
+            klass = get_modeladmin(obj, self.admin_site.name)
             return klass.change_view(request, object_id, form_url, extra_context)
         except KeyError:
             raise Http404(_('SOMETHING BAD'))
@@ -325,13 +326,13 @@ class EditRegionAdmin(ModelAdmin):
         if obj is not None:
             # from here on out, we heavily reuse the other modeladmin
             # self.model should be EditRegionChunk
-            modeladmin = self.admin_site._registry[self.model]
+            modeladmin = get_modeladmin(self.model, self.admin_site.name)
 
             # mutate the querystring and set some data onto it, which will
             # be passed to the get_changelist_filters method, as well as
             # being used to filter the ChangeList correctly.
             new_get = request.GET.copy()
-            new_get[REQUEST_VAR_CT] = ContentType.objects.get_for_model(obj).pk
+            new_get[REQUEST_VAR_CT] = get_content_type(obj).pk
             new_get[REQUEST_VAR_ID] = obj.pk
 
             for region in self.get_regions_for_object(request, obj):
@@ -389,7 +390,7 @@ class EditRegionInline(GenericInlineModelAdmin):
         # dependency on adminlinks here to see if we're in a popup.
         # if we are, don't show any of these.
         if POPUP_QS_VAR not in request.REQUEST:
-            modeladmin = self.admin_site._registry[EditRegionChunk]
+            modeladmin = get_modeladmin(EditRegionChunk, self.admin_site.name)
             formset.region_changelists = modeladmin.get_changelists_for_object(request, obj)
         return formset
 
@@ -435,7 +436,7 @@ class ChunkAdmin(AdminlinksMixin):
         content type etc.
         """
         validate_region_name(request.GET.get('region'))
-        obj.content_type = ContentType.objects.get_for_id(request.GET.get('content_type'))
+        obj.content_type = get_content_type(request.GET.get('content_type'))
         obj.content_id = int(request.GET.get('content_id'))
         obj.region = str(request.GET.get('region'))
         #obj.subcontent_type = self.get_chunk_renderer_content_type()
@@ -538,7 +539,7 @@ class ChunkAdmin(AdminlinksMixin):
         This method allows us to add custom data to any success template displayed
         because we're in our admin popup.
         """
-        modeladmin = self.admin_site._registry[EditRegionChunk]
+        modeladmin = get_modeladmin(EditRegionChunk, self.admin_site.name)
         json_data = {
             'action': action,
             'primary_key': obj.pk,

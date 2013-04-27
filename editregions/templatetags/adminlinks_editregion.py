@@ -7,10 +7,10 @@ from django.contrib.contenttypes.models import ContentType
 from django.http import QueryDict
 from editregions.models import EditRegionChunk
 from editregions.admin.utils import AdminChunkWrapper
+from editregions.utils.data import get_content_type
 from editregions.utils.regions import (validate_region_name,
-                                       fake_context_payload,
                                        get_pretty_region_name)
-from adminlinks.templatetags.utils import (get_admin_site, context_passes_test,
+from adminlinks.templatetags.utils import (get_admin_site,
                                            _add_custom_link_to_context)
 from classytags.arguments import StringArgument, Argument
 from classytags.core import Options
@@ -59,7 +59,7 @@ class EditRegionToolbar(BaseAdminLink, InclusionTag):
             wrapped = AdminChunkWrapper(opts=EditRegionChunk._meta,
                                         namespace=site.name,
                                         content_id=obj.pk,
-                                        content_type=ContentType.objects.get_for_model(obj),
+                                        content_type=get_content_type(obj),
                                         region=region_name)
             wrapped.querydict.update(querystring)
             # replace the default values with our own, better ones :\
