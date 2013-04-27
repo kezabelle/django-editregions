@@ -1,8 +1,23 @@
 ;(function($, undefined) {
+    // for fancyiframe
+    var fancyiframe_links = '.results.ui-sortable tbody a';
+//    var $nominated_template = $('[rel="current_template"]').eq(0);
 
+    var on_popup_close = function(event, data) {
+            // no additional data was provided.
+        if (arguments.length === 1) {
+            return;
+        }
+        console.log(arguments);
+    };
+
+    // for dragging and dropping
     var handle = 'div.drag_handle';
     var sortable_targets = '.results';
-
+    var all_inlines = 'div.region-inline-wrapper';
+    var progress_wrapper = 'div.region-inline-progress-wrapper';
+    var wait = 'div.region-inline-progress-wrapper div.waiting';
+    var success = 'div.region-inline-progress-wrapper div.success';
     var start_region;
     var start_position;
     var target_region;
@@ -25,11 +40,17 @@
     };
 
     var update_remote_object = function(sortable, event, ui, id, position, region) {
-        alert('making ' + id + ' be at position ' + position + ' in "' + region + '"');
+        var $wait = $(wait);
+        var $old_progress = $(progress_wrapper);
+        $wait.show();
         var url = $(event.srcElement).attr('data-href');
-        var data = {pk: id, position: position, region: region}
+        var data = {pk: id, position: position, region: region};
         $.get(url, data, function(resp, status) {
-            alert('yay!');
+            $wait.fadeOut(750, function(evt) {
+                $old_progress.remove();
+            });
+            $(all_inlines).replaceWith(resp['html']);
+            ready_up();
         })
     };
 
@@ -79,7 +100,25 @@
 
     var ready_up = function() {
         $(sortable_targets).sortable(sortable_options);
+
+        $(document).bind('fancyiframe-close', on_popup_close);
+
+        if (window.location.search.indexOf('pop=') === -1 && window.location.search.indexOf('_popop=') === -1) {
+            $(fancyiframe_links).fancyiframe({
+                elements: {
+                    prefix: 'django-adminlinks',
+                    classes: 'adminlinks'
+                },
+                fades: {
+                    opacity: 0.90,
+                    overlayIn: 100,
+                    overlayOut: 250,
+                    wrapperIn: 0,
+                    wrapperOut: 250
+                }
+            });
+        }
     };
 
     $(document).ready(ready_up);
-})(jQuery);
+})(typeof django !== 'undefined' && django.jQuery || window.jQuery);
