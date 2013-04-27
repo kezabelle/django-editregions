@@ -60,7 +60,9 @@ class MovementForm(Form):
     """
     pk = IntegerField(min_value=1)
     position = IntegerField(min_value=1)
-    region = TypedChoiceField(coerce=unicode, choices=(),
+    #: if region is set, then we're probably in an inline'd changelist, and
+    #: we may be wanting to move region ...
+    region = TypedChoiceField(coerce=unicode, choices=(), required=False,
                               validators=[validate_region_name])
     obj_cache = None
 
