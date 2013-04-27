@@ -3,7 +3,7 @@ from django.core.exceptions import ValidationError
 from django.db.models import F
 from django.forms import Form, Media
 from django.forms.util import ErrorList
-from django.forms.fields import TypedChoiceField, IntegerField
+from django.forms.fields import IntegerField, CharField
 from editregions.models import EditRegionChunk
 from editregions.admin.utils import shared_media
 from editregions.utils.chunks import get_chunks_for_region
@@ -63,16 +63,12 @@ class MovementForm(Form):
     position = IntegerField(min_value=1)
     #: if region is set, then we're probably in an inline'd changelist, and
     #: we may be wanting to move region ...
-    region = TypedChoiceField(coerce=unicode, choices=(), required=False,
-                              validators=[validate_region_name])
+    region = CharField(required=False, validators=[validate_region_name])
     obj_cache = None
 
     def __init__(self, *args, **kwargs):
         super(MovementForm, self).__init__(*args, **kwargs)
-        # set the choices to be anything in the database already.
-        # TODO: refactor this to be only regions available on the current template
-        self.fields['region'].choices = ((x.region, x.region)
-                                         for x in self.Meta.model.objects.all().only('region'))
+
         try:
             self.fields['pk'].max_value = (self.Meta.model.objects.all().only('pk')
                                            .order_by('-pk')[0].pk)
