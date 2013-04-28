@@ -434,23 +434,17 @@ class ChunkAdmin(AdminlinksMixin):
         """
         return {}
 
+    @guard_querystring_m
     def save_model(self, request, obj, form, change):
         """
         Adds extra fields to the object so it's saved against the correct
         content type etc.
         """
-        validate_region_name(request.GET.get('region'))
-        obj.content_type = get_content_type(request.GET.get('content_type'))
-        obj.content_id = int(request.GET.get('content_id'))
-        obj.region = str(request.GET.get('region'))
-        #obj.subcontent_type = self.get_chunk_renderer_content_type()
-
-        # If the position is not set,
-        # it's easiest to assume it's going on the end of the chunk list.
+        obj.content_type_id = request.GET[REQUEST_VAR_CT]
+        obj.content_id = request.GET[REQUEST_VAR_ID]
+        obj.region = request.GET[REQUEST_VAR_REGION]
         if obj.position is None:
-            new_position = get_last_chunk_position(content_id=obj.content_id,
-                                                   content_type=obj.content_type, region_name=obj.region)
-            obj.position = new_position + 1
+            obj.position = 1
         super(ChunkAdmin, self).save_model(request, obj, form, change)
 
     def response_max(self, request, limit, found):
@@ -476,7 +470,8 @@ class ChunkAdmin(AdminlinksMixin):
         if we need to stop early because of a chunk limit being reached.
 
         """
-        available_chunks = get_enabled_chunks_for_region(str(request.GET.get('region')))
+        region = request.GET[REQUEST_VAR_REGION]
+        available_chunks = get_enabled_chunks_for_region(region)
         limit = available_chunks[self.model]
         # if there's a limit (no infinity set) ensure we haven't it it yet.
         if limit is not None:
