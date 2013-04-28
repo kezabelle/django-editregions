@@ -39,7 +39,8 @@ class EditRegionChunk(ChangeTracking, Generic):
         }
 
     def move(self, requested_position):
-        form = MovementForm(data={'move_to': requested_position, 'obj': self})
+        from editregions.admin.forms import MovementForm
+        form = MovementForm(data={'position': requested_position, 'pk': self.pk})
         if form.is_valid():
             return form.save()
         return form.errors
