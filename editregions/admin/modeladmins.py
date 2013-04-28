@@ -53,6 +53,7 @@ class EditRegionAdmin(ModelAdmin):
     save_as = False
     save_on_top = False
     actions = None
+    change_list_template = 'admin/editregions/change_list.html'
 
     list_display = [
         'get_position',
