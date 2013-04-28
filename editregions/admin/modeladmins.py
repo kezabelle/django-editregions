@@ -473,18 +473,20 @@ class ChunkAdmin(AdminlinksMixin):
         if we need to stop early because of a chunk limit being reached.
 
         """
-        region = request.GET[REQUEST_VAR_REGION]
         parent_id = request.GET[REQUEST_VAR_ID]
         parent_ct = request.GET[REQUEST_VAR_CT]
         parent_class = get_content_type(parent_ct).model_class()
         parent_obj = parent_class.objects.get(pk=parent_id)
         templates = parent_obj.get_edit_template_names()
         template = get_first_valid_template(templates)
-        available_chunks = get_enabled_chunks_for_region(template, region)
+        available_chunks = get_enabled_chunks_for_region(template,
+                                                         parent_obj.region)
         limit = available_chunks[self.model]
         # if there's a limit (no infinity set) ensure we haven't it it yet.
         if limit is not None:
-            already_created = self.model.objects.filter(**self._guarded).count()
+            filters = {'content_type': parent_ct, 'content_id': parent_id,
+                       'region': parent_obj.region}
+            already_created = self.model.objects.filter(**filters).count()
             if already_created >= limit:
                 return self.response_max(request, limit, already_created)
         return super(ChunkAdmin, self).add_view(request, *args, **kwargs)
