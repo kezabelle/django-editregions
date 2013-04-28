@@ -381,15 +381,19 @@ class EditRegionAdmin(ModelAdmin):
                 changelists.append(cl)
         return changelists
 
-    def render_changelists_for_object(self, request, obj):
-        return render_to_string(EditRegionInline.template, {
+    def changelists_as_context_data(self, request, obj):
+        return {
             'inline_admin_formset': {
                 'formset': {
                     'region_changelists': self.get_changelists_for_object(request,
                                                                           obj)
                 },
             },
-        })
+        }
+
+    def render_changelists_for_object(self, request, obj):
+        context = self.changelists_as_context_data(request, obj)
+        return render_to_string(EditRegionInline.template, context)
 
     @property
     def media(self):
