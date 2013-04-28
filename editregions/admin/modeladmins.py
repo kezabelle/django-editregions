@@ -548,12 +548,6 @@ class ChunkAdmin(AdminlinksMixin):
         templates.extend(super(ChunkAdmin, self).get_success_templates(request))
         return templates
 
-    def get_admin_wrapper_class(self):
-        """
-        .. testcase: TODO
-        """
-        return AdminChunkWrapper
-
     def get_response_extra_context(self, request, obj, action):
         """
         This method allows us to add custom data to any success template displayed
