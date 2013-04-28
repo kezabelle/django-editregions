@@ -1,12 +1,10 @@
 # -*- coding: utf-8 -*-
-from django.contrib.contenttypes.models import ContentType
 from django.db.models.fields import CharField, PositiveIntegerField
-from django.db.models.fields.related import ForeignKey
 from model_utils.managers import PassThroughManager, InheritanceManager
 from editregions.querying import EditRegionChunkQuerySet
-from editregions.text import (render_label, render_help, chunk_v, chunk_vplural)
+from editregions.text import chunk_v, chunk_vplural
 from editregions.utils.data import get_content_type
-from editregions.utils.regions import validate_region_name, get_pretty_region_name
+from editregions.utils.regions import validate_region_name
 from helpfulfields.models import Generic, ChangeTracking
 
 

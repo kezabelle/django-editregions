@@ -125,8 +125,6 @@ class AdminChunkWrapper(object):
         :param obj: The :class:`~editregions.models.EditRegionChunk` subclass
         :return:
         """
-
-
         self.opts = opts
         self.admin_namespace = namespace
 

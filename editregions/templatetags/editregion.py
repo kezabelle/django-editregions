@@ -28,9 +28,8 @@ class EditRegionTag(Tag):
     """
     model = EditRegionChunk
     options = Options(
-        StringArgument('name', required=True, resolve=False),
+        StringArgument('name', required=True, resolve=True),
         Argument('content_object', required=True, default=None, resolve=True),
-        #'as', StringArgument('varname', resolve=False, required=False),
     )
 
     def render_tag(self, context, name, content_object, **kwargs):

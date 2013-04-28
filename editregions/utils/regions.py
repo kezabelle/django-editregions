@@ -118,18 +118,3 @@ def get_enabled_chunks_for_region(template, name, settings=None):
     if len(resolved) == 0:
         logger.debug(u'No chunks types found for "%(region)s"' % {'region': name})
     return resolved
-
-
-def scan_template_for_named_regions(template_names, request_path='/'):
-    template_settings = ()
-    try:
-        for template_name in template_names:
-            if template_name in EDIT_REGIONS:
-                template_settings = EDIT_REGIONS[template_name]
-                break
-    except KeyError as e:
-        # template has not been set up :\
-        return []
-
-    # the template_settings should be a list of 3-tuples
-    return (x[0] for x in template_settings)
