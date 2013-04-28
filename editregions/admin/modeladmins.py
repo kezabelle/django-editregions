@@ -348,6 +348,10 @@ class EditRegionAdmin(ModelAdmin):
             # self.model should be EditRegionChunk
             modeladmin = get_modeladmin(self.model, self.admin_site.name)
 
+            # store the old get here, because it gets changed inside the region
+            # loops, which is a lossy process.
+            old_get = request.GET
+
             # mutate the querystring and set some data onto it, which will
             # be passed to the get_changelist_filters method, as well as
             # being used to filter the ChangeList correctly.
@@ -379,6 +383,9 @@ class EditRegionAdmin(ModelAdmin):
                                 list_max_show_all=100, list_editable=None,
                                 model_admin=self)
                 changelists.append(cl)
+            # as the internal request.GET may be lossy, we restore the original
+            # data here.
+            request.GET = old_get
         return changelists
 
     def changelists_as_context_data(self, request, obj):
