@@ -49,9 +49,25 @@ def validate_region_name(name):
 fallback_region_name_re = re.compile(r'[_\W]+')
 
 
+def get_first_valid_template(template_names, settings=None):
+    """
+    Given a bunch of templates (tuple, list), find the first one in the
+    settings dictionary. Assumes the incoming template list is ordered in
+    discovery-preference order.
+    """
+    settings = settings or EDIT_REGIONS
+    for template in template_names:
+        if template in settings:
+            return template
+    raise KeyError('None of the given templates is in the settings config.')
+
+
 def get_regions_for_template(template, settings=None):
-    if settings is None:
-        settings = EDIT_REGIONS
+    """
+    Given a single template (using get_first_valid_template()), find all
+    regions provided to it.
+    """
+    settings = settings or EDIT_REGIONS
     return [x[0] for x in settings[template]]
 
 
@@ -63,8 +79,7 @@ def get_pretty_region_name(template, name, settings=None):
 
     .. testcase: PrettyNameTestCase
     """
-    if settings is None:
-        settings = EDIT_REGIONS
+    settings = settings or EDIT_REGIONS
     try:
         return [x[1] for x in settings[template] if x[0] == name][0]
     except KeyError:
