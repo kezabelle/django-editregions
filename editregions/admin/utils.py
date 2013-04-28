@@ -75,7 +75,7 @@ def guard_querystring(function):
 
         # Content identifier can be anything as long as it isn't 0 and fits
         # within our DB storage max_length.
-        content_id = lookup.get(REQUEST_VAR_ID, '0')
+        content_id = str(lookup.get(REQUEST_VAR_ID, '0'))
         max_length = EditRegionChunk._meta.get_field_by_name(REQUEST_VAR_ID)[0].max_length
         if content_id != '0' and len(content_id) <= max_length:
             fields.update({REQUEST_VAR_ID: content_id})
