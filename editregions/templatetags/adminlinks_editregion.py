@@ -3,13 +3,12 @@ from __future__ import unicode_literals
 import logging
 from adminlinks.templatetags.adminlinks_buttons import BaseAdminLink
 from django import template
-from django.contrib.contenttypes.models import ContentType
 from django.http import QueryDict
 from editregions.models import EditRegionChunk
 from editregions.admin.utils import AdminChunkWrapper
 from editregions.utils.data import get_content_type
 from editregions.utils.regions import (validate_region_name,
-                                       get_pretty_region_name)
+                                       get_pretty_region_name, get_first_valid_template)
 from adminlinks.templatetags.utils import (get_admin_site,
                                            _add_custom_link_to_context)
 from classytags.arguments import StringArgument, Argument
@@ -63,8 +62,10 @@ class EditRegionToolbar(BaseAdminLink, InclusionTag):
                                         region=region_name)
             wrapped.querydict.update(querystring)
             # replace the default values with our own, better ones :\
+            templates = obj.get_edit_template_names()
+            template = get_first_valid_template(templates)
             link.update(link=wrapped.get_manage_url(),
-                        verbose_name=get_pretty_region_name(region_name))
+                        verbose_name=get_pretty_region_name(template, region_name))
         context.update(link)
         return context
 register.tag(name='render_adminlinks_editregion',

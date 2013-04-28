@@ -33,8 +33,8 @@ from editregions.admin.utils import (AdminChunkWrapper, shared_media,
 from editregions.models import EditRegionChunk
 from editregions.utils.regions import (get_enabled_chunks_for_region,
                                        get_pretty_region_name,
-                                       scan_template_for_named_regions,
-                                       validate_region_name)
+                                       get_first_valid_template,
+                                       get_regions_for_template)
 from editregions.text import (admin_chunktype_label, admin_summary_label,
                               admin_position_label, admin_modified_label,
                               region_v)
@@ -79,8 +79,9 @@ class EditRegionAdmin(ModelAdmin):
         :return: the region name
         :rtype: string
         """
-        pboj = obj.content_object.get_edit_template_names()[0]
-        return get_pretty_region_name(pboj, obj.region)
+        templates = obj.content_object.get_edit_template_names()
+        template = get_first_valid_template(templates)
+        return get_pretty_region_name(template, obj.region)
     get_region_name.short_description = region_v
 
     def get_subclass_type(self, obj):
@@ -288,7 +289,8 @@ class EditRegionAdmin(ModelAdmin):
         except ObjectDoesNotExist as e:
             return HttpResponseBadRequest('something went wrong')
 
-        template_name = parent_obj.get_edit_template_names()[0]
+        templates = parent_obj.get_edit_template_names()
+        template = get_first_valid_template(templates)
         ChunkWrapper = self.get_admin_wrapper_class()
         filters = (ChunkWrapper(**{
             'opts': x._meta,
@@ -296,7 +298,7 @@ class EditRegionAdmin(ModelAdmin):
             'region': region,
             'content_type': ct,
             'content_id': pk,
-        }) for x in get_enabled_chunks_for_region(template_name, region))
+        }) for x in get_enabled_chunks_for_region(template, region))
         return filters
 
     def get_admin_wrapper_class(self):
@@ -333,7 +335,8 @@ class EditRegionAdmin(ModelAdmin):
                                            'obj': obj.__class__,
                                            'cls': EditRegionInline
                                        })
-        return scan_template_for_named_regions(templates)
+        template = get_first_valid_template(templates)
+        return get_regions_for_template(template)
 
     def get_changelists_for_object(self, request, obj, **kwargs):
         changelists = []
@@ -471,7 +474,13 @@ class ChunkAdmin(AdminlinksMixin):
 
         """
         region = request.GET[REQUEST_VAR_REGION]
-        available_chunks = get_enabled_chunks_for_region(region)
+        parent_id = request.GET[REQUEST_VAR_ID]
+        parent_ct = request.GET[REQUEST_VAR_CT]
+        parent_class = get_content_type(parent_ct).model_class()
+        parent_obj = parent_class.objects.get(pk=parent_id)
+        templates = parent_obj.get_edit_template_names()
+        template = get_first_valid_template(templates)
+        available_chunks = get_enabled_chunks_for_region(template, region)
         limit = available_chunks[self.model]
         # if there's a limit (no infinity set) ensure we haven't it it yet.
         if limit is not None:

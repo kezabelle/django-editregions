@@ -8,10 +8,12 @@ from django.core.exceptions import ImproperlyConfigured
 from editregions.models import EditRegionChunk
 from editregions.text import ttag_no_obj, ttag_not_model
 from editregions.utils.chunks import get_chunks_for_region, render_all_chunks
-from editregions.utils.regions import validate_region_name
+from editregions.utils.regions import (validate_region_name,
+                                       get_first_valid_template)
 from editregions.utils.data import get_content_type
 
 register = template.Library()
+
 
 class EditRegionTag(Tag):
     """
@@ -63,7 +65,8 @@ class EditRegionTag(Tag):
 
         results = get_chunks_for_region(content_id=content_object.pk,
                                         content_type=content_type, region=name)
-        template = content_object.get_live_template_names()[0]
+        templates = content_object.get_live_template_names()
+        template = get_first_valid_template(templates)
         # if it's being used as an `as x` output tag,
         # return the unjoined list.
         #if kwargs.pop(self.varname_name):

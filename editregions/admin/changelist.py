@@ -3,7 +3,7 @@ from adminlinks.constants import POPUP_QS_VAR
 from editregions.constants import (REQUEST_VAR_REGION, REQUEST_VAR_CT,
                                    REQUEST_VAR_ID)
 from django.contrib.admin.views.main import ChangeList, IS_POPUP_VAR
-from editregions.utils.regions import get_pretty_region_name
+from editregions.utils.regions import get_pretty_region_name, get_first_valid_template
 from editregions.utils.data import get_content_type
 
 
@@ -29,7 +29,7 @@ class EditRegionChangeList(ChangeList):
 
         parent_obj = (get_content_type(self.parent_content_type).model_class()
                       .objects.get(pk=self.parent_content_id))
-        self.template = parent_obj.get_live_template_names()[0]
+        self.template = get_first_valid_template(parent_obj.get_live_template_names())
         try:
             self.get_region_display = get_pretty_region_name(self.template,
                                                              self.region)
