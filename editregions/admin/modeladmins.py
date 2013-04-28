@@ -422,7 +422,6 @@ class ChunkAdmin(AdminlinksMixin):
     save_as = False
     save_on_top = False
     exclude = ['content_type', 'content_id', 'region', 'position']
-    change_readonly_fields = ['created', 'modified']
 
     def get_model_perms(self, request, *args, **kwargs):
         """
@@ -434,21 +433,6 @@ class ChunkAdmin(AdminlinksMixin):
         :return: Empty dictionary
         """
         return {}
-
-    def get_readonly_fields(self, request, obj=None):
-        """
-        Shadow method for the default ModelAdmin.
-        Allows us to view created/modified fields as read only.
-
-        :param request: The WSGIRequest.
-        :param obj: the current object to be viewed.
-        :return:
-        """
-        if obj is not None:
-            extras = list(self.readonly_fields)
-            extras.extend(self.change_readonly_fields)
-            return extras
-        return self.readonly_fields
 
     def save_model(self, request, obj, form, change):
         """
