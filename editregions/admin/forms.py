@@ -90,12 +90,13 @@ class MovementForm(Form):
             cd['pk'] = None
             self._errors['pk'] = e.msg
 
+        # rather than raise an error for an invalid region, just set it
+        # back to whatever the region says it should be. Trust no-one.
         if 'region' in cd and cd['pk'] is not None:
             template = cd['pk'].content_object.get_edit_template_names()[0]
             regions = get_regions_for_template(template)
             if cd['region'] not in regions:
-                self._errors['region'] = 'Invalid region'
-
+                cd['region'] = cd['pk'].region
         return cd
 
     def save(self):
