@@ -25,6 +25,4 @@
     {% endfor %}
 {% endif %}
 </div>
-<div class="region-inline-progress-wrapper">
-    <div class="waiting">Please wait, saving changes &hellip;</div>
-</div>
+{% include "admin/editregions/change_list_progress.html" with x=1 only %}
