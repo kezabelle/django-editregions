@@ -105,6 +105,7 @@ class MovementForm(Form):
         Updates the current object, and all other objects in the same region.
         """
         obj = self.cleaned_data['pk']
+        old_position = obj.position
         obj.position = self.cleaned_data['position']
         old_region = obj.region
         new_region = self.cleaned_data.get('region', obj.region)
@@ -126,7 +127,8 @@ class MovementForm(Form):
             obj.region = new_region
             old_chunks = get_chunks_for_region(content_type=obj.content_type,
                                                content_id=obj.content_id,
-                                               region=old_region)
+                                               region=old_region,
+                                               position__gte=old_position)
 
         # we don't mind updating the `modified` field for this one, because
         # we moved it explicitly, and we may've also changed region ...
@@ -143,11 +145,9 @@ class MovementForm(Form):
                 get_chunks_for_region(pk=obj.pk).update(position=new_position)
 
         # having moved region, update the old one to fix the contiguous
-        # positions.
+        # positions, hopefully just by shifting them all up 1.
         if old_chunks is not None:
-            for new_position, obj in enumerate(old_chunks.iterator(), 1):
-                if obj.position != new_position:
-                    get_chunks_for_region(pk=obj.pk).update(position=new_position)
+            old_chunks.update(position=F('position') - 1)
         return obj
 
     def change_message(self):
