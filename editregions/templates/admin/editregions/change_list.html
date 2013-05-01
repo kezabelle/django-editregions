@@ -1,8 +1,11 @@
 {% extends "admin/change_list.html" %}
 {% load i18n %}
-{% block object-tools %}{% endblock %}
+{% block extrastyle %}
+{{ media.css }}
+{% endblock extrastyle %}
 
-{% block filters %}
-    {% include "admin/editregions/change_list_filters.html" %}
-    {% include "admin/editregions/change_list_progress.html" with x=1 only %}
-{% endblock %}
+{% block content %}
+    <div id="content-main">
+    {% include "admin/editregions/edit_inline/none.html" %}
+    </div>
+{% endblock content %}

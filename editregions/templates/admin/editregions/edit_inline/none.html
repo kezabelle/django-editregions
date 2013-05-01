@@ -1,7 +1,7 @@
 <div class="region-inline-wrapper">
     {% load editregion_result_list %}
 {% load i18n %}
-{% if is_popup %}
+{% if is_popup and not allow_editregions %}
     <div class="already-in-popup">
         <span>{% trans "Unable to edit regions while inside a popup window" %}</span>
     </div>

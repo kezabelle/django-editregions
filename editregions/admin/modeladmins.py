@@ -2,6 +2,8 @@
 from __future__ import unicode_literals
 from functools import update_wrapper
 import logging
+from django.contrib.admin.views.main import IS_POPUP_VAR
+from django.template.response import TemplateResponse
 from adminlinks.admin import AdminlinksMixin
 from adminlinks.constants import POPUP_QS_VAR
 from django.contrib import admin
@@ -219,29 +221,6 @@ class EditRegionAdmin(ModelAdmin):
                                       mimetype='application/json')
 
     def queryset(self, *args, **kwargs):
-
-        # # try to find the request in the arguments.
-        # request = None
-        # if len(args) > 0:
-        #     request = args[0]
-        # elif 'request' in kwargs:
-        #     request = kwargs['request']
-        #
-        # # try to pull the region out of the request
-        # region = None
-        # if request is not None:
-        #     region = request.GET.get(REQUEST_VAR_REGION, None)
-        #
-        # # try and limit the number of LEFT OUTER JOINs we do using the
-        # # inheritance query manager. This is going to be problematic post 1.6
-        # # probably, if using grandchildren.
-        # filtered_subclasses = ()
-        # if region is not None:
-        #     available_chunks = get_enabled_chunks_for_region('pages/default.html', region)
-        #     filtered_subclasses = (x._meta.module_name
-        #                            for x in available_chunks.keys())
-
-        # this is the important part, where we get the real queryset.
         qs = get_chunks_for_region()
         ordering = self.get_ordering(*args, **kwargs)
         if ordering:
@@ -307,9 +286,31 @@ class EditRegionAdmin(ModelAdmin):
 
     @guard_querystring_m
     def changelist_view(self, request, extra_context=None):
+        parent_ct = request.GET[REQUEST_VAR_CT]
+        parent_id = request.GET[REQUEST_VAR_ID]
+        obj = get_content_type(parent_ct).model_class().objects.get(pk=parent_id)
         extra_context = extra_context or {}
-        extra_context['available_chunks'] = self.get_changelist_filters(request.GET)
-        return super(EditRegionAdmin, self).changelist_view(request, extra_context)
+        context = self.changelists_as_context_data(request, obj)
+        opts = self.model._meta
+        app_label = opts.app_label
+        context.update({
+            'module_name': force_unicode(opts.verbose_name_plural),
+            'title': _('Select %s to change') % force_unicode(opts.verbose_name),
+            'is_popup': IS_POPUP_VAR in request.GET,
+            'allow_editregions': True,
+            'media': self.media,
+            'app_label': app_label,
+            'cl': {
+                'opts': {
+                    'app_label': app_label,
+                    'verbose_name_plural': opts.verbose_name_plural,
+                }
+            }
+        })
+        context.update(extra_context or {})
+        return TemplateResponse(request, self.change_list_template,
+                                context, current_app=self.admin_site.name)
+        # return super(EditRegionAdmin, self).changelist_view(request, extra_context)
 
     def get_model_perms(self, request):
         return {
