@@ -62,7 +62,7 @@
         rows.each(function (i) {
             var target_class = (i % 2) + 1;
             $(this).removeClass('row1 row2').addClass('row'+ target_class);
-            //$('td:nth-child(1)', this).html(i+1);
+            $('td:nth-child(1)', this).html(i+1);
         });
 
         var obj_id = ui.item.find(handle).eq(0).attr('data-pk');
