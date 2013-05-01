@@ -1,6 +1,6 @@
 ;(function($, undefined) {
     // for fancyiframe
-    var fancyiframe_links = '.results.ui-sortable tbody a';
+    var fancyiframe_links = '.results.ui-sortable tbody a, .changelist-filter .add-chunks__available a';
 //    var $nominated_template = $('[rel="current_template"]').eq(0);
 
     var on_popup_close = function(event, data) {
