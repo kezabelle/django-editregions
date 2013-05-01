@@ -488,17 +488,18 @@ class ChunkAdmin(AdminlinksMixin):
         """
         parent_id = request.GET[REQUEST_VAR_ID]
         parent_ct = request.GET[REQUEST_VAR_CT]
+        region = request.GET[REQUEST_VAR_REGION]
         parent_class = get_content_type(parent_ct).model_class()
         parent_obj = parent_class.objects.get(pk=parent_id)
         templates = parent_obj.get_edit_template_names()
         template = get_first_valid_template(templates)
         available_chunks = get_enabled_chunks_for_region(template,
-                                                         parent_obj.region)
+                                                         region)
         limit = available_chunks[self.model]
         # if there's a limit (no infinity set) ensure we haven't it it yet.
         if limit is not None:
             filters = {'content_type': parent_ct, 'content_id': parent_id,
-                       'region': parent_obj.region}
+                       'region': region}
             already_created = self.model.objects.filter(**filters).count()
             if already_created >= limit:
                 return self.response_max(request, limit, already_created)
