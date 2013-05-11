@@ -61,7 +61,9 @@ def get_first_valid_template(template_names, settings=None):
     for template in template_names:
         if template in settings:
             return template
-    raise KeyError('None of the given templates is in the settings config.')
+    tried_templates = ', '.join(template_names)
+    msg = 'None of the given templates (%s) is in the settings config.' % tried_templates
+    raise KeyError(msg)
 
 
 def get_regions_for_template(template, settings=None):
