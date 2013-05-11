@@ -7,8 +7,12 @@
             // no additional data was provided.
         if (arguments.length === 1) {
             return;
-        }
-        console.log(arguments);
+        };
+
+        if (data.html !== void(0) && data.html !== '') {
+            $(all_inlines).replaceWith(data.html);
+            ready_up();
+        };
     };
 
     // for dragging and dropping
