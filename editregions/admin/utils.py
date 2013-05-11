@@ -159,7 +159,7 @@ class AdminChunkWrapper(object):
         # if the object already exists in the database, we're probably safe
         # to assume it's data is the most trustworthy.
         if self.exists:
-            self.content_type = self.chunk.content_type.pk
+            self.content_type = self.chunk.content_type_id
             self.content_id = self.chunk.content_id
             self.region = self.chunk.region
 
