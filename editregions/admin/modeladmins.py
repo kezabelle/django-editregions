@@ -173,6 +173,17 @@ class EditRegionAdmin(ModelAdmin):
 
     # We're finished our list_display fields here.
 
+    def get_model_perms(self, request, *args, **kwargs):
+        """
+        Shadow method for the default ModelAdmin. Allows us to hide stufff.
+        By using an empty dictionary, permissions still work, but chunk administration
+        views are hidden from the default AdminSite index.
+
+        :param request: The WSGIRequest.
+        :return: Empty dictionary
+        """
+        return {}
+
     def get_custom_urls(self):
         # why this isn't a separate method in Django, I don't know.
         from django.conf.urls import patterns, url
@@ -310,14 +321,6 @@ class EditRegionAdmin(ModelAdmin):
         context.update(extra_context or {})
         return TemplateResponse(request, self.change_list_template,
                                 context, current_app=self.admin_site.name)
-        # return super(EditRegionAdmin, self).changelist_view(request, extra_context)
-
-    def get_model_perms(self, request):
-        return {
-            'add': True,
-            'change': True,
-            'delete': True,
-        }
 
     def get_regions_for_object(self, request, obj, **kwargs):
         """
