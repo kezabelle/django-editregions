@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import logging
+from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
 from django.db.models.loading import get_model
 from django.utils.datastructures import SortedDict
@@ -110,7 +111,10 @@ def get_enabled_chunks_for_region(template, name, settings=None):
         chunktypes = [x[2] for x in settings[template] if x[0] == name][0]
         # Replace the dotted app_label/model_name combo with the actual model.
         for chunk, count in chunktypes.items():
-            model = get_model_class(chunk)
+            try:
+                model = get_model_class(chunk)
+            except ContentType.DoesNotExist as e:
+                model = None
             # Once we have a model and there's no stupid limit set,
             # add it to our new data structure.
             # Note that while None > 0 appears correct,
