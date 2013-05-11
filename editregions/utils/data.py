@@ -35,8 +35,18 @@ def get_model_class(obj):
 def get_content_type(input):
     if hasattr(input, '_meta'):
         return ContentType.objects.get_for_model(input)
-    else:
-        return ContentType.objects.get_for_id(input)
+
+    if isinstance(input, basestring) and input.count('.') == 1:
+        parts = tuple(input.split('.')[0:2])
+        try:
+            return ContentType.objects.get_by_natural_key(app_label=parts[0],
+                                                          model=parts[1])
+        except ContentType.DoesNotExist as e:
+            # give a clearer indication wtf went wrong.
+            msg = 'Unable to find ContentType for app: %s, model: %s' % parts
+            e.args = (msg,) + e.args[1:]
+            raise
+    return ContentType.objects.get_for_id(input)
 
 
 def get_modeladmin(obj, admin_namespace='admin'):
