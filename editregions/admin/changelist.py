@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from django.core.exceptions import ImproperlyConfigured
 from adminlinks.constants import POPUP_QS_VAR
 from editregions.constants import (REQUEST_VAR_REGION, REQUEST_VAR_CT,
                                    REQUEST_VAR_ID)
@@ -29,7 +30,16 @@ class EditRegionChangeList(ChangeList):
 
         parent_obj = (get_content_type(self.parent_content_type).model_class()
                       .objects.get(pk=self.parent_content_id))
-        self.template = get_first_valid_template(parent_obj.get_live_template_names())
+        try:
+            self.template = get_first_valid_template(parent_obj.get_live_template_names())
+        except AttributeError as e:
+            raise ImproperlyConfigured('%(obj)r must have a '
+                                   '`get_live_template_names` method to '
+                                   'be used with %(cls)r' % {
+                                       'obj': parent_obj.__class__,
+                                       'cls': EditRegionChangeList
+                                   })
+
         try:
             self.get_region_display = get_pretty_region_name(self.template,
                                                              self.region)
