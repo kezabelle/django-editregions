@@ -27,7 +27,7 @@ class EditRegionToolbar(BaseAdminLink, InclusionTag):
 
     options = Options(
         BaseAdminLink.base_options[0],  # obj
-        StringArgument('region_name', required=True, resolve=False),
+        StringArgument('region_name', required=True, resolve=True),
         StringArgument('admin_site', required=False, default='admin'),
         Argument('querystring', required=False, default='pop=1'),
     )
