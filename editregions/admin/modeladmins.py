@@ -530,12 +530,19 @@ class ChunkAdmin(AdminlinksMixin):
         because we're in our admin popup.
         """
         modeladmin = get_modeladmin(EditRegionChunk, self.admin_site.name)
-        json_data = {
-            'action': action,
-            'primary_key': obj.pk,
-            'html': modeladmin.render_changelists_for_object(request, obj)
+        ctx_data = {
+            'action': {
+                'add': action == 'add',
+                'change': action == 'change',
+                'delete':  action == 'delete',
+            },
+            'object': {
+                'pk': obj.pk,
+                'id': obj.pk,
+            },
+            'html': modeladmin.render_changelists_for_object(request, obj.content_object)
         }
-        return simplejson.dumps(json_data)
+        return ctx_data
 
     def get_response_add_context(self, request, obj):
         return self.get_response_extra_context(request, obj, 'add')
