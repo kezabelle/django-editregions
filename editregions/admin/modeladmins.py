@@ -524,37 +524,6 @@ class ChunkAdmin(AdminlinksMixin):
         """
         return super(ChunkAdmin, self).delete_view(request, *args, **kwargs)
 
-    def get_success_templates(self, request):
-        """Override the AdminlinksMixin equivalent, to provide per-model template lookups.
-
-        Forces the attempted loading of the following:
-            - a template for this model.
-            - a template for this app.
-            - a template for any parent model.
-            - a template for any parent app.
-            - a guaranteed to exist template (the editregions success file)
-
-        :param request: The WSGIRequest
-        :return: list of strings representing templates to look for.
-        """
-        app_label = self.model._meta.app_label
-        model_name = self.model._meta.object_name.lower()
-        any_parents = self.model._meta.parents.keys()
-        templates = [
-            "admin/editregions/%s/%s/success.html" % (app_label, model_name),
-            "admin/editregions/%s/success.html" % app_label,
-        ]
-        for parent in any_parents:
-            app_label = parent._meta.app_label
-            model_name = parent._meta.object_name.lower()
-            templates.extend([
-                "admin/editregions/%s/%s/success.html" % (app_label, model_name),
-                "admin/editregions/%s/success.html" % app_label,
-            ])
-        templates.extend(['admin/editregions/success.html'])
-        templates.extend(super(ChunkAdmin, self).get_success_templates(request))
-        return templates
-
     def get_response_extra_context(self, request, obj, action):
         """
         This method allows us to add custom data to any success template displayed
