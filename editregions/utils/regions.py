@@ -7,6 +7,7 @@ import re
 from django.core.validators import RegexValidator, slug_re, MaxLengthValidator
 from django.utils.translation import ugettext_lazy as _
 from editregions.constants import EDIT_REGIONS
+from editregions.utils.data import get_model_class
 
 logger = logging.getLogger(__name__)
 
@@ -109,8 +110,7 @@ def get_enabled_chunks_for_region(template, name, settings=None):
         chunktypes = [x[2] for x in settings[template] if x[0] == name][0]
         # Replace the dotted app_label/model_name combo with the actual model.
         for chunk, count in chunktypes.items():
-            chunked = chunk.split('.')[0:2]
-            model = get_model(*chunked)
+            model = get_model_class(chunk)
             # Once we have a model and there's no stupid limit set,
             # add it to our new data structure.
             # Note that while None > 0 appears correct,
