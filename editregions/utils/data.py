@@ -32,9 +32,7 @@ def get_model_class(obj):
     if not hasattr(obj, '_meta'):
         raise AttributeError('Not a model object')
 
-    app, model = obj._meta.app_label, obj._meta.module_name
-    model = get_model(app_label=app, model_name=model, only_installed=True)
-    return model
+    return get_content_type(obj).model_class()
 
 
 def get_content_type(input):
