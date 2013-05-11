@@ -460,7 +460,10 @@ class ChunkAdmin(AdminlinksMixin):
         obj.content_id = request.GET[REQUEST_VAR_ID]
         obj.region = request.GET[REQUEST_VAR_REGION]
         if obj.position is None:
-            obj.position = 1
+            found = get_chunks_for_region(content_type=obj.content_type,
+                                          content_id=obj.content_id,
+                                          region=obj.region).count()
+            obj.position = found+1
         super(ChunkAdmin, self).save_model(request, obj, form, change)
 
     def response_max(self, request, limit, found):
