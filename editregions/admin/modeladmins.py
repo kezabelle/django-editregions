@@ -26,7 +26,7 @@ from django.utils.translation import ugettext_lazy as _
 from editregions.constants import (REQUEST_VAR_REGION, REQUEST_VAR_CT,
                                    REQUEST_VAR_ID)
 from editregions.utils.chunks import get_chunks_for_region
-from editregions.utils.data import get_modeladmin, get_content_type
+from editregions.utils.data import get_modeladmin, get_content_type, get_model_class
 from editregions.utils.rendering import render_one_summary
 from editregions.admin.changelist import EditRegionChangeList
 from editregions.admin.forms import EditRegionInlineFormSet, MovementForm
@@ -265,7 +265,7 @@ class EditRegionAdmin(ModelAdmin):
         ct = request_querydict[REQUEST_VAR_CT]
         pk = request_querydict[REQUEST_VAR_ID]
         try:
-            parent_obj = get_content_type(ct).model_class().objects.get(pk=pk)
+            parent_obj = get_model_class(ct).objects.get(pk=pk)
         except ObjectDoesNotExist as e:
             return HttpResponseBadRequest('something went wrong')
 
@@ -288,7 +288,7 @@ class EditRegionAdmin(ModelAdmin):
     def changelist_view(self, request, extra_context=None):
         parent_ct = request.GET[REQUEST_VAR_CT]
         parent_id = request.GET[REQUEST_VAR_ID]
-        obj = get_content_type(parent_ct).model_class().objects.get(pk=parent_id)
+        obj = get_model_class(parent_ct).objects.get(pk=parent_id)
         extra_context = extra_context or {}
         context = self.changelists_as_context_data(request, obj)
         opts = self.model._meta

@@ -29,9 +29,6 @@ def get_model_class(obj):
     :param obj: a model instance
     :return: an installed model class, or None.
     """
-    if not hasattr(obj, '_meta'):
-        raise AttributeError('Not a model object')
-
     return get_content_type(obj).model_class()
 
 
