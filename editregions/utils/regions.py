@@ -56,6 +56,8 @@ def get_first_valid_template(template_names, settings=None):
     discovery-preference order.
     """
     settings = settings or EDIT_REGIONS
+    if isinstance(template_names, basestring):
+        template_names = (template_names,)
     for template in template_names:
         if template in settings:
             return template
