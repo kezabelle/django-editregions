@@ -6,7 +6,7 @@ from django.db.models.fields.related import OneToOneField
 from editregions.utils.rendering import render_one_chunk
 from editregions.models import EditRegionChunk
 from editregions.utils.regions import get_enabled_chunks_for_region
-from editregions.utils.data import convert_context_to_dict, get_content_type
+from editregions.utils.data import convert_context_to_dict, get_content_type, get_model_class
 
 logger = logging.getLogger(__name__)
 
@@ -108,8 +108,7 @@ def render_all_chunks(template, context, region, found_chunks):
 
     # filter our chunks which are no long enabled ...
     # this'll hit the ContentType cache after a while ...
-    to_render = [x for x in found_chunks
-                 if get_content_type(x).model_class() in enabled]
+    to_render = [x for x in found_chunks if get_model_class(x) in enabled]
     # output = []
 
     # In the future, it'd be nice to be able to just use the existing context and
