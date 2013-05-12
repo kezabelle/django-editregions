@@ -453,6 +453,15 @@ class ChunkAdmin(AdminlinksMixin):
         """
         return {}
 
+    def log_addition(self, request, object):
+        super(ChunkAdmin, self).log_addition(request, object)
+
+    def log_change(self, request, object, message):
+        super(ChunkAdmin, self).log_change(request, object, message)
+
+    def log_deletion(self, request, object, object_repr):
+        super(ChunkAdmin, self).log_deletion(request, object, object_repr)
+
     @guard_querystring_m
     def save_model(self, request, obj, form, change):
         """
