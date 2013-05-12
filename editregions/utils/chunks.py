@@ -35,6 +35,16 @@ def get_chunks_for_region(**base_filters):
     return EditRegionChunk.polymorphs.filter(**base_filters).select_subclasses()
 
 
+def get_related_names_for_enabled_chunks(enabled_chunks):
+    """
+    Accepts a list of regions out of get_enabled_chunks_for_region and attempts
+    to calculate back the related name to EditRegionChunk, for use in
+    select_subclasses.
+    """
+    return [x._meta.get_ancestor_link(EditRegionChunk).related_query_name()
+                        for x in enabled_chunks.keys()]
+
+
 def chunk_iteration_context(index, value, iterable):
     """
     Each time we render a chunk, we should also inject an additional set of
@@ -106,6 +116,7 @@ def render_all_chunks(template, context, region, found_chunks):
     """
     enabled = get_enabled_chunks_for_region(template=template, name=region)
 
+    enabled_relateds = get_related_names_for_enabled_chunks(enabled)
     # filter our chunks which are no long enabled ...
     # this'll hit the ContentType cache after a while ...
     to_render = [x for x in found_chunks if get_model_class(x) in enabled]
