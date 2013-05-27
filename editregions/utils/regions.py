@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 import logging
-from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
 from django.db.models.loading import get_model
 from django.utils.datastructures import SortedDict
@@ -8,7 +7,6 @@ import re
 from django.core.validators import RegexValidator, slug_re, MaxLengthValidator
 from django.utils.translation import ugettext_lazy as _
 from editregions.constants import EDIT_REGIONS
-from editregions.utils.data import get_model_class
 
 logger = logging.getLogger(__name__)
 
