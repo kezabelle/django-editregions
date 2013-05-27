@@ -6,7 +6,11 @@
         <h3>{{ chunk_set.grouper|capfirst }}</h3>
         <ul class="add-chunks__available">
             {% for chunk in chunk_set.list %}
-                <li><a href="{{ chunk.get_absolute_url }}">{{ chunk.label|capfirst }}</a></li>
+                <li>
+                    {% if chunk.get_absolute_url %}<a href="{{ chunk.get_absolute_url }}">{% endif %}
+                        {{ chunk.label|capfirst }}
+                    {% if chunk.get_absolute_url %}</a>{% endif %}
+                </li>
             {% endfor %}
         </ul>
     {% empty %}
