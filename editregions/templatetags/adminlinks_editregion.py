@@ -29,7 +29,7 @@ class EditRegionToolbar(BaseAdminLink, InclusionTag):
         BaseAdminLink.base_options[0],  # obj
         StringArgument('region_name', required=True, resolve=True),
         StringArgument('admin_site', required=False, default='admin'),
-        Argument('querystring', required=False, default='pop=1'),
+        Argument('querystring', required=False, default=''),
     )
 
     def get_context(self, context, obj, region_name, admin_site, querystring):
