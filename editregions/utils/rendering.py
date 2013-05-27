@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from django.core.exceptions import ImproperlyConfigured
+from editregions.utils.data import get_modeladmin
 
 
 def render_one_chunk(context, chunk, renderer=None):
@@ -7,22 +8,15 @@ def render_one_chunk(context, chunk, renderer=None):
     # helpful error messages than one might otherwise get (AttributeError for
     # no render_into_region, TypeError for calling render_into_region because of
     # it being unbound method (got RequestContext instance instead))
-    if not hasattr(chunk, 'render_into_region'):
-        raise ImproperlyConfigured('%r does not have a `render_into_region` method' % chunk)
-    renderer = getattr(chunk, 'render_into_region')
-    if not callable(renderer):
-        raise ImproperlyConfigured('%r is not callable' % renderer)
-    return renderer(context)
+    if renderer is None:
+        renderer = get_modeladmin(chunk)
+    if not hasattr(renderer, 'render_into_region'):
+        raise ImproperlyConfigured('%r does not have a `render_into_region` method' % renderer.__class__)
+    return renderer.render_into_region(context=context, obj=chunk)
 
 
 def render_one_summary(context, chunk, renderer=None):
-
-    if hasattr(chunk, 'render_summary'):
-        summary = getattr(chunk, 'render_summary')
-        if not callable(summary):
-            raise ImproperlyConfigured('%r is not callable' % summary)
-        return summary(context)
-
-    # if we don't have a render summary,
-    # just show the chunk.
+    renderer = get_modeladmin(chunk)
+    if hasattr(renderer, 'render_into_summary'):
+        return renderer.render_into_summary(context=context, obj=chunk)
     return render_one_chunk(context, chunk, renderer)
