@@ -3,10 +3,11 @@ import logging
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ImproperlyConfigured
 from django.db.models.fields.related import OneToOneField
+from adminlinks.templatetags.utils import convert_context_to_dict
 from editregions.utils.rendering import render_one_chunk
 from editregions.models import EditRegionChunk
 from editregions.utils.regions import get_enabled_chunks_for_region
-from editregions.utils.data import convert_context_to_dict, get_content_type, get_model_class
+from editregions.utils.data import get_content_type, get_model_class
 
 logger = logging.getLogger(__name__)
 

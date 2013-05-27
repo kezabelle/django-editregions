@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 from django.contrib.contenttypes.models import ContentType
 from adminlinks.templatetags.utils import get_admin_site
-from django.db.models import get_model
 
 
 def queryset_to_attr_map(queryset, attr):
@@ -10,15 +9,6 @@ def queryset_to_attr_map(queryset, attr):
         result = getattr(obj, attr)
         output[result] = obj
     return output
-
-
-def convert_context_to_dict(context):
-    dicts = context.dicts
-    out = {}
-    for d in dicts:
-        for key, value in d.items():
-            out[key] = value
-    return out
 
 
 def get_model_class(obj):
