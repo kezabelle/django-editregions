@@ -86,7 +86,10 @@ def get_pretty_region_name(template, name, settings=None):
     settings = settings or EDIT_REGIONS
     try:
         return [x[1] for x in settings[template] if x[0] == name][0]
-    except KeyError:
+    except (KeyError, IndexError) as e:
+        # KeyError = settings['whatever'] wasn't in the settings conf
+        # IndexError = doing [0] on the list didn't yield anything; so no valid
+        # region was found.
         logbits = {'region': name}
         logger.debug(u'No declared name for "%(region)s" in your EDIT_REGIONS '
                      u'setting, falling back to using a regular expression' % logbits)
