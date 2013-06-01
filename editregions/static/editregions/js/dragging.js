@@ -109,7 +109,7 @@
 
         $(document).bind('fancyiframe-close', on_popup_close);
 
-        if (parent === void(0) && parent.window === null) {
+        if (window.frameElement === null) {
             $(fancyiframe_links).fancyiframe({
                 elements: {
                     prefix: 'django-adminlinks',
