@@ -295,7 +295,6 @@ class EditRegionAdmin(ModelAdmin):
     def get_admin_wrapper_class(self):
         return AdminChunkWrapper
 
-    @guard_querystring_m
     def changelist_view(self, request, extra_context=None):
         parent_ct = request.GET[REQUEST_VAR_CT]
         parent_id = request.GET[REQUEST_VAR_ID]
