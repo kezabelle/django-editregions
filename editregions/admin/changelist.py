@@ -65,6 +65,6 @@ class EditRegionChangeList(ChangeList):
                             content_id=self.parent_content_id,
                             content_type=self.parent_content_type,
                             region=self.region)
-        if not self.is_popup and POPUP_QS_VAR not in wrapped_obj.querydict:
-            wrapped_obj.querydict.update({POPUP_QS_VAR: 1})
+        # if not self.is_popup and POPUP_QS_VAR not in wrapped_obj.querydict:
+        #     wrapped_obj.querydict.update({POPUP_QS_VAR: 1})
         return wrapped_obj.get_absolute_url()
