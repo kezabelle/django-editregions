@@ -428,11 +428,18 @@ class EditRegionInline(GenericInlineModelAdmin):
         # sidestep validation which wants to inherit from BaseModelFormSet
         self.formset = EditRegionInlineFormSet
         formset = super(EditRegionInline, self).get_formset(request, obj, **kwargs)
-        # dependency on adminlinks here to see if we're in a popup.
-        # if we are, don't show any of these.
-        if POPUP_QS_VAR not in request.REQUEST:
-            modeladmin = get_modeladmin(EditRegionChunk, self.admin_site.name)
-            formset.region_changelists = modeladmin.get_changelists_for_object(request, obj)
+        modeladmin = get_modeladmin(EditRegionChunk, self.admin_site.name)
+        if obj is not None:
+            # As I won't remember why we have to do this, later, this is the
+            # traceback which not doing it caused:
+            # https://gist.github.com/kezabelle/40653a0ad1ffd8fc77ba
+            # Basically, the template gets changed half way through the request
+            # because of the different points at which objects are saved.
+            # By not relying on the new instance (with the changed template)
+            # instead using the one in the DB (with the old template) we can
+            # ensure the regions line up correctly.
+            obj = obj.__class__.objects.get(pk=obj.pk)
+        formset.region_changelists = modeladmin.get_changelists_for_object(request, obj)
         return formset
 
 
