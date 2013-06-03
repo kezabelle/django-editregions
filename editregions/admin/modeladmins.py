@@ -163,9 +163,12 @@ class EditRegionAdmin(ModelAdmin):
         }
         url_to_move2 = reverse(url_to_move)
         html = ('<div class="drag_handle" data-pk="%(pk)s" data-href="%(url)s">'
-                '</div>' % {
+                '</div>&nbsp;<a class="delete_handle" href="%(delete_url)s">'
+                '%(delete)s</a>' % {
                     'pk': obj.pk,
                     'url': url_to_move2,
+                    'delete_url': '#',
+                    'delete': _('Delete'),
                 })
         return html
     get_object_tools.allow_tags = True
