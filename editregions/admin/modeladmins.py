@@ -558,7 +558,7 @@ class ChunkAdmin(AdminlinksMixin):
     def get_response_add_context(self, request, obj):
         return self.get_response_extra_context(request, obj, 'add')
 
-    def get_response_add_context(self, request, obj):
+    def get_response_change_context(self, request, obj):
         return self.get_response_extra_context(request, obj, 'change')
 
     def get_response_delete_context(self, request, obj_id):
