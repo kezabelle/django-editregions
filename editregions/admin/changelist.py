@@ -31,7 +31,7 @@ class EditRegionChangeList(ChangeList):
         parent_obj = (get_content_type(self.parent_content_type).model_class()
                       .objects.get(pk=self.parent_content_id))
         try:
-            self.template = get_first_valid_template(parent_obj.get_live_template_names())
+            self.template = get_first_valid_template(parent_obj.get_edit_template_names())
         except AttributeError as e:
             raise ImproperlyConfigured('%(obj)r must have a '
                                    '`get_live_template_names` method to '
