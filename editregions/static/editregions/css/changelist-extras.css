@@ -23,3 +23,12 @@ django-feincms
     -ms-filter:"progid:DXImageTransform.Microsoft.Alpha"(Opacity=40);
     visibility: visible !important;
 }
+
+.delete_handle {
+    background: url('../../admin/img/icon_deletelink.gif') 50% 50% no-repeat;
+    width: 16px;
+    height: 16px;
+    display: inline-block;
+    vertical-align: middle;
+    text-indent: -13435px;
+}
