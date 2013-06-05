@@ -49,17 +49,17 @@ def validate_region_name(name):
 fallback_region_name_re = re.compile(r'[_\W]+')
 
 
-def get_first_valid_template(template_names, settings=None):
+def get_first_valid_template(template_names, editable_regions=None):
     """
     Given a bunch of templates (tuple, list), find the first one in the
     settings dictionary. Assumes the incoming template list is ordered in
     discovery-preference order.
     """
-    settings = settings or EDIT_REGIONS
+    editable_regions = editable_regions or EDIT_REGIONS
     if isinstance(template_names, basestring):
         template_names = (template_names,)
     for template in template_names:
-        if template in settings:
+        if template in editable_regions:
             return template
     tried_templates = ', '.join(template_names)
     msg = 'None of the given templates (%s) is in the settings config.' % tried_templates
