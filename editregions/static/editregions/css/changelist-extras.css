@@ -12,7 +12,7 @@ django-feincms
 }
 
 .drag_handle:hover {
-    cursor: move;
+    cursor: row-resize;
 }
 
 .ui-sortable .ui-sortable-placeholder {
