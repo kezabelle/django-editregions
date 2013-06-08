@@ -62,7 +62,7 @@ class EditRegionToolbar(BaseAdminLink, InclusionTag):
                                         region=region_name)
             wrapped.querydict.update(querystring)
             # replace the default values with our own, better ones :\
-            templates = obj.get_edit_template_names()
+            templates = obj.get_region_groups()
             template = get_first_valid_template(templates)
             link.update(link=wrapped.get_manage_url(),
                         verbose_name=get_pretty_region_name(template, region_name))

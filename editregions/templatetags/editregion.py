@@ -64,7 +64,7 @@ class EditRegionTag(Tag):
 
         results = get_chunks_for_region(content_id=content_object.pk,
                                         content_type=content_type, region=name)
-        templates = content_object.get_live_template_names()
+        templates = content_object.get_region_groups()
         template = get_first_valid_template(templates)
         # if it's being used as an `as x` output tag,
         # return the unjoined list.

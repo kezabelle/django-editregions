@@ -24,7 +24,7 @@ class GetAllRegions(AsTag):
     )
 
     def get_value(self, context, content_object):
-        templates = content_object.get_live_template_names()
+        templates = content_object.get_region_groups()
         template = get_first_valid_template(templates)
         return get_regions_for_template(template)
 register.tag('get_regions_for', GetAllRegions)

@@ -93,7 +93,7 @@ class MovementForm(Form):
         # rather than raise an error for an invalid region, just set it
         # back to whatever the region says it should be. Trust no-one.
         if 'region' in cd and cd['pk'] is not None:
-            templates = cd['pk'].content_object.get_edit_template_names()
+            templates = cd['pk'].content_object.get_region_groups()
             template = get_first_valid_template(templates)
             regions = get_regions_for_template(template)
             if cd['region'] not in regions:

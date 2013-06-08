@@ -82,7 +82,7 @@ class EditRegionAdmin(ModelAdmin):
         :return: the region name
         :rtype: string
         """
-        templates = obj.content_object.get_edit_template_names()
+        templates = obj.content_object.get_region_groups()
         template = get_first_valid_template(templates)
         return get_pretty_region_name(template, obj.region)
     get_region_name.short_description = region_v
@@ -283,7 +283,7 @@ class EditRegionAdmin(ModelAdmin):
         except ObjectDoesNotExist as e:
             return HttpResponseBadRequest('something went wrong')
 
-        templates = parent_obj.get_edit_template_names()
+        templates = parent_obj.get_region_groups()
         template = get_first_valid_template(templates)
         ChunkWrapper = self.get_admin_wrapper_class()
         filters = (ChunkWrapper(**{
@@ -334,10 +334,10 @@ class EditRegionAdmin(ModelAdmin):
         in the compiled template.
         """
         try:
-            templates = obj.get_edit_template_names()
+            templates = obj.get_region_groups()
         except AttributeError as e:
             raise ImproperlyConfigured('%(obj)r must have a '
-                                       '`get_edit_template_names` method to '
+                                       '`get_region_groups` method to '
                                        'be used with %(cls)r' % {
                                            'obj': obj.__class__,
                                            'cls': EditRegionInline
@@ -515,7 +515,7 @@ class ChunkAdmin(AdminlinksMixin):
         region = request.GET[REQUEST_VAR_REGION]
         parent_class = get_content_type(parent_ct).model_class()
         parent_obj = parent_class.objects.get(pk=parent_id)
-        templates = parent_obj.get_edit_template_names()
+        templates = parent_obj.get_region_groups()
         template = get_first_valid_template(templates)
         available_chunks = get_enabled_chunks_for_region(template,
                                                          region)
