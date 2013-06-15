@@ -116,13 +116,15 @@ def render_all_chunks(template, context, region, found_chunks):
         :class:`~editregions.templatetags.editregion.EditRegionTag`
     """
     enabled = get_enabled_chunks_for_region(template=template, name=region)
-    enabled_relateds = get_related_names_for_enabled_chunks(enabled)
+    # enabled_relateds = get_related_names_for_enabled_chunks(enabled)
     # found_chunks.select_subclasses(*enabled_relateds)
     # print(found_chunks.subclasses)
     # print(found_chunks.query.select_related)
+
     # filter our chunks which are no long enabled ...
     # this'll hit the ContentType cache after a while ...
     to_render = [x for x in found_chunks if get_model_class(x) in enabled]
+    del enabled
     # output = []
 
     # In the future, it'd be nice to be able to just use the existing context and
@@ -139,3 +141,5 @@ def render_all_chunks(template, context, region, found_chunks):
         # a warning to stderr), so we screen it all here.
         if output is not None:
             yield output
+        del index, chunk
+    del to_render
