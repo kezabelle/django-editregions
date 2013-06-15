@@ -109,6 +109,7 @@ def get_enabled_chunks_for_region(template, name, given_settings=None):
         given_settings = EDIT_REGIONS
     resolved = SortedDict()
     if template in given_settings:
+        # TODO: fix this so we can avoid IndexError out of range ...
         chunktypes = [x[2] for x in given_settings[template] if x[0] == name][0]
         # Replace the dotted app_label/model_name combo with the actual model.
         for chunk, count in chunktypes.items():
