@@ -2,6 +2,7 @@
 from __future__ import unicode_literals
 from functools import update_wrapper
 import logging
+import warnings
 from django.contrib.admin.views.main import IS_POPUP_VAR
 from django.template.response import TemplateResponse
 from adminlinks.admin import AdminlinksMixin
@@ -583,3 +584,30 @@ class ChunkAdmin(AdminlinksMixin):
 
         fake_obj = FakeObj(obj_id)
         return self.get_response_extra_context(request, fake_obj, 'delete')
+
+    def render_into_region(self, obj, context):
+        """
+        These exist purely to avoid unexpected breakages if an admin subclass
+        doesn't implement them.
+
+        :param obj: The :class:`~editregions.models.EditRegionChunk` subclass
+                    currently expecting to be rendered.
+        :param context: The overall template context.
+        :return: Some output. Usually HTML for output on a page.
+        """
+        warnings.warn('`render_into_region` not implemented on %r' % self.__class__,
+                      RuntimeWarning)
+
+    def render_into_summary(self, obj, context):
+        """
+        These exist purely to avoid unexpected breakages if an admin subclass
+        doesn't implement them.
+
+        :param obj: The :class:`~editregions.models.EditRegionChunk` subclass
+                    currently expecting to be rendered.
+        :param context: The overall template context.
+        :return: Some output. Usually a text representation of the
+                 :meth: `~editregions.admin.modeladmins.ChunkAdmin.render_into_region`
+        """
+        warnings.warn('`render_into_summary` not implemented on %r' % self.__class__,
+                      RuntimeWarning)
