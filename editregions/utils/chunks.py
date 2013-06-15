@@ -133,4 +133,9 @@ def render_all_chunks(template, context, region, found_chunks):
     for index, chunk in enumerate(to_render):
         new_context = convert_context_to_dict(context)
         new_context.update(chunk_iteration_context(index, chunk, to_render))
-        yield render_one_chunk(new_context, chunk)
+        output = render_one_chunk(new_context, chunk)
+        # a chunk may return None if the ModelAdmin responsible for
+        # rendering it doesn't implement the correct methods (instead raising
+        # a warning to stderr), so we screen it all here.
+        if output is not None:
+            yield output
