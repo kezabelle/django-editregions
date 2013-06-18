@@ -33,6 +33,7 @@ def get_chunks_for_region(**base_filters):
 
     .. seealso:: :class:`~editregions.templatetags.editregion.EditRegionTag`
     """
+    logger.debug('Finding EditRegionChunk subclasses using %r' % base_filters)
     return EditRegionChunk.polymorphs.filter(**base_filters).select_subclasses()
 
 
@@ -124,6 +125,10 @@ def render_all_chunks(template, context, region, found_chunks):
     # filter our chunks which are no long enabled ...
     # this'll hit the ContentType cache after a while ...
     to_render = [x for x in found_chunks if get_model_class(x) in enabled]
+    logger.info('Rendering %(renderable)d of %(possible)d chunks' % {
+        'renderable': len(to_render),
+        'possible': len(enabled),
+    })
     del enabled
     # output = []
 
@@ -141,5 +146,5 @@ def render_all_chunks(template, context, region, found_chunks):
         # a warning to stderr), so we screen it all here.
         if output is not None:
             yield output
-        del index, chunk
+        del index, chunk, output
     del to_render

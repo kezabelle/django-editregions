@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
+import logging
 from django.contrib.contenttypes.models import ContentType
 from adminlinks.templatetags.utils import get_admin_site
+
+logger = logging.getLogger(__name__)
 
 
 def queryset_to_attr_map(queryset, attr):
@@ -24,9 +27,12 @@ def get_model_class(obj):
 
 def get_content_type(input):
     if hasattr(input, '_meta'):
+        logger.info('Input is a Django model, using `get_for_model`')
         return ContentType.objects.get_for_model(input)
 
     if isinstance(input, basestring) and input.count('.') == 1:
+        logger.info('Input is a dotted string "appname.ModelName", splitting '
+                    'into component parts for lookup `get_by_natural_key`')
         parts = tuple(input.split('.')[0:2])
         try:
             return ContentType.objects.get_by_natural_key(app_label=parts[0],
@@ -36,6 +42,7 @@ def get_content_type(input):
             msg = 'Unable to find ContentType for app: %s, model: %s' % parts
             e.args = (msg,) + e.args[1:]
             raise
+    logger.info('Input failed previous tests, assumed to be a ContentType `pk`')
     return ContentType.objects.get_for_id(input)
 
 

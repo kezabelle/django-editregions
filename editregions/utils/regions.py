@@ -58,8 +58,15 @@ def get_first_valid_template(template_names, editable_regions=None):
     editable_regions = editable_regions or EDIT_REGIONS
     if isinstance(template_names, basestring):
         template_names = (template_names,)
-    for template in template_names:
+    for index, template in enumerate(template_names):
         if template in editable_regions:
+            logger.info('discovered template %(template)s having looked for '
+                        '%(count)s templates previously, of %(total)s '
+                        'templates total' % {
+                            'template': template,
+                            'count': index,
+                            'total': len(template_names),
+                        })
             return template
     tried_templates = ', '.join(template_names)
     msg = 'None of the given templates (%s) is in the settings config.' % tried_templates
@@ -91,8 +98,8 @@ def get_pretty_region_name(template, name, settings=None):
         # IndexError = doing [0] on the list didn't yield anything; so no valid
         # region was found.
         logbits = {'region': name}
-        logger.debug(u'No declared name for "%(region)s" in your EDIT_REGIONS '
-                     u'setting, falling back to using a regular expression' % logbits)
+        logger.debug('No declared name for "%(region)s" in your EDIT_REGIONS '
+                     'setting, falling back to using a regular expression' % logbits)
         return re.sub(fallback_region_name_re, string=name, repl=' ')
 
 
@@ -121,7 +128,7 @@ def get_enabled_chunks_for_region(template, name, given_settings=None):
             if model is not None and (count is None or count > 0):
                 resolved.update({model: count})
             if model is None:
-                logger.error(u'Unable to find model "%(chunk)s"' % {'chunk': chunk})
+                logger.error('Unable to find model "%(chunk)s"' % {'chunk': chunk})
     if len(resolved) == 0:
-        logger.debug(u'No chunks types found for "%(region)s"' % {'region': name})
+        logger.debug('No chunks types found for "%(region)s"' % {'region': name})
     return resolved

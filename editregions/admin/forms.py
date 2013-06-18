@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import logging
 from django.db.models import F
 from django.forms import Form, Media
 from django.forms.util import ErrorList
@@ -9,6 +10,8 @@ from editregions.admin.utils import shared_media
 from editregions.utils.chunks import get_chunks_for_region
 from editregions.utils.regions import (validate_region_name,
                                        get_regions_for_template, get_first_valid_template)
+
+logger = logging.getLogger(__name__)
 
 
 class EditRegionInlineForm(object):
@@ -124,6 +127,10 @@ class MovementForm(Form):
         # last of all...
         old_chunks = None
         if old_region != new_region:
+            logger.debug('object moved from %(old_region)s to %(new_region)s' % {
+                'old_region': old_region,
+                'new_region': new_region,
+            })
             obj.region = new_region
             old_chunks = get_chunks_for_region(content_type=obj.content_type,
                                                content_id=obj.content_id,
@@ -154,6 +161,7 @@ class MovementForm(Form):
         obj = self.cleaned_data['pk']
         data = (obj.position, obj.region)
         msg = 'Moved to position %d in region "%s"' % data
+        logger.info(msg)
         return obj, msg
 
     def parent_change_message(self):
@@ -161,6 +169,7 @@ class MovementForm(Form):
         data = (force_unicode(obj._meta.verbose_name), obj.pk, obj.position,
                 obj.region)
         msg = 'Moved %s (pk:%s) to position %d in region "%s"' % data
+        logger.info(msg)
         return obj.content_object, msg
 
     class Meta:

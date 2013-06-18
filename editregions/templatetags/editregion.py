@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import logging
 from django import template
 from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
@@ -13,7 +14,7 @@ from editregions.utils.regions import (validate_region_name,
 from editregions.utils.data import get_content_type
 
 register = template.Library()
-
+logger = logging.getLogger(__name__)
 
 class EditRegionTag(Tag):
     """
@@ -40,26 +41,34 @@ class EditRegionTag(Tag):
         _tag_name = 'editregion'
 
         # somehow, a None got through. Interesting.
-        if settings.DEBUG and content_object is None:
-            raise ImproperlyConfigured(ttag_no_obj % {
+        if content_object is None:
+            error = ttag_no_obj % {
                 'tagname': _tag_name,
                 'region': name,
-            })
+            }
+            if settings.DEBUG:
+                raise ImproperlyConfigured(error)
+            else:
+                logger.error(error)
 
         try:
             content_type = get_content_type(content_object)
         except ContentType.DoesNotExist:
             # the model doesn't exist in the content types table. I don'
             #  know why.
+            logger.error('content object does not exist')
             return u''
         except AttributeError:
             # we didn't get a proper django model, but something has definitely
             # been passed in, because the earlier None sentinel didn't catch it.
+            error = ttag_not_model % {
+                'tagname': _tag_name,
+                'type': type(content_object).__name__
+            }
             if settings.DEBUG:
-                raise ImproperlyConfigured(ttag_not_model % {
-                    'tagname': _tag_name,
-                    'type': type(content_object).__name__
-                })
+                raise ImproperlyConfigured(error)
+            else:
+                logger.error(error)
             return u''
 
         results = get_chunks_for_region(content_id=content_object.pk,
