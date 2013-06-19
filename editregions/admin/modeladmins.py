@@ -4,10 +4,8 @@ from functools import update_wrapper
 import logging
 from django.conf import settings
 import warnings
-from django.contrib.admin.views.main import IS_POPUP_VAR
 from django.template.response import TemplateResponse
 from adminlinks.admin import AdminlinksMixin
-from adminlinks.constants import POPUP_QS_VAR
 from django.contrib import admin
 from django.contrib.admin.options import ModelAdmin
 from django.contrib.admin.util import unquote, display_for_field
@@ -24,11 +22,11 @@ from django.utils.encoding import force_unicode
 from django.utils.html import escape, strip_tags
 from django.utils.text import truncate_words
 from django.utils.translation import ugettext_lazy as _
-
 from editregions.constants import (REQUEST_VAR_REGION, REQUEST_VAR_CT,
                                    REQUEST_VAR_ID)
 from editregions.utils.chunks import get_chunks_for_region
-from editregions.utils.data import get_modeladmin, get_content_type, get_model_class
+from editregions.utils.data import (get_modeladmin, get_content_type,
+                                    get_model_class)
 from editregions.utils.rendering import render_one_summary
 from editregions.admin.changelist import EditRegionChangeList
 from editregions.admin.forms import EditRegionInlineFormSet, MovementForm
@@ -327,7 +325,6 @@ class EditRegionAdmin(ModelAdmin):
         context.update({
             'module_name': force_unicode(opts.verbose_name_plural),
             'title': _('Select %s to change') % force_unicode(opts.verbose_name),
-            'is_popup': IS_POPUP_VAR in request.GET,
             'allow_editregions': True,
             'media': self.media,
             'app_label': app_label,
@@ -557,7 +554,6 @@ class ChunkAdmin(AdminlinksMixin):
             'admin/editregions/limit_reached.html'
         ]
         context = {
-            'is_popup': POPUP_QS_VAR in request.REQUEST,
             'found': found,
             'limit': limit,
         }
