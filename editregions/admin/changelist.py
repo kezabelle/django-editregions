@@ -1,11 +1,16 @@
 # -*- coding: utf-8 -*-
+import logging
+from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
-from adminlinks.constants import POPUP_QS_VAR
 from editregions.constants import (REQUEST_VAR_REGION, REQUEST_VAR_CT,
                                    REQUEST_VAR_ID)
-from django.contrib.admin.views.main import ChangeList, IS_POPUP_VAR
-from editregions.utils.regions import get_pretty_region_name, get_first_valid_template
+from django.contrib.admin.views.main import ChangeList
+from editregions.utils.regions import (get_pretty_region_name,
+                                       get_first_valid_template)
 from editregions.utils.data import get_content_type
+
+
+logger = logging.getLogger(__name__)
 
 
 class EditRegionChangeList(ChangeList):
@@ -18,8 +23,10 @@ class EditRegionChangeList(ChangeList):
         super(EditRegionChangeList, self).__init__(*args, **kwargs)
         try:
             request = kwargs['request']
+            logger.debug('"request" taken from kwargs')
         except KeyError as e:
             request = args[0]
+            logger.debug('"request" assumed to be in args')
 
         self.available_chunks = self.model_admin.get_changelist_filters(request.GET)
         self.formset = None
@@ -33,12 +40,13 @@ class EditRegionChangeList(ChangeList):
         try:
             self.template = get_first_valid_template(parent_obj.get_region_groups())
         except AttributeError as e:
-            raise ImproperlyConfigured('%(obj)r must have a '
-                                   '`get_region_groups` method to '
-                                   'be used with %(cls)r' % {
-                                       'obj': parent_obj.__class__,
-                                       'cls': EditRegionChangeList
-                                   })
+            msg = ('%(obj)r must have a `get_region_groups` method to be '
+                   'used with %(cls)r' % {
+                       'obj': parent_obj.__class__, 'cls': EditRegionChangeList
+                   })
+            logger.error(msg)
+            if settings.DEBUG:
+                raise ImproperlyConfigured(msg)
 
         try:
             self.get_region_display = get_pretty_region_name(self.template,

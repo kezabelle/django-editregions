@@ -117,8 +117,9 @@ class MovementForm(Form):
                                             content_id=obj.content_id,
                                             region=new_region,
                                             position__gte=obj.position)
-        # push those that should be affected, down by 1 each. Including the one
-        # in the position we want!
+
+        logger.debug('Push objects which should be affected, including the one '
+                     'we in the position we need.')
         next_chunks.update(position=F('position') + 1)
 
         # if we've moved region, we need to update at least a partial set of
@@ -149,11 +150,17 @@ class MovementForm(Form):
         # field) if they're not in the correct position.
         for new_position, obj in enumerate(all_chunks.iterator(), 1):
             if obj.position != new_position:
+                logger.debug('%(obj)r out of position, moving from %(old)d '
+                             'to %(new)d' % {
+                                 'obj': obj, 'old': obj.position,
+                                 'new': new_position,
+                             })
                 get_chunks_for_region(pk=obj.pk).update(position=new_position)
 
-        # having moved region, update the old one to fix the contiguous
-        # positions, hopefully just by shifting them all up 1.
         if old_chunks is not None:
+            logger.debug('all chunks in old region, which were after our moved '
+                         'object, need to be shifted up by 1 to try and force '
+                         'the positions into being contiguous again.')
             old_chunks.update(position=F('position') - 1)
         return obj
 

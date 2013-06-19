@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
+import logging
 from django.contrib import messages
 from django.shortcuts import redirect
 from django.views.generic.base import TemplateResponseMixin
 
+logger = logging.getLogger(__name__)
 
 class FormSuccess(Exception):
     def __init__(self, location, msg=None, permanent=False):
@@ -30,6 +32,11 @@ class EditRegionResponseMixin(TemplateResponseMixin):
             return super(EditRegionResponseMixin, self).render_to_response(
                 context, **response_kwargs)
         except FormSuccess as e:
-            if e.msg:
+            if e.msg is not None:
                 messages.success(self.request, e.msg)
+            logger.debug('%(path)s raised `FormSuccess`, redirecting to '
+                         'new endpoint %(new_path)s' % {
+                             'path': self.request.path,
+                             'new_path': e.location,
+                         })
             return redirect(e.location, permanent=e.permanent)

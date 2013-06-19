@@ -2,6 +2,7 @@
 from __future__ import unicode_literals
 from functools import update_wrapper
 import logging
+from django.conf import settings
 import warnings
 from django.contrib.admin.views.main import IS_POPUP_VAR
 from django.template.response import TemplateResponse
@@ -222,11 +223,11 @@ class EditRegionAdmin(ModelAdmin):
         form = MovementForm(data=request.GET, files=None, initial=None)
         if form.is_valid() and self.has_change_permission(request, form.cleaned_data['pk']):
             form.save()
-            html = self.render_changelists_for_object(request, form.cleaned_data['pk'].content_object)
+            html = self.render_changelists_for_object(request=request,
+                                                      obj=form.cleaned_data['pk'].content_object)
             json_data = {
-                'action': 'move',
+                'action': 'move', 'html': html,
                 'primary_key': form.cleaned_data['pk'].pk,
-                'html': html,
             }
             self.log_change(request, *form.change_message())
             self.log_change(request, *form.parent_change_message())
@@ -236,6 +237,19 @@ class EditRegionAdmin(ModelAdmin):
                                       mimetype='application/json')
 
     def queryset(self, *args, **kwargs):
+        """
+        Don't use the default queryset/manager, as it won't be our interface
+        to polymorphic (downcast) EditRegionChunk subclasses. Instead,
+        uses :func:`editregions.utils.chunks.get_chunks_for_region` and then
+        applies the expected ordering.
+
+        :param args: Stuff to pass through to
+               :meth:`~django.contrib.admin.options.BaseModelAdmin.get_ordering`
+        :param kwargs: Stuff to pass through to
+               :meth:`~django.contrib.admin.options.BaseModelAdmin.get_ordering`
+        :return: our EditRegionChunks, but already downcast to their final form.
+        :rtype: :class:`~django.db.models.query.QuerySet`
+        """
         qs = get_chunks_for_region()
         ordering = self.get_ordering(*args, **kwargs)
         if ordering:
@@ -243,6 +257,9 @@ class EditRegionAdmin(ModelAdmin):
         return qs
 
     def get_object(self, request, object_id):
+        """
+        I cannot remember why this exists ...
+        """
         queryset = self.queryset(request)
         try:
             return queryset.get(pk=object_id)
@@ -335,22 +352,29 @@ class EditRegionAdmin(ModelAdmin):
         in the compiled template.
         """
         try:
+            logger.debug('Requesting region group choices from %(obj)r' % {
+                'obj': obj,
+            })
             templates = obj.get_region_groups()
         except AttributeError as e:
-            raise ImproperlyConfigured('%(obj)r must have a '
-                                       '`get_region_groups` method to '
-                                       'be used with %(cls)r' % {
-                                           'obj': obj.__class__,
-                                           'cls': EditRegionInline
-                                       })
+            msg = ('%(obj)r must have a `get_region_groups` method to be '
+                   'used with %(cls)r' % {
+                       'obj': obj.__class__, 'cls': EditRegionInline
+                   })
+            logger.error(msg)
+            if settings.DEBUG:
+                raise ImproperlyConfigured(msg)
+            #: in production, we may not raise ImproperlyConfigured, in which
+            #: we would be accessing `templates` without it being set.
+            templates = ()
         template = get_first_valid_template(templates)
         return get_regions_for_template(template)
 
     def get_changelists_for_object(self, request, obj, **kwargs):
         changelists = []
 
-        # only do all this clever stuff if we're editing
         if obj is not None:
+            logger.debug('Editing an object, so do `get_changelists_for_object`')
             # from here on out, we heavily reuse the other modeladmin
             # self.model should be EditRegionChunk
             modeladmin = get_modeladmin(self.model, self.admin_site.name)
@@ -430,7 +454,7 @@ class EditRegionInline(GenericInlineModelAdmin):
         self.formset = EditRegionInlineFormSet
         formset = super(EditRegionInline, self).get_formset(request, obj, **kwargs)
         modeladmin = get_modeladmin(EditRegionChunk, self.admin_site.name)
-        if obj is not None:
+        if obj is not None and request.method == 'POST':
             # As I won't remember why we have to do this, later, this is the
             # traceback which not doing it caused:
             # https://gist.github.com/kezabelle/40653a0ad1ffd8fc77ba
@@ -439,6 +463,8 @@ class EditRegionInline(GenericInlineModelAdmin):
             # By not relying on the new instance (with the changed template)
             # instead using the one in the DB (with the old template) we can
             # ensure the regions line up correctly.
+            logger.info('Editing an %(obj)r; we may be changing the region '
+                        'group being used, so re-grabbing the DB version')
             obj = obj.__class__.objects.get(pk=obj.pk)
         formset.region_changelists = modeladmin.get_changelists_for_object(request, obj)
         return formset
@@ -464,12 +490,46 @@ class ChunkAdmin(AdminlinksMixin):
         return {}
 
     def log_addition(self, request, object):
+        """
+        Should log against the parent object?
+
+        :param request:
+        :type request:
+        :param object:
+        :type object:
+        :return:
+        :rtype:
+        """
         super(ChunkAdmin, self).log_addition(request, object)
 
     def log_change(self, request, object, message):
+        """
+        Should log against the parent object too
+
+        :param request:
+        :type request:
+        :param object:
+        :type object:
+        :param message:
+        :type message:
+        :return:
+        :rtype:
+        """
         super(ChunkAdmin, self).log_change(request, object, message)
 
     def log_deletion(self, request, object, object_repr):
+        """
+        Deletes should be logged against the parent thing.
+
+        :param request:
+        :type request:
+        :param object:
+        :type object:
+        :param object_repr:
+        :type object_repr:
+        :return:
+        :rtype:
+        """
         super(ChunkAdmin, self).log_deletion(request, object, object_repr)
 
     @guard_querystring_m
@@ -523,10 +583,21 @@ class ChunkAdmin(AdminlinksMixin):
         limit = available_chunks[self.model]
         # if there's a limit (no infinity set) ensure we haven't it it yet.
         if limit is not None:
+            logger.debug('Limit of %(limit)d found for %(cls)r in region '
+                         '"%(region)s"' % {
+                             'limit': limit,
+                             'cls': self.model,
+                             'region': region,
+                         })
             filters = {'content_type': parent_ct, 'content_id': parent_id,
                        'region': region}
             already_created = self.model.objects.filter(**filters).count()
             if already_created >= limit:
+                logger.info('Already hit limit of %(limit)d, found %(exists)d '
+                            'objects in the database' % {
+                                'limit': limit,
+                                'exists': already_created,
+                            })
                 return self.response_max(request, limit, already_created)
         return super(ChunkAdmin, self).add_view(request, *args, **kwargs)
 
