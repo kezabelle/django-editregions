@@ -68,6 +68,10 @@ class EditRegionChangeList(ChangeList):
         # querydict updated and get the real URL we want, not the rubbish
         # the default changelist provides.
         klass = self.model_admin.get_admin_wrapper_class()
+        logger.debug('%(cl)r is using %(wrapper)r to get the change_view URL' % {
+            'cl': self.__class__,
+            'wrapper': klass,
+        })
         wrapped_obj = klass(opts=result._meta, obj=result,
                             namespace=self.model_admin.admin_site.name,
                             content_id=self.parent_content_id,
