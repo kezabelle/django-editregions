@@ -16,7 +16,6 @@ from editregions.models import EditRegionChunk
 from adminlinks.templatetags.utils import MODELADMIN_REVERSE
 
 
-
 logger = logging.getLogger(__name__)
 
 # TODO: is this needed?
@@ -221,3 +220,15 @@ class AdminChunkWrapper(object):
         if self.exists and not attr.startswith('_'):
             return getattr(self.chunk, attr)
         raise AttributeError
+
+
+class FakeObj(object):
+    """
+    Used by
+    :meth:`~editregions.admin.modeladmins.ChunkAdmin.get_response_delete_context`
+    to fake some attributes and allow access as if it were the original object,
+    when after confirmation, it won't exist any more.
+    """
+    def __init__(self, obj_id, **kwargs):
+        self.pk = obj_id
+        self.id = obj_id

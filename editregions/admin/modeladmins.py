@@ -31,7 +31,7 @@ from editregions.utils.rendering import render_one_summary
 from editregions.admin.changelist import EditRegionChangeList
 from editregions.admin.forms import EditRegionInlineFormSet, MovementForm
 from editregions.admin.utils import (AdminChunkWrapper, shared_media,
-                                     guard_querystring_m)
+                                     guard_querystring_m, FakeObj)
 from editregions.models import EditRegionChunk
 from editregions.utils.regions import (get_enabled_chunks_for_region,
                                        get_pretty_region_name,
@@ -640,15 +640,6 @@ class ChunkAdmin(AdminlinksMixin):
         return self.get_response_extra_context(request, obj, 'change')
 
     def get_response_delete_context(self, request, obj_id):
-
-        # we have to use a fake object to simulate the original, as it no longer
-        # can be guaranteed to exist. We expose only the very specific values we
-        # need for get_response_extra_context to work.
-        class FakeObj(object):
-            def __init__(self, obj_id):
-                self.pk = obj_id
-                self.id = obj_id
-
         fake_obj = FakeObj(obj_id)
         return self.get_response_extra_context(request, fake_obj, 'delete')
 
