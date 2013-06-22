@@ -187,7 +187,7 @@ class EditRegionAdmin(ModelAdmin):
         """
         return {}
 
-    def get_custom_urls(self):
+    def get_urls(self):
         # why this isn't a separate method in Django, I don't know.
         from django.conf.urls import patterns, url
 
@@ -198,12 +198,22 @@ class EditRegionAdmin(ModelAdmin):
 
         info = self.model._meta.app_label, self.model._meta.module_name
         urlpatterns = patterns('',
+                               # parent_ct is the Django ContentType PK for
+                               # the object the EditRegionChunks are bound to
+                               # eg: a page, a blog post, a project.
+                               # parent_id is the PK of the parent object in
+                               # question. We don't know what format the PK takes
+                               # so we accept anything.
+                               url(r'^(?P<parent_ct>\d+)/(?P<parent_id>.+)/$',
+                                   wrap(self.list_view),
+                                   name='%s_%s_changelist' % info),
+                               # moving an object from one position to another
+                               # potentially across regions.
                                url(r'^move/$',
                                    wrap(self.move_view),
                                    name='%s_%s_move' % info))
-        return urlpatterns + self.get_urls()
-
-    urls = property(get_custom_urls)
+        return urlpatterns
+    urls = property(get_urls)
 
     def move_view(self, request):
         """
@@ -298,9 +308,7 @@ class EditRegionAdmin(ModelAdmin):
     def get_admin_wrapper_class(self):
         return AdminChunkWrapper
 
-    def changelist_view(self, request, extra_context=None):
-        parent_ct = request.GET[REQUEST_VAR_CT]
-        parent_id = request.GET[REQUEST_VAR_ID]
+    def list_view(self, request, parent_ct, parent_id, extra_context=None):
         obj = get_model_class(parent_ct).objects.get(pk=parent_id)
         extra_context = extra_context or {}
         context = self.changelists_as_context_data(request, obj)
