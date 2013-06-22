@@ -22,11 +22,16 @@
     var progress_wrapper = 'div.region-inline-progress-wrapper';
     var wait = 'div.region-inline-progress-wrapper div.waiting';
     var success = 'div.region-inline-progress-wrapper div.success';
+
+    // variables hoisted up here for tracking whether things got changed.
     var start_region;
     var start_position;
     var target_region;
     var target_position;
 
+    // just sets some variables into the parent scope when they might've changed,
+    // so that `finish_changelist_changes` can decide whether or not
+    // to bother calling `update_remote_object`
     var maybe_move_region = function(e, ui){
         $(this).find("tbody").append(ui.item);
         // rebinds the region to the parent scope
@@ -45,15 +50,19 @@
 
     var update_remote_object = function(sortable, event, ui, id, position, region) {
         var url = ui.item.find(handle).eq(0).attr('data-href');
+        // url should be the URL to the movement form.
         if (url !== void(0)) {
             var $wait = $(wait);
             var $old_progress = $(progress_wrapper);
             $wait.show();
             var data = {pk: id, position: position, region: region};
             $.get(url, data, function(resp, status) {
+                // wait a bit then remove the progress element from the DOM
                 $wait.fadeOut(750, function(evt) {
                     $old_progress.remove();
                 });
+
+                // refresh the view itself with updated data.
                 $(all_inlines).replaceWith(resp['html']);
                 ready_up();
             });
@@ -104,6 +113,8 @@
         cursor: 'move'
     };
 
+    // this exists as a non-anonymous function so that once we've updated an
+    // object we can dynamically re-bind everything we need to.
     var ready_up = function() {
         $(sortable_targets).sortable(sortable_options).disableSelection();
 
