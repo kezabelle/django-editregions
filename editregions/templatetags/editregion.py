@@ -16,16 +16,23 @@ from editregions.utils.data import get_content_type
 register = template.Library()
 logger = logging.getLogger(__name__)
 
+
 class EditRegionTag(Tag):
     """
-    Usage:
-        {% load edit_region %}
-        {% edit_region 'region_name' object %}
+    Output the contents of a region in a region group::
+
+        {% load editregion %}
+        {% editregion 'region_name' object %}
 
     Note that if no object is provided in debug mode,
     the tag will raise an ImproperlyConfigured exception and expect you to fix it.
     In production (DEBUG=False) it will avoid raising that and should hopefully
     return nothing if something goes wrong.
+
+    .. note::
+        This is a bit slow, without the cached template loader being used.
+        Needs addressing - periodically see if we can improve it according to
+        django-debug-toolbar-template-timings.
     """
     model = EditRegionChunk
     options = Options(
