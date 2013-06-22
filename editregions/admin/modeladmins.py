@@ -442,8 +442,8 @@ class EditRegionInline(GenericInlineModelAdmin):
     can_delete = False
     extra = 0
     max_num = 0
-    ct_field = "content_type"
-    ct_fk_field = "content_id"
+    ct_field = REQUEST_VAR_CT
+    ct_fk_field = REQUEST_VAR_ID
     template = 'admin/editregions/edit_inline/none.html'
 
     def get_formset(self, request, obj=None, **kwargs):
