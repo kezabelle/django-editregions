@@ -256,7 +256,8 @@ class EditRegionAdmin(ModelAdmin):
 
     def get_object(self, request, object_id):
         """
-        I cannot remember why this exists ...
+        This overrides the default, to catch ObjectDoesNotExist, because we
+        can't guarantee what model is being referenced, as it's polymorphic.
         """
         queryset = self.queryset(request)
         try:
