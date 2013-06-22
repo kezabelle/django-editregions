@@ -295,8 +295,8 @@ class EditRegionAdmin(ModelAdmin):
 
         templates = parent_obj.get_region_groups()
         template = get_first_valid_template(templates)
-        ChunkWrapper = self.get_admin_wrapper_class()
-        filters = (ChunkWrapper(**{
+        AdminChunkWrapper = self.get_admin_wrapper_class()
+        filters = (AdminChunkWrapper(**{
             'opts': x._meta,
             'namespace': self.admin_site.app_name,
             'region': region,
