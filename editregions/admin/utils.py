@@ -196,7 +196,17 @@ class AdminChunkWrapper(object):
         return self._get_admin_url(view='delete')
 
     def get_manage_url(self):
-        return self._get_admin_url(view='changelist')
+        """
+        Our changelist doesn't fit with the _get_admin_url pattern, so rather
+        than make it more extensible, we'll just do our work here.
+
+        :return: URL + any querystring, as appropriate.
+        :rtype: string
+        """
+        self.url_parts.update(view='changelist')
+        endpoint = reverse(MODELADMIN_REVERSE % self.url_parts,
+                           args=[self.content_type, self.content_id])
+        return '%s?%s' % (endpoint, self.querydict.urlencode())
 
     def get_change_url(self):
         return self._get_admin_url(view='change')
