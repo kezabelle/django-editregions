@@ -153,7 +153,7 @@ class AdminChunkWrapper(object):
             'module': self.opts.module_name,
             'view': '__error__',
         }
-        self.querydict = QueryDict('', mutable=True)
+        self.querydict = QueryDict('_popup=1', mutable=True)
 
         # if the object already exists in the database, we're probably safe
         # to assume it's data is the most trustworthy.
