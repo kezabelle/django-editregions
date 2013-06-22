@@ -108,10 +108,16 @@ guard_querystring_m = method_decorator(guard_querystring)
 
 class AdminChunkWrapper(object):
     """
-    An object for chunking an existing data type into, and getting out something
-    we can reliably use in the admin widgets.
+    Used through-out our admin customisations to wrap either the *idea* of
+    an object, or the details about an actual object, in a single API.
+
+    .. warning::
+        passing `obj` in while assume that the object exists, and prefer its
+        values over any others passed in. The absence of `obj` means you really
+        need to provide `content_id`, `content_type` and `region`.
     """
-    def __init__(self, opts, namespace, content_id, content_type, region, obj=None):
+    def __init__(self, opts, namespace, content_id=None, content_type=None,
+                 region=None, obj=None):
         """
 
         :param opts: the `_meta` for resolving the admin view to call ...
@@ -126,26 +132,31 @@ class AdminChunkWrapper(object):
         """
         self.opts = opts
         self.admin_namespace = namespace
-
-        # attempt to accept either ContentType instances or primary keys
-        # representing them.
-        try:
-            self.content_type = int(content_type.pk)
-        except AttributeError as e:
-            # Not an object, instead should be an integer
-            self.content_type = content_type
-
-        self.content_id = content_id
-        self.region = region
         self.label = opts.verbose_name
         self.exists = obj is not None
         self.chunk = obj
 
-        self.module = opts.app_label
+        # if the object already exists in the database, we're probably safe
+        # to assume it's data is the most trustworthy.
         if self.exists:
+            self.content_type = self.chunk.content_type_id
+            self.content_id = self.chunk.content_id
+            self.region = self.chunk.region
             self.module = obj._meta.app_label
+        else:
+            try:
+                # attempt to accept either ContentType instances or primary keys
+                # representing them.
+                self.content_type = int(content_type.pk)
+            except AttributeError as e:
+                # Not an object, instead should be an integer
+                self.content_type = content_type
+            self.content_id = content_id
+            self.region = region
+            self.module = opts.app_label
+
         if self.region is not None:
-            validate_region_name(region)
+            validate_region_name(self.region)
 
         self.url_parts = {
             'namespace': self.admin_namespace,
@@ -154,13 +165,6 @@ class AdminChunkWrapper(object):
             'view': '__error__',
         }
         self.querydict = QueryDict('_popup=1', mutable=True)
-
-        # if the object already exists in the database, we're probably safe
-        # to assume it's data is the most trustworthy.
-        if self.exists:
-            self.content_type = self.chunk.content_type_id
-            self.content_id = self.chunk.content_id
-            self.region = self.chunk.region
 
         # update the querystring if they're not already in there.
         # possibly this is wrong, and should override any that are there?
