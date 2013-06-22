@@ -8,18 +8,17 @@ from django.template.response import TemplateResponse
 from adminlinks.admin import AdminlinksMixin
 from django.contrib import admin
 from django.contrib.admin.options import ModelAdmin
-from django.contrib.admin.util import unquote, display_for_field
+from django.contrib.admin.util import display_for_field
 from django.contrib.contenttypes.generic import GenericInlineModelAdmin
-from django.core.exceptions import (ObjectDoesNotExist, PermissionDenied,
-                                    ImproperlyConfigured)
+from django.core.exceptions import (ObjectDoesNotExist, ImproperlyConfigured)
 from django.core.urlresolvers import reverse
-from django.http import Http404, HttpResponse, HttpResponseBadRequest, QueryDict
+from django.http import HttpResponse, HttpResponseBadRequest, QueryDict
 from django.shortcuts import render_to_response
 from django.template import RequestContext
 from django.template.loader import render_to_string
 from django.utils import simplejson
 from django.utils.encoding import force_unicode
-from django.utils.html import escape, strip_tags
+from django.utils.html import strip_tags
 from django.utils.text import truncate_words
 from django.utils.translation import ugettext_lazy as _
 from editregions.constants import (REQUEST_VAR_REGION, REQUEST_VAR_CT,
