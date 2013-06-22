@@ -268,23 +268,6 @@ class EditRegionAdmin(ModelAdmin):
     def get_changelist(self, *args, **kwargs):
         return EditRegionChangeList
 
-    def change_view(self, request, object_id, form_url='', extra_context=None):
-
-        obj = self.get_object(request, unquote(object_id))
-        opts = obj._meta
-
-        if not self.has_change_permission(request, obj):
-            raise PermissionDenied
-
-        if obj is None:
-            raise Http404(_('%(name)s object with primary key %(key)r does not exist.') % {'name': force_unicode(opts.verbose_name), 'key': escape(object_id)})
-
-        try:
-            klass = get_modeladmin(obj, self.admin_site.name)
-            return klass.change_view(request, object_id, form_url, extra_context)
-        except KeyError:
-            raise Http404(_('SOMETHING BAD'))
-
     def get_changelist_filters(self, request_querydict):
         """
         Get the list of chunks for the changelist sidebar.
