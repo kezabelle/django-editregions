@@ -2,7 +2,7 @@
 {% load i18n %}
 <li class="admin-toolbar-btn">
     <a href="{{ link }}" class="admin-toolbar-link icon-edit-circled">
-        {% trans "edit" %} {{ verbose_name }}
+        {% trans "edit" %} {{ obj_name }} {{ verbose_name }}
     </a>
 </li>
 {% endif %}
