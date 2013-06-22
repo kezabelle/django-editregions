@@ -162,12 +162,16 @@ class EditRegionAdmin(ModelAdmin):
             'chunkhandler': self.model._meta.module_name,
         }
         url_to_move2 = reverse(url_to_move)
+        AdminChunkWrapper = self.get_admin_wrapper_class()
+        delete_url = AdminChunkWrapper(opts=obj._meta,
+                                       namespace=self.admin_site.name,
+                                       obj=obj).get_delete_url()
         html = ('<div class="drag_handle" data-pk="%(pk)s" data-href="%(url)s">'
                 '</div>&nbsp;<a class="delete_handle" href="%(delete_url)s">'
                 '%(delete)s</a>' % {
                     'pk': obj.pk,
                     'url': url_to_move2,
-                    'delete_url': '#',
+                    'delete_url': delete_url,
                     'delete': _('Delete'),
                 })
         return html
