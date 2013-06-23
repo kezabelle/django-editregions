@@ -1,3 +1,3 @@
-rm -f 'requirements.txt';
-touch 'requirements.txt';
-find editregions -type f -name requirements.txt -exec cat {} >> requirements.txt \;
+rm -f 'requirements.all.txt';
+touch 'requirements.all.txt';
+find . -type f -name requirements.txt -exec cat {} >> requirements.all.txt \;

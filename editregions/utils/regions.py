@@ -6,7 +6,7 @@ from django.utils.datastructures import SortedDict
 import re
 from django.core.validators import RegexValidator, slug_re, MaxLengthValidator
 from django.utils.translation import ugettext_lazy as _
-from editregions.constants import EDIT_REGIONS
+from editregions.constants import settings
 
 logger = logging.getLogger(__name__)
 
@@ -55,7 +55,7 @@ def get_first_valid_template(template_names, editable_regions=None):
     settings dictionary. Assumes the incoming template list is ordered in
     discovery-preference order.
     """
-    editable_regions = editable_regions or EDIT_REGIONS
+    editable_regions = editable_regions or settings.EDIT_REGIONS
     if isinstance(template_names, basestring):
         template_names = (template_names,)
     for index, template in enumerate(template_names):
@@ -73,16 +73,16 @@ def get_first_valid_template(template_names, editable_regions=None):
     raise KeyError(msg)
 
 
-def get_regions_for_template(template, settings=None):
+def get_regions_for_template(template, editable_regions=None):
     """
     Given a single template (using get_first_valid_template()), find all
     regions provided to it.
     """
-    settings = settings or EDIT_REGIONS
-    return [x[0] for x in settings[template]]
+    editable_regions = editable_regions or settings.EDIT_REGIONS
+    return [x[0] for x in editable_regions[template]]
 
 
-def get_pretty_region_name(template, name, settings=None):
+def get_pretty_region_name(template, name, editable_regions=None):
     """
     Try and find a not-machine-oriented name for this region, potentially
     localized. If none exists, use the given regular expression to provide
@@ -90,9 +90,9 @@ def get_pretty_region_name(template, name, settings=None):
 
     .. testcase: PrettyNameTestCase
     """
-    settings = settings or EDIT_REGIONS
+    editable_regions = editable_regions or settings.EDIT_REGIONS
     try:
-        return [x[1] for x in settings[template] if x[0] == name][0]
+        return [x[1] for x in editable_regions[template] if x[0] == name][0]
     except (KeyError, IndexError) as e:
         # KeyError = settings['whatever'] wasn't in the settings conf
         # IndexError = doing [0] on the list didn't yield anything; so no valid
@@ -112,8 +112,7 @@ def get_enabled_chunks_for_region(template, name, given_settings=None):
     keys are the actual models, rather than dotted paths, and whose values are the
     counts for each chunk.
     """
-    if given_settings is None:
-        given_settings = EDIT_REGIONS
+    given_settings = given_settings or settings.EDIT_REGIONS
     resolved = SortedDict()
     if template in given_settings:
         # TODO: fix this so we can avoid IndexError out of range ...
