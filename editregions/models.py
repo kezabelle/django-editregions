@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import logging
 from django.core.cache import cache, DEFAULT_CACHE_ALIAS
 from django.db.models.fields import CharField, PositiveIntegerField
 from django.db.models.signals import post_save
@@ -9,6 +10,8 @@ from editregions.text import chunk_v, chunk_vplural
 from editregions.utils.data import get_content_type
 from editregions.utils.regions import validate_region_name
 from helpfulfields.models import Generic, ChangeTracking
+
+logger = logging.getLogger(__name__)
 
 
 class EditRegionChunk(ChangeTracking, Generic):
@@ -28,11 +31,9 @@ class EditRegionChunk(ChangeTracking, Generic):
     polymorphs = InheritanceManager()
 
     def __repr__(self):
-        return u'%(cls)r attached to %(content_object)s via region "%(region)s"' % {
-            'content_object': unicode(self.content_object),
-            'region': self.region,
-            'cls': self.__class__,
-        }
+        return '<{x.__module__}.{x.__class__.__name__} pk={x.pk:d},' \
+               'region={x.region}, parent_type={x.content_type_id:d}, ' \
+               'parent_id={x.content_id}, position={x.position:d}'.format(x=self)
 
     def __unicode__(self):
         ct = get_content_type(self.content_type_id).model_class()
