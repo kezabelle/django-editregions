@@ -6,7 +6,7 @@ from django.utils.datastructures import SortedDict
 import re
 from django.core.validators import RegexValidator, slug_re, MaxLengthValidator
 from django.utils.translation import ugettext_lazy as _
-from editregions.constants import settings
+from editregions.constants import EDIT_REGIONS
 
 logger = logging.getLogger(__name__)
 
@@ -55,7 +55,7 @@ def get_first_valid_template(template_names, editable_regions=None):
     settings dictionary. Assumes the incoming template list is ordered in
     discovery-preference order.
     """
-    editable_regions = editable_regions or settings.EDIT_REGIONS
+    editable_regions = editable_regions or EDIT_REGIONS
     if isinstance(template_names, basestring):
         template_names = (template_names,)
     for index, template in enumerate(template_names):
@@ -78,7 +78,7 @@ def get_regions_for_template(template, editable_regions=None):
     Given a single template (using get_first_valid_template()), find all
     regions provided to it.
     """
-    editable_regions = editable_regions or settings.EDIT_REGIONS
+    editable_regions = editable_regions or EDIT_REGIONS
     return [x[0] for x in editable_regions[template]]
 
 
@@ -90,7 +90,7 @@ def get_pretty_region_name(template, name, editable_regions=None):
 
     .. testcase: PrettyNameTestCase
     """
-    editable_regions = editable_regions or settings.EDIT_REGIONS
+    editable_regions = editable_regions or EDIT_REGIONS
     try:
         return [x[1] for x in editable_regions[template] if x[0] == name][0]
     except (KeyError, IndexError) as e:
@@ -112,7 +112,7 @@ def get_enabled_chunks_for_region(template, name, given_settings=None):
     keys are the actual models, rather than dotted paths, and whose values are the
     counts for each chunk.
     """
-    given_settings = given_settings or settings.EDIT_REGIONS
+    given_settings = given_settings or EDIT_REGIONS
     resolved = SortedDict()
     if template in given_settings:
         # TODO: fix this so we can avoid IndexError out of range ...

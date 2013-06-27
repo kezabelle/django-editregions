@@ -5,7 +5,9 @@ from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
 from classytags.core import Tag, Options
 from classytags.arguments import Argument, StringArgument
+from django.core.cache import cache, DEFAULT_CACHE_ALIAS
 from django.core.exceptions import ImproperlyConfigured
+from editregions.constants import RENDERED_CACHE_KEY
 from editregions.models import EditRegionChunk
 from editregions.text import ttag_no_obj, ttag_not_model
 from editregions.utils.chunks import get_chunks_for_region, render_all_chunks
@@ -42,8 +44,6 @@ class EditRegionTag(Tag):
 
     def render_tag(self, context, name, content_object, **kwargs):
         validate_region_name(name)
-        # if we're in a fake request to this template, assume we're scanning
-        # for placeholders, and set the appropriate string to read back.
 
         _tag_name = 'editregion'
 
@@ -86,5 +86,16 @@ class EditRegionTag(Tag):
         # return the unjoined list.
         #if kwargs.pop(self.varname_name):
         #    return render_all_chunks(context, name, results)
-        return u'\n'.join(render_all_chunks(template, context, name, results))
+        KEY = RENDERED_CACHE_KEY.format(content_type_id=content_type.pk,
+                                        content_id=content_object.pk,
+                                        region=name)
+        cached_val = cache.get(KEY, None)
+        if cached_val is None:
+            logger.debug("key {key} was not found in the '{cache}' backend, "
+                         "so we're polling the DB for chunks".format(key=KEY,
+                         cache=DEFAULT_CACHE_ALIAS))
+            cached_val = u'\n'.join(render_all_chunks(template, context, name,
+                                                      results))
+            cache.set(KEY, cached_val)
+        return cached_val
 register.tag('editregion', EditRegionTag)
