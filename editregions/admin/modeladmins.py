@@ -65,15 +65,42 @@ class EditRegionAdmin(ModelAdmin):
         # this should always be last, and not be in the list_display_links
         'get_object_tools',
     ]
-    list_display_links = [
-        'get_region_name',
-        'get_subclass_type',
-        'get_subclass_summary',
-        'get_last_modified',
-    ]
+    list_display_links = ()
     list_filter = [
         'region',
     ]
+
+    def __init(self, *args, **kwargs):
+        super(EditRegionAdmin, self).__init__(*args, **kwargs)
+        # disables the built in link building using
+        # EditRegionChangeList.url_for_result so that we can have useful
+        # links that we can customise.
+        self.list_display_links = self.get_list_display_links(
+            request=None, list_display=self.list_display,
+        )
+
+    def get_list_display_links(self, request, list_display):
+        """
+        Disable the built in link building so we can have customised links
+        in the changelist.
+        """
+        return (None,)
+
+    def get_list_display(self, request):
+        """
+        A copy of the standard one, hard-copying the fields ...
+        """
+        return self.list_display[:]
+
+    def get_changelist_link_html(self, obj, **kwargs):
+        AdminChunkWrapper = self.get_admin_wrapper_class()
+        wrapped_obj = AdminChunkWrapper(opts=obj._meta, obj=obj,
+                                        namespace=self.admin_site.name,
+                                        content_id=obj.content_id,
+                                        content_type=obj.content_type,
+                                        region=obj.region)
+        return ('<a href="{url}" data-adminlinks="autoclose" data-no-turbolink>'
+                '{data}</a>').format(url=wrapped_obj.get_absolute_url(), **kwargs)
 
     def get_region_name(self, obj):
         """
@@ -83,7 +110,9 @@ class EditRegionAdmin(ModelAdmin):
         """
         templates = obj.content_object.get_region_groups()
         template = get_first_valid_template(templates)
-        return get_pretty_region_name(template, obj.region)
+        region_name = get_pretty_region_name(template, obj.region)
+        return self.get_changelist_link_html(obj, data=region_name)
+    get_region_name.allow_tags = True
     get_region_name.short_description = region_v
 
     def get_subclass_type(self, obj):
@@ -97,7 +126,8 @@ class EditRegionAdmin(ModelAdmin):
         :return: the subclass object's verbose name
         :rtype: string
         """
-        return obj._meta.verbose_name
+        return self.get_changelist_link_html(obj, data=obj._meta.verbose_name)
+    get_subclass_type.allow_tags = True
     get_subclass_type.short_description = admin_chunktype_label
 
     def get_subclass_summary(self, obj):
@@ -113,7 +143,7 @@ class EditRegionAdmin(ModelAdmin):
         """
         context = {'admin_summary': True}
         content = strip_tags(render_one_summary(context, obj))
-        return truncate_words(content, 20)
+        return self.get_changelist_link_html(obj, data=truncate_words(content, 20))
     get_subclass_summary.allow_tags = True
     get_subclass_summary.short_description = admin_summary_label
 
@@ -128,7 +158,8 @@ class EditRegionAdmin(ModelAdmin):
         :return: the order this will be shown in.
         :rtype: integer
         """
-        return obj.position
+        return self.get_changelist_link_html(obj, data=obj.position)
+    get_position.allow_tags = True
     get_position.short_description = admin_position_label
 
     def get_last_modified(self, obj):
@@ -166,7 +197,8 @@ class EditRegionAdmin(ModelAdmin):
                                        namespace=self.admin_site.name,
                                        obj=obj).get_delete_url()
         html = ('<div class="drag_handle" data-pk="%(pk)s" data-href="%(url)s">'
-                '</div>&nbsp;<a class="delete_handle" href="%(delete_url)s">'
+                '</div>&nbsp;<a class="delete_handle" href="%(delete_url)s" '
+                'data-adminlinks="autoclose" data-no-turbolink>'
                 '%(delete)s</a>' % {
                     'pk': obj.pk,
                     'url': url_to_move2,
@@ -386,16 +418,9 @@ class EditRegionAdmin(ModelAdmin):
             for region in self.get_regions_for_object(request, obj):
                 new_get[REQUEST_VAR_REGION] = region
                 request.GET = new_get
-
-                # we don't want the region name displayed here, because we're
-                # already displaying it in the template.
                 our_list_display = self.list_display[:]
-                our_list_links = self.list_display_links[:]
-                try:
-                    our_list_display.remove('get_region_name')
-                    our_list_links.remove('get_region_name')
-                except ValueError as e:
-                    pass
+                our_list_links = self.get_list_display_links(request,
+                                                             our_list_display)
                 ChangeList = self.get_changelist(request, **kwargs)
                 cl = ChangeList(request=request, model=self.model,
                                 list_display=our_list_display,
