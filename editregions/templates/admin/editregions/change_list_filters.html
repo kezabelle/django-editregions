@@ -7,7 +7,7 @@
         <ul class="add-chunks__available">
             {% for chunk in chunk_set.list %}
                 <li>
-                    {% if chunk.get_absolute_url %}<a href="{{ chunk.get_absolute_url }}">{% endif %}
+                    {% if chunk.get_absolute_url %}<a href="{{ chunk.get_absolute_url }}" data-adminlinks="autoclose" data-no-turbolink>{% endif %}
                         {{ chunk.label|capfirst }}
                     {% if chunk.get_absolute_url %}</a>{% endif %}
                 </li>
