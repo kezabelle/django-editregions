@@ -164,7 +164,7 @@ class AdminChunkWrapper(object):
             'module': self.opts.module_name,
             'view': '__error__',
         }
-        self.querydict = QueryDict('_popup=1', mutable=True)
+        self.querydict = QueryDict('', mutable=True)
 
         # update the querystring if they're not already in there.
         # possibly this is wrong, and should override any that are there?
