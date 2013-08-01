@@ -243,6 +243,13 @@ class FakeObj(object):
     to fake some attributes and allow access as if it were the original object,
     when after confirmation, it won't exist any more.
     """
+    __slots__ = ['pk', 'id', 'content_object']
+
     def __init__(self, obj_id, **kwargs):
         self.pk = obj_id
         self.id = obj_id
+        # setting `content_object` to None is required for the delete view
+        # to work, because ChunkAdmin.get_response_delete_context eventually
+        # calls get_changelists_for_object, at which point None is guarded
+        # against and we can avoid doing pointless work.
+        self.content_object = None
