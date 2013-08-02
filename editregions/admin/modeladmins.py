@@ -586,14 +586,16 @@ class ChunkAdmin(AdminlinksMixin):
         parent_id = request.GET[REQUEST_VAR_ID]
         parent_ct = request.GET[REQUEST_VAR_CT]
         region = request.GET[REQUEST_VAR_REGION]
+
+        # the following is all just about discovering chunk limits
         parent_class = get_content_type(parent_ct).model_class()
         parent_obj = parent_class.objects.get(pk=parent_id)
         templates = parent_obj.get_region_groups()
         template = get_first_valid_template(templates)
-        available_chunks = get_enabled_chunks_for_region(template,
-                                                         region)
+        available_chunks = get_enabled_chunks_for_region(template, region)
         limit = available_chunks[self.model]
-        # if there's a limit (no infinity set) ensure we haven't it it yet.
+        # now we have our possible limit, if there's a limit
+        # (no infinity set via None) ensure we haven't hit it yet.
         if limit is not None:
             logger.debug('Limit of %(limit)d found for %(cls)r in region '
                          '"%(region)s"' % {
@@ -601,9 +603,9 @@ class ChunkAdmin(AdminlinksMixin):
                              'cls': self.model,
                              'region': region,
                          })
-            filters = {'content_type': parent_ct, 'content_id': parent_id,
-                       'region': region}
-            already_created = self.model.objects.filter(**filters).count()
+            already_created = self.model.objects.filter(
+                content_type=parent_ct, content_id=parent_id, region=region
+            ).count()
             if already_created >= limit:
                 logger.info('Already hit limit of %(limit)d, found %(exists)d '
                             'objects in the database' % {
@@ -611,6 +613,7 @@ class ChunkAdmin(AdminlinksMixin):
                                 'exists': already_created,
                             })
                 return self.response_max(request, limit, already_created)
+        # we haven't got a limit for this chunk type, so carry on as normal.
         return super(ChunkAdmin, self).add_view(request, *args, **kwargs)
 
     @guard_querystring_m
