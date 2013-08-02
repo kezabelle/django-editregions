@@ -508,46 +508,26 @@ class ChunkAdmin(AdminlinksMixin):
 
     def log_addition(self, request, object):
         """
-        Should log against the parent object?
-
-        :param request:
-        :type request:
-        :param object:
-        :type object:
-        :return:
-        :rtype:
+        Log's against the Chunk, and it's parent object.
         """
         super(ChunkAdmin, self).log_addition(request, object)
+        super(ChunkAdmin, self).log_addition(request, object.content_object)
 
     def log_change(self, request, object, message):
         """
-        Should log against the parent object too
-
-        :param request:
-        :type request:
-        :param object:
-        :type object:
-        :param message:
-        :type message:
-        :return:
-        :rtype:
+        Log's against the Chunk, and it's parent object.
         """
         super(ChunkAdmin, self).log_change(request, object, message)
+        super(ChunkAdmin, self).log_change(request, object.content_object,
+                                           message)
 
     def log_deletion(self, request, object, object_repr):
         """
-        Deletes should be logged against the parent thing.
-
-        :param request:
-        :type request:
-        :param object:
-        :type object:
-        :param object_repr:
-        :type object_repr:
-        :return:
-        :rtype:
+        Log's against the Chunk, and it's parent object.
         """
         super(ChunkAdmin, self).log_deletion(request, object, object_repr)
+        super(ChunkAdmin, self).log_deletion(request, object.content_object,
+                                             object_repr)
 
     @guard_querystring_m
     def save_model(self, request, obj, form, change):
