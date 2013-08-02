@@ -665,7 +665,8 @@ class ChunkAdmin(AdminlinksMixin):
         modeladmin = get_modeladmin(EditRegionChunk, self.admin_site.name)
         changelists = modeladmin.render_changelists_for_object(
             request=request, obj=obj.content_object)
-        context = super(ChunkAdmin, self).get_response_change_context(request, obj)
+        context = super(ChunkAdmin, self).get_response_delete_context(request,
+                                                                      obj_id)
         context.update(html=changelists)
         return context
 
