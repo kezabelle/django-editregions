@@ -44,10 +44,15 @@ class EditRegionToolbar(BaseAdminLink, InclusionTag):
             logger.debug('Invalid admin site')
             return {}
         content_type = get_content_type(obj)
+        new_querystring = QueryDict(querystring, mutable=True)
+        new_querystring.update({'content_type': content_type.pk,
+                                'content_id': obj.pk})
         link = _add_custom_link_to_context(admin_site, context['request'],
-                                           EditRegionChunk._meta, 'change',
-                                           'changelist', [content_type.pk, obj.pk],
-                                           query=querystring)
+                                           opts=EditRegionChunk._meta,
+                                           permname='change',
+                                           viewname='changelist',
+                                           url_params=None,
+                                           query=new_querystring.urlencode())
 
         if link['verbose_name']:
             logger.debug('link created successfully, swapping out the '
