@@ -55,26 +55,3 @@ class EditRegionChangeList(ChangeList):
             # unable to parse with the re module because self.region is None
             # and re expected string or buffer
             self.get_region_display = self.region
-
-    def url_for_result(self, result):
-        """
-        We need to override this so that the changelists as inlines get the
-        proper URLs.
-
-        :return: the subclass (result) url
-        :rtype: string
-        """
-        # we pass a whole bunch of data back to AdminChunkWrapper and get
-        # querydict updated and get the real URL we want, not the rubbish
-        # the default changelist provides.
-        AdminChunkWrapper = self.model_admin.get_admin_wrapper_class()
-        logger.debug('%(cl)r is using %(wrapper)r to get the change_view URL' % {
-            'cl': self.__class__,
-            'wrapper': AdminChunkWrapper,
-        })
-        wrapped_obj = AdminChunkWrapper(opts=result._meta, obj=result,
-                                        namespace=self.model_admin.admin_site.name,
-                                        content_id=self.parent_content_id,
-                                        content_type=self.parent_content_type,
-                                        region=self.region)
-        return wrapped_obj.get_absolute_url()
