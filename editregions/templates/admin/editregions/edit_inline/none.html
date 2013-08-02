@@ -1,11 +1,6 @@
 <div class="region-inline-wrapper">
     {% load editregion_result_list %}
-{% load i18n %}
-{% if is_popup and not allow_editregions %}
-    <div class="already-in-popup">
-        <span>{% trans "Unable to edit regions while inside a popup window" %}</span>
-    </div>
-{% else %}
+    {% load i18n %}
     {% for cl in inline_admin_formset.formset.region_changelists %}
         <div class="module filtered changelist-as-inline" id="changelist-{{ forloop.counter }}" data-region="{{ cl.region }}">
         {% include "admin/editregions/change_list_filters.html" with available_chunks=cl.available_chunks iterating=forloop.counter %}
@@ -23,6 +18,5 @@
         {% editregion_result_list cl %}
         </div>
     {% endfor %}
-{% endif %}
 </div>
 {% include "admin/editregions/change_list_progress.html" with x=1 only %}

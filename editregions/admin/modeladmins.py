@@ -21,6 +21,7 @@ from django.utils.encoding import force_unicode
 from django.utils.html import strip_tags
 from django.utils.text import truncate_words
 from django.utils.translation import ugettext_lazy as _
+from adminlinks.templatetags.utils import _add_link_to_context
 from editregions.constants import (REQUEST_VAR_REGION, REQUEST_VAR_CT,
                                    REQUEST_VAR_ID)
 from editregions.utils.chunks import get_chunks_for_region
@@ -367,7 +368,6 @@ class EditRegionAdmin(ModelAdmin):
         context.update({
             'module_name': force_unicode(opts.verbose_name_plural),
             'title': _('Select %s to change') % force_unicode(opts.verbose_name),
-            'allow_editregions': True,
             'media': self.media,
             'app_label': app_label,
             'cl': {
@@ -643,17 +643,36 @@ class ChunkAdmin(AdminlinksMixin):
         # if there's no querystring, create one.
         if len(redirect) < 2:
             redirect.append('')
+
+        # get the modeladmin in question, from the URL provided.
         func = resolve(redirect[0]).func.func_closure[0].cell_contents
         is_chunkadmin = (
             hasattr(func, 'response_max'),
             hasattr(func, 'render_into_region'),
         )
         if all(is_chunkadmin):
+            # we don't want to autoclose, and we don't want to save a new
+            # or add another, so we're hopefully inside a bare add/change view
+            # so we probably ought to go back to the parent object's edit view.
+            redirect_to_parent_if = (
+                not self.wants_to_autoclose(request),
+                not self.wants_to_continue_editing(request)
+            )
+            if all(redirect_to_parent_if):
+                abuse_adminlink = _add_link_to_context(
+                    admin_site=self.admin_site.name, request=request,
+                    opts=obj.content_object._meta, permname='change',
+                    url_params=[obj.content_id], query=redirect[1])
+                return abuse_adminlink['link']
+
+            # we either wanted to autoclose, or we wanted to continue/add another
+            # etc, so we don't want to redirect elsewhere, we just want to
+            # update the querystring with fields required by the ChunkAdmin
             querystring = QueryDict(redirect[1], mutable=True)
             querystring.update(content_id=obj.content_id,
                                content_type=obj.content_type_id,
                                region=obj.region)
-            if '_autoclose' in request.GET:
+            if self.wants_to_autoclose(request):
                 querystring.update(_autoclose=1)
             redirect[1] = querystring.urlencode()
             return '?'.join(redirect)
