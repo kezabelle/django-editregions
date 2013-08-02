@@ -1,14 +1,11 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 import logging
-from adminlinks.templatetags.adminlinks_buttons import BaseAdminLink, _changelist_popup_qs
+from adminlinks.templatetags.adminlinks_buttons import BaseAdminLink
 from django import template
 from django.http import QueryDict
 from editregions.models import EditRegionChunk
-from editregions.admin.utils import AdminChunkWrapper
 from editregions.utils.data import get_content_type
-from editregions.utils.regions import (validate_region_name,
-                                       get_pretty_region_name, get_first_valid_template)
 from adminlinks.templatetags.utils import (get_admin_site,
                                            _add_custom_link_to_context)
 from classytags.arguments import StringArgument, Argument
@@ -29,7 +26,7 @@ class EditRegionToolbar(BaseAdminLink, InclusionTag):
         BaseAdminLink.base_options[0],  # obj
         # StringArgument('region_name', required=True, resolve=True),
         StringArgument('admin_site', required=False, default='admin'),
-        Argument('querystring', required=False, default=_changelist_popup_qs()),
+        Argument('querystring', required=False, default=''),
     )
 
     def get_link_context(self, context, obj, admin_site, querystring):
