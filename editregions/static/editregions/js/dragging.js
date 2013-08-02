@@ -57,6 +57,13 @@
             $wait.show();
             var data = {pk: id, position: position, region: region};
             $.get(url, data, function(resp, status) {
+                // frameElement indicates we're in the popup iframe, so we want
+                // to traverse back to the parent window and set a shared
+                // variable to indicate to the parent window that once we've
+                // closed this window, we need to refresh.
+                if (window.frameElement !== null) {
+                    parent.window.__data_changed__ = true;
+                }
                 // wait a bit then remove the progress element from the DOM
                 $wait.fadeOut(750, function(evt) {
                     $old_progress.remove();
