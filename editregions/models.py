@@ -31,9 +31,9 @@ class EditRegionChunk(ChangeTracking, Generic):
     polymorphs = InheritanceManager()
 
     def __repr__(self):
-        return '<{x.__module__}.{x.__class__.__name__} pk={x.pk:d},' \
-               'region={x.region}, parent_type={x.content_type_id:d}, ' \
-               'parent_id={x.content_id}, position={x.position:d}'.format(x=self)
+        return '<{x.__module__}.{x.__class__.__name__} pk={x.pk},' \
+               'region={x.region}, parent_type={x.content_type_id}, ' \
+               'parent_id={x.content_id}, position={x.position}'.format(x=self)
 
     def __unicode__(self):
         ct = get_content_type(self.content_type_id).model_class()
