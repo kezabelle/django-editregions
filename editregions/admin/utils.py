@@ -253,3 +253,6 @@ class FakeObj(object):
         # calls get_changelists_for_object, at which point None is guarded
         # against and we can avoid doing pointless work.
         self.content_object = None
+
+    def _get_pk_val(self):
+        return self.pk
