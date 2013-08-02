@@ -414,14 +414,9 @@ class EditRegionAdmin(ModelAdmin):
 
         if obj is not None:
             logger.debug('Editing an object, so do `get_changelists_for_object`')
-            # from here on out, we heavily reuse the other modeladmin
-            # self.model should be EditRegionChunk
-            modeladmin = get_modeladmin(self.model, self.admin_site.name)
-
             # store the old get here, because it gets changed inside the region
             # loops, which is a lossy process.
             old_get = request.GET
-
             # mutate the querystring and set some data onto it, which will
             # be passed to the get_changelist_filters method, as well as
             # being used to filter the ChangeList correctly.
