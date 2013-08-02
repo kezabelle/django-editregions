@@ -11,7 +11,7 @@ from django.contrib.admin.options import ModelAdmin
 from django.contrib.admin.util import display_for_field, unquote
 from django.contrib.contenttypes.generic import GenericInlineModelAdmin
 from django.core.exceptions import (ObjectDoesNotExist, ImproperlyConfigured)
-from django.core.urlresolvers import reverse
+from django.core.urlresolvers import reverse, resolve
 from django.http import HttpResponse, HttpResponseBadRequest, QueryDict
 from django.shortcuts import render_to_response
 from django.template import RequestContext
@@ -30,7 +30,7 @@ from editregions.utils.rendering import render_one_summary
 from editregions.admin.changelist import EditRegionChangeList
 from editregions.admin.forms import EditRegionInlineFormSet, MovementForm
 from editregions.admin.utils import (AdminChunkWrapper, shared_media,
-                                     guard_querystring_m, FakeObj)
+                                     guard_querystring_m)
 from editregions.models import EditRegionChunk
 from editregions.utils.regions import (get_enabled_chunks_for_region,
                                        get_pretty_region_name,
@@ -630,6 +630,62 @@ class ChunkAdmin(AdminlinksMixin):
         the super() change_view without doing so.
         """
         return super(ChunkAdmin, self).change_view(request, *args, **kwargs)
+
+    def maybe_fix_redirection(self, request, url, obj):
+        """
+        Inspect's a URL, and adds in our required fields if they're not there.
+        eg: if a URL has no querystring, or the querystring does not contain
+        `content_id`, `content_type` and `region` it will attempt to insert
+        them, and if `_autoclose` was in the requesting URL, it should be
+        maintained.
+        """
+        redirect = url.split('?')
+        # if there's no querystring, create one.
+        if len(redirect) < 2:
+            redirect.append('')
+        func = resolve(redirect[0]).func.func_closure[0].cell_contents
+        is_chunkadmin = (
+            hasattr(func, 'response_max'),
+            hasattr(func, 'render_into_region'),
+        )
+        if all(is_chunkadmin):
+            querystring = QueryDict(redirect[1], mutable=True)
+            querystring.update(content_id=obj.content_id,
+                               content_type=obj.content_type_id,
+                               region=obj.region)
+            if '_autoclose' in request.GET:
+                querystring.update(_autoclose=1)
+            redirect[1] = querystring.urlencode()
+            return '?'.join(redirect)
+        return url
+
+    def response_add(self, request, obj, *args, **kwargs):
+        """
+        Checks whether the response may need a querystring on the redirect,
+        so that it doesn't break because of a SuspiciousOperation caused by
+        guard_querystring_m
+        """
+        response = super(ChunkAdmin, self).response_add(request, obj,
+                                                           *args, **kwargs)
+        # if it's a redirect, we may need to put our required querystring items
+        if response.status_code in (301, 302):
+            response['Location'] = self.maybe_fix_redirection(
+                request=request, url=response['Location'], obj=obj)
+        return response
+
+    def response_change(self, request, new_object, *args, **kwargs):
+        """
+        Checks whether the response may need a querystring on the redirect,
+        so that it doesn't break because of a SuspiciousOperation caused by
+        guard_querystring_m
+        """
+        response = super(ChunkAdmin, self).response_change(request, new_object,
+                                                           *args, **kwargs)
+        # if it's a redirect, we may need to put our required querystring items
+        if response.status_code in (301, 302):
+            response['Location'] = self.maybe_fix_redirection(
+                request=request, url=response['Location'], obj=new_object)
+        return response
 
     @guard_querystring_m
     def delete_view(self, request, object_id, extra_context=None):
