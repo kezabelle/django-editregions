@@ -113,14 +113,14 @@ class MovementForm(Form):
         old_region = obj.region
         new_region = self.cleaned_data.get('region', obj.region)
 
-        next_chunks = get_chunks_for_region(content_type=obj.content_type,
-                                            content_id=obj.content_id,
-                                            region=new_region,
-                                            position__gte=obj.position)
-
+        next_chunks = EditRegionChunk.objects.filter(content_type=obj.content_type,
+                                                     content_id=obj.content_id,
+                                                     region=new_region,
+                                                     position__gte=obj.position)
         logger.debug('Push objects which should be affected, including the one '
                      'we in the position we need.')
         next_chunks.update(position=F('position') + 1)
+        del next_chunks  # not required hereafter.
 
         # if we've moved region, we need to update at least a partial set of
         # positions on the old region ... we do it here, before saving the
@@ -128,54 +128,50 @@ class MovementForm(Form):
         # last of all...
         old_chunks = None
         if old_region != new_region:
-            logger.debug('object moved from %(old_region)s to %(new_region)s' % {
-                'old_region': old_region,
-                'new_region': new_region,
-            })
+            logger.debug('object moved from {old} to {new}'.format(
+                         old=old_region, new=new_region))
             obj.region = new_region
-            old_chunks = get_chunks_for_region(content_type=obj.content_type,
-                                               content_id=obj.content_id,
-                                               region=old_region,
-                                               position__gte=old_position)
+            old_chunks = EditRegionChunk.objects.filter(content_type=obj.content_type,
+                                                        content_id=obj.content_id,
+                                                        region=old_region,
+                                                        position__gte=old_position)
 
         # we don't mind updating the `modified` field for this one, because
         # we moved it explicitly, and we may've also changed region ...
         obj.save()
-
-        all_chunks = get_chunks_for_region(content_type=obj.content_type,
-                                           content_id=obj.content_id,
-                                           region=new_region)
-        # find all the existing objects and iterate over each of them,
-        # doing an update (rather than save, to avoid changing the `modified`
-        # field) if they're not in the correct position.
-        for new_position, obj in enumerate(all_chunks.iterator(), 1):
-            if obj.position != new_position:
-                logger.debug('%(obj)r out of position, moving from %(old)d '
-                             'to %(new)d' % {
-                                 'obj': obj, 'old': obj.position,
-                                 'new': new_position,
-                             })
-                get_chunks_for_region(pk=obj.pk).update(position=new_position)
 
         if old_chunks is not None:
             logger.debug('all chunks in old region, which were after our moved '
                          'object, need to be shifted up by 1 to try and force '
                          'the positions into being contiguous again.')
             old_chunks.update(position=F('position') - 1)
+        del old_chunks, old_region  # we're finished handling the previous.
+
+        new_chunks = EditRegionChunk.objects.filter(content_type=obj.content_type,
+                                                    content_id=obj.content_id,
+                                                    region=new_region)
+        # find all the existing objects and iterate over each of them,
+        # doing an update (rather than save, to avoid changing the `modified`
+        # field) if they're not in the correct position.
+        for new_position, obj in enumerate(new_chunks.iterator(), 1):
+            if obj.position != new_position:
+                logger.debug('{obj!r} out of position, moving from'
+                             '{obj.position} to {new_position}'.format(
+                             obj=obj, new_position=new_position))
+                EditRegionChunk.objects.filter(pk=obj.pk).update(position=new_position)
         return obj
 
     def change_message(self):
         obj = self.cleaned_data['pk']
-        data = (obj.position, obj.region)
-        msg = 'Moved to position %d in region "%s"' % data
+        msg = 'Moved to position {obj.position} in region "{obj.region}"'.format(obj=obj)
         logger.info(msg)
         return obj, msg
 
     def parent_change_message(self):
         obj = self.cleaned_data['pk']
-        data = (force_unicode(obj._meta.verbose_name), obj.pk, obj.position,
-                obj.region)
-        msg = 'Moved %s (pk:%s) to position %d in region "%s"' % data
+        msg = 'Moved {vname} (pk: {obj.pk}) to position {obj.position} in ' \
+              'region "{obj.region}"'.format(vname=force_unicode(obj._meta.verbose_name),
+                                             obj=obj)
         logger.info(msg)
         return obj.content_object, msg
 
