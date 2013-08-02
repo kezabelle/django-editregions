@@ -239,14 +239,27 @@ class EditRegionAdmin(ModelAdmin):
                                # parent_id is the PK of the parent object in
                                # question. We don't know what format the PK takes
                                # so we accept anything.
-                               url(r'^(?P<parent_ct>\d+)/(?P<parent_id>.+)/$',
-                                   wrap(self.list_view),
+                               #url(r'^(?P<parent_ct>\d+)/(?P<parent_id>.+)/$',
+                               url(r'^$',
+                                   wrap(self.changelist_view),
                                    name='%s_%s_changelist' % info),
                                # moving an object from one position to another
                                # potentially across regions.
                                url(r'^move/$',
                                    wrap(self.move_view),
-                                   name='%s_%s_move' % info))
+                                   name='%s_%s_move' % info),
+                               # this thing is needed, unfortunately, to enable
+                               # the delete screen to work on EditRegionChunk
+                               # subclasses.
+                               # see https://code.djangoproject.com/ticket/20640
+                               # As I'm not thrilled with the idea of finding
+                               # the wrong edit screen ... we're going to
+                               # re-point it at the history view.
+                               url(r'^(.+)/$',
+                                   wrap(self.history_view),
+                                   name='%s_%s_change' % info),
+                               )
+
         return urlpatterns
     urls = property(get_urls)
 
@@ -343,7 +356,9 @@ class EditRegionAdmin(ModelAdmin):
     def get_admin_wrapper_class(self):
         return AdminChunkWrapper
 
-    def list_view(self, request, parent_ct, parent_id, extra_context=None):
+    def changelist_view(self, request, extra_context=None):
+        parent_ct = request.GET[REQUEST_VAR_CT]
+        parent_id = request.GET[REQUEST_VAR_ID]
         obj = get_model_class(parent_ct).objects.get(pk=parent_id)
         extra_context = extra_context or {}
         context = self.changelists_as_context_data(request, obj)
