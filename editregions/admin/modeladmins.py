@@ -691,13 +691,14 @@ class ChunkAdmin(AdminlinksMixin):
     def delete_view(self, request, object_id, extra_context=None):
         """
         This override exists to guard the querystring, but also to provide
-        *needed data* to the available context. This isn't used by the templates
-        though; instead it is used for ferrying the parent object details
-        to `get_response_delete_context` so that it can render the
-        changelists back to the client.
+        *needed data* to the available context. This is mostly used for ferrying
+        the parent object details to `get_response_delete_context` so that it
+        can render the changelists back to the client.
         """
         obj = self.get_object(request, unquote(object_id))
         needed_data = extra_context or {}
+        # emulate the behaviour of add/change_view
+        needed_data.update(is_popup="_popup" in request.REQUEST)
         if obj is not None:
             needed_data.update(gfk={'content_id': obj.content_id,
                                     'content_type': obj.content_type,

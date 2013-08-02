@@ -122,20 +122,27 @@
 
         if (window.frameElement === null) {
             $(fancyiframe_links).fancyiframe({
+                debug: true,
                 elements: {
                     prefix: 'django-adminlinks',
                     classes: 'adminlinks'
                 },
                 fades: {
-                    opacity: 0.90,
-                    overlayIn: 100,
-                    overlayOut: 250,
-                    wrapperIn: 0,
-                    wrapperOut: 250
+                    opacity: 0.93,
+                    overlayIn: 0,
+                    overlayOut: 0
+                },
+                callbacks: {
+                    href: function($element) {
+                        // we're not in a frame (so we're viewing the admin
+                        // directly;
+                        var new_href = $.fn.fancyiframe.defaults.callbacks.href($element);
+                        return new_href.toString() + '&amp;_popup=1'
+                    }
                 }
             });
         }
     };
 
     $(document).ready(ready_up);
-})(typeof django !== 'undefined' && django.jQuery || window.jQuery);
+})(django.jQuery);
