@@ -61,7 +61,8 @@
                 // to traverse back to the parent window and set a shared
                 // variable to indicate to the parent window that once we've
                 // closed this window, we need to refresh.
-                if (window.frameElement !== null) {
+                window.__data_changed__ = true;
+                if (window.frameElement !== void(0) && window.frameElement !== null) {
                     parent.window.__data_changed__ = true;
                 }
                 // wait a bit then remove the progress element from the DOM
