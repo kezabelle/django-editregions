@@ -1,6 +1,6 @@
 {% if link and verbose_name %}
 {% load i18n %}
-    <a href="{{ link }}" class="django-adminlinks--btn django-adminlinks--editregions"data-adminlinks="autoclose" data-no-turbolink>
+    <a href="{{ link }}" class="django-adminlinks--btn django-adminlinks--editregions" data-no-turbolink>
         {% trans "edit" %} {{ verbose_name }}
     </a>
 {% endif %}
