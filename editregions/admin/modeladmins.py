@@ -2,6 +2,7 @@
 from __future__ import unicode_literals
 from functools import update_wrapper
 import logging
+from urlparse import urlsplit, urlunsplit
 from django.conf import settings
 import warnings
 from django.template.response import TemplateResponse
@@ -631,82 +632,67 @@ class ChunkAdmin(AdminlinksMixin):
         """
         return super(ChunkAdmin, self).change_view(request, *args, **kwargs)
 
-    def maybe_fix_redirection(self, request, url, obj):
+    def maybe_fix_redirection(self, request, response, obj):
         """
+        This is basically a middleware for admin responses from add/edit
+        screens.
+
         Inspect's a URL, and adds in our required fields if they're not there.
         eg: if a URL has no querystring, or the querystring does not contain
         `content_id`, `content_type` and `region` it will attempt to insert
         them, and if `_autoclose` was in the requesting URL, it should be
         maintained.
         """
-        redirect = url.split('?')
-        # if there's no querystring, create one.
-        if len(redirect) < 2:
-            redirect.append('')
+        resp = super(ChunkAdmin, self).maybe_fix_redirection(request,
+                                                             response, obj)
+        if not resp.has_header('location') or not hasattr(resp, 'redirect_parts'):
+            return resp
 
         # get the modeladmin in question, from the URL provided.
-        func = resolve(redirect[0]).func.func_closure[0].cell_contents
+        func = resolve(resp.redirect_parts[2]).func.func_closure[0].cell_contents
         is_chunkadmin = (
             hasattr(func, 'response_max'),
             hasattr(func, 'render_into_region'),
         )
-        if all(is_chunkadmin):
-            # we don't want to autoclose, and we don't want to save a new
-            # or add another, so we're hopefully inside a bare add/change view
-            # so we probably ought to go back to the parent object's edit view.
-            redirect_to_parent_if = (
-                not self.wants_to_autoclose(request),
-                not self.wants_to_continue_editing(request)
-            )
-            if all(redirect_to_parent_if):
-                abuse_adminlink = _add_link_to_context(
-                    admin_site=self.admin_site.name, request=request,
-                    opts=obj.content_object._meta, permname='change',
-                    url_params=[obj.content_id], query=redirect[1])
-                return abuse_adminlink['link']
+        # it doesn't look like a chunk admin, so we can't know we need to
+        # redirect back to the parent.
+        if not all(is_chunkadmin):
+            return resp
 
-            # we either wanted to autoclose, or we wanted to continue/add another
-            # etc, so we don't want to redirect elsewhere, we just want to
-            # update the querystring with fields required by the ChunkAdmin
-            querystring = QueryDict(redirect[1], mutable=True)
-            querystring.update(content_id=obj.content_id,
-                               content_type=obj.content_type_id,
-                               region=obj.region)
-            if self.wants_to_autoclose(request):
-                querystring.update(_autoclose=1)
-            redirect[1] = querystring.urlencode()
-            return '?'.join(redirect)
-        return url
+        # we don't want to autoclose, and we don't want to save a new
+        # or add another, so we're hopefully inside a bare add/change view
+        # so we probably ought to go back to the parent object's edit view.
+        redirect_to_parent_if = (
+            not self.wants_to_autoclose(request),
+            not self.wants_to_continue_editing(request)
+        )
+        if all(redirect_to_parent_if):
+            abuse_adminlink = _add_link_to_context(
+                admin_site=self.admin_site.name, request=request,
+                opts=obj.content_object._meta, permname='change',
+                url_params=[obj.content_id], query=resp.redirect_parts[3])
+            resp.redirect_parts = list(urlsplit(abuse_adminlink['link']))
+            resp['Location'] = urlunsplit(resp.redirect_parts)
+            return resp
 
-    def response_add(self, request, obj, *args, **kwargs):
-        """
-        Checks whether the response may need a querystring on the redirect,
-        so that it doesn't break because of a SuspiciousOperation caused by
-        guard_querystring_m
-        """
-        response = super(ChunkAdmin, self).response_add(request, obj,
-                                                           *args, **kwargs)
-        # if it's a redirect, we may need to put our required querystring items
-        if response.status_code in (301, 302):
-            response['Location'] = self.maybe_fix_redirection(
-                request=request, url=response['Location'], obj=obj)
-        return response
+        # we either wanted to autoclose, or we wanted to continue/add another
+        # etc, so we don't want to redirect elsewhere, we just want to
+        # update the querystring with fields required by the ChunkAdmin
+        querystring = QueryDict(resp.redirect_parts[3], mutable=True)
+        
+        # delete any values which could be wrong [but shouldn't be!]
+        for x in ('content_id', 'content_type', 'region',):
+            if x in querystring:
+                del querystring[x]
+        querystring.update(content_id=obj.content_id,
+                           content_type=obj.content_type_id,
+                           region=obj.region)
+        if self.wants_to_autoclose(request):
+            querystring.update(_autoclose=1)
+        resp.redirect_parts[3] = querystring.urlencode()
+        resp['Location'] = urlunsplit(resp.redirect_parts)
+        return resp
 
-    def response_change(self, request, new_object, *args, **kwargs):
-        """
-        Checks whether the response may need a querystring on the redirect,
-        so that it doesn't break because of a SuspiciousOperation caused by
-        guard_querystring_m
-        """
-        response = super(ChunkAdmin, self).response_change(request, new_object,
-                                                           *args, **kwargs)
-        # if it's a redirect, we may need to put our required querystring items
-        if response.status_code in (301, 302):
-            response['Location'] = self.maybe_fix_redirection(
-                request=request, url=response['Location'], obj=new_object)
-        return response
-
-    @guard_querystring_m
     def delete_view(self, request, object_id, extra_context=None):
         """
         This override exists to guard the querystring, but also to provide
