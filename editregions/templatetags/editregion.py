@@ -38,6 +38,7 @@ class EditRegionTag(AsTag):
         django-debug-toolbar-template-timings.
     """
     model = EditRegionChunk
+    name = 'editregion'
     options = Options(
         StringArgument('name', required=True, resolve=True),
         Argument('content_object', required=True, default=None, resolve=True),
@@ -46,13 +47,10 @@ class EditRegionTag(AsTag):
 
     def render_tag(self, context, name, content_object, **kwargs):
         validate_region_name(name)
-
-        _tag_name = 'editregion'
-
         # somehow, a None got through. Interesting.
         if content_object is None:
             error = ttag_no_obj % {
-                'tagname': _tag_name,
+                'tagname': self.name,
                 'region': name,
             }
             logger.error(error)
@@ -83,7 +81,7 @@ class EditRegionTag(AsTag):
             # we didn't get a proper django model, but something has definitely
             # been passed in, because the earlier None sentinel didn't catch it.
             error = ttag_not_model % {
-                'tagname': _tag_name,
+                'tagname': self.name,
                 'type': type(content_object).__name__
             }
             if settings.DEBUG:
@@ -122,4 +120,4 @@ class EditRegionTag(AsTag):
             return u''
 
         return u'\n'.join(results)
-register.tag('editregion', EditRegionTag)
+register.tag(EditRegionTag.name, EditRegionTag)
