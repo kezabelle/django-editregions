@@ -10,7 +10,6 @@ from adminlinks.admin import AdminlinksMixin
 from django.contrib import admin
 from django.contrib.admin.options import ModelAdmin
 from django.contrib.admin.util import display_for_field, unquote
-from django.contrib.contenttypes.generic import GenericInlineModelAdmin
 from django.core.exceptions import (ObjectDoesNotExist, ImproperlyConfigured)
 from django.core.urlresolvers import reverse, resolve
 from django.http import HttpResponse, HttpResponseBadRequest, QueryDict
@@ -23,6 +22,7 @@ from django.utils.html import strip_tags
 from django.utils.text import truncate_words
 from django.utils.translation import ugettext_lazy as _
 from adminlinks.templatetags.utils import _add_link_to_context
+from editregions.admin.inlines import EditRegionInline
 from editregions.constants import (REQUEST_VAR_REGION, REQUEST_VAR_CT,
                                    REQUEST_VAR_ID)
 from editregions.utils.chunks import get_chunks_for_region
@@ -30,7 +30,7 @@ from editregions.utils.data import (get_modeladmin, get_content_type,
                                     get_model_class)
 from editregions.utils.rendering import render_one_summary
 from editregions.admin.changelist import EditRegionChangeList
-from editregions.admin.forms import EditRegionInlineFormSet, MovementForm
+from editregions.admin.forms import MovementForm
 from editregions.admin.utils import (AdminChunkWrapper, shared_media,
                                      guard_querystring_m)
 from editregions.models import EditRegionChunk
@@ -478,36 +478,6 @@ class EditRegionAdmin(ModelAdmin):
         base_media = super(EditRegionAdmin, self).media
         return base_media + shared_media
 admin.site.register(EditRegionChunk, EditRegionAdmin)
-
-
-class EditRegionInline(GenericInlineModelAdmin):
-    model = EditRegionChunk
-    can_delete = False
-    extra = 0
-    max_num = 0
-    ct_field = REQUEST_VAR_CT
-    ct_fk_field = REQUEST_VAR_ID
-    template = 'admin/editregions/edit_inline/none.html'
-
-    def get_formset(self, request, obj=None, **kwargs):
-        # sidestep validation which wants to inherit from BaseModelFormSet
-        self.formset = EditRegionInlineFormSet
-        formset = super(EditRegionInline, self).get_formset(request, obj, **kwargs)
-        modeladmin = get_modeladmin(EditRegionChunk, self.admin_site.name)
-        if obj is not None and request.method == 'POST':
-            # As I won't remember why we have to do this, later, this is the
-            # traceback which not doing it caused:
-            # https://gist.github.com/kezabelle/40653a0ad1ffd8fc77ba
-            # Basically, the template gets changed half way through the request
-            # because of the different points at which objects are saved.
-            # By not relying on the new instance (with the changed template)
-            # instead using the one in the DB (with the old template) we can
-            # ensure the regions line up correctly.
-            logger.info('Editing an %(obj)r; we may be changing the region '
-                        'group being used, so re-grabbing the DB version')
-            obj = obj.__class__.objects.get(pk=obj.pk)
-        formset.region_changelists = modeladmin.get_changelists_for_object(request, obj)
-        return formset
 
 
 class ChunkAdmin(AdminlinksMixin):
