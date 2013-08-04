@@ -115,7 +115,7 @@ class EditRegionTag(AsTag):
                          cache=DEFAULT_CACHE_ALIAS))
             chunks = list(render_all_chunks(template, context, name, results))
 
-        if inherit:
+        if inherit and len(chunks) < 1:
             # make sure we have the damn method we need.
             try:
                 parents = content_object.get_ancestors()
