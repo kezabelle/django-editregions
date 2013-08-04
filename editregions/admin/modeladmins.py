@@ -615,27 +615,31 @@ class ChunkAdmin(AdminlinksMixin):
         """
         resp = super(ChunkAdmin, self).maybe_fix_redirection(request,
                                                              response, obj)
-        if not resp.has_header('location') or not hasattr(resp, 'redirect_parts'):
+        return_early = (
+            not resp.has_header('location'),
+            not hasattr(resp, 'redirect_parts'),
+            hasattr(resp, 'canonical'), # something wants to be *final*
+        )
+        if any(return_early):
             return resp
 
         # get the modeladmin in question, from the URL provided.
         func = resolve(resp.redirect_parts[2]).func.func_closure[0].cell_contents
-        is_chunkadmin = (
-            hasattr(func, 'response_max'),
-            hasattr(func, 'render_into_region'),
-        )
+
         # it doesn't look like a chunk admin, so we can't know we need to
         # redirect back to the parent.
-        if not all(is_chunkadmin):
+        if (not hasattr(func, 'response_max')
+                and not hasattr(func, 'render_into_region')):
             return resp
 
-        # we don't want to autoclose, and we don't want to save a new
-        # or add another, so we're hopefully inside a bare add/change view
-        # so we probably ought to go back to the parent object's edit view.
+        # set up reasons to go back to the parent object's edit view.
         redirect_to_parent_if = (
             not self.wants_to_autoclose(request),
             not self.wants_to_continue_editing(request)
         )
+        # we don't want to autoclose, and we don't want to save a new
+        # or add another, so we're hopefully inside a bare add/change view
+        # so we probably ought to go back to the parent object's edit view.
         if all(redirect_to_parent_if):
             abuse_adminlink = _add_link_to_context(
                 admin_site=self.admin_site.name, request=request,
@@ -701,7 +705,8 @@ class ChunkAdmin(AdminlinksMixin):
         modeladmin = get_modeladmin(EditRegionChunk, self.admin_site.name)
         changelists = modeladmin.render_changelists_for_object(
             request=request, obj=obj.content_object)
-        context = super(ChunkAdmin, self).get_response_change_context(request, obj)
+        context = super(ChunkAdmin, self).get_response_change_context(request,
+                                                                      obj)
         context.update(html=changelists)
         return context
 
