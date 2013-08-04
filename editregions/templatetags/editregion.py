@@ -101,19 +101,7 @@ class EditRegionTag(AsTag):
                                         content_type=content_type, region=name)
         templates = content_object.get_region_groups()
         template = get_first_valid_template(templates)
-        # if it's being used as an `as x` output tag,
-        # return the unjoined list.
-        #if kwargs.pop(self.varname_name):
-        #    return render_all_chunks(context, name, results)
-        KEY = RENDERED_CACHE_KEY.format(content_type_id=content_type.pk,
-                                        content_id=content_object.pk,
-                                        region=name)
-        chunks = cache.get(KEY, None)
-        if chunks is None:
-            logger.debug("key {key} was not found in the '{cache}' backend, "
-                         "so we're polling the DB for chunks".format(key=KEY,
-                         cache=DEFAULT_CACHE_ALIAS))
-            chunks = list(render_all_chunks(template, context, name, results))
+        chunks = list(render_all_chunks(template, context, name, results))
 
         if inherit and len(chunks) < 1:
             # make sure we have the damn method we need.

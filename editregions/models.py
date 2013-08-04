@@ -48,6 +48,7 @@ class EditRegionChunk(ChangeTracking, Generic):
         if form.is_valid():
             return form.save()
         return form.errors
+    move.alters_data = True
 
     class Meta:
         abstract = False
@@ -55,26 +56,3 @@ class EditRegionChunk(ChangeTracking, Generic):
         db_table = 'editregions_editregionchunk'
         verbose_name = chunk_v
         verbose_name_plural = chunk_vplural
-
-
-def remove_from_cache(instance, **kwargs):
-    """
-    Given an instance (a :class:`~editregions.models.EditRegionChunk` subclass)
-    we construct a key using
-    :attr:`~editregions.constants.EditRegionsConf.RENDERED_CACHE_KEY`
-    and attempt to delete it from the default cache backend. We don't even
-    care if it fails.
-
-    We only care about the instance, so we're just smashing everything else
-    into kwargs.
-    """
-    KEY = RENDERED_CACHE_KEY.format(content_type_id=instance.content_type_id,
-                                    content_id=instance.content_id,
-                                    region=instance.region)
-    logger.debug('Clearing cache key {key!s} from the "{cache}" backend '
-                 'because {obj!r} was saved'.format(key=KEY, obj=instance,
-                                                    cache=DEFAULT_CACHE_ALIAS))
-    cache.delete(KEY)
-
-post_save.connect(receiver=remove_from_cache, sender=EditRegionChunk,
-                  dispatch_uid='editregions_chunk_remove_from_cache')
