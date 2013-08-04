@@ -6,9 +6,7 @@ from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
 from classytags.core import Options
 from classytags.arguments import Argument, StringArgument, Flag
-from django.core.cache import cache, DEFAULT_CACHE_ALIAS
 from django.core.exceptions import ImproperlyConfigured
-from editregions.constants import RENDERED_CACHE_KEY
 from editregions.models import EditRegionChunk
 from editregions.text import ttag_no_obj, ttag_not_model, ttag_no_ancestors
 from editregions.utils.chunks import get_chunks_for_region, render_all_chunks

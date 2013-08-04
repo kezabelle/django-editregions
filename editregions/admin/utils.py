@@ -8,7 +8,8 @@ from django.forms import Media
 from django.http import QueryDict
 from django.utils.decorators import method_decorator, available_attrs
 from django.utils.text import truncate_words
-from editregions.constants import REQUEST_VAR_REGION, REQUEST_VAR_ID, REQUEST_VAR_CT
+from editregions.constants import (REQUEST_VAR_REGION, REQUEST_VAR_ID,
+                                   REQUEST_VAR_CT)
 from editregions.utils.rendering import render_one_summary
 from helpfulfields.admin import changetracking_readonlys, changetracking_fieldset
 from editregions.utils.regions import validate_region_name
@@ -256,3 +257,4 @@ class FakeObj(object):
 
     def _get_pk_val(self):
         return self.pk
+
