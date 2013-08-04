@@ -19,7 +19,6 @@ from django.template.loader import render_to_string
 from django.utils import simplejson
 from django.utils.encoding import force_unicode
 from django.utils.html import strip_tags
-from django.utils.text import truncate_words
 from django.utils.translation import ugettext_lazy as _
 from adminlinks.templatetags.utils import _add_link_to_context
 from editregions.admin.inlines import EditRegionInline
@@ -41,6 +40,13 @@ from editregions.utils.regions import (get_enabled_chunks_for_region,
 from editregions.text import (admin_chunktype_label, admin_summary_label,
                               admin_position_label, admin_modified_label,
                               region_v)
+
+try:
+    from django.utils.text import Truncator
+    def truncate_words(s, num):
+        return Truncator(s).words(num, truncate='...')
+except ImportError as e:
+    from django.utils.text import truncate_words
 
 logger = logging.getLogger(__name__)
 
