@@ -149,6 +149,18 @@
                     }
                 }
             });
+        } else {
+            $(fancyiframe_links).each(function() {
+                var $t = $(this);
+                var href = $t.attr('href');
+                var redirect = encodeURIComponent(window.location.pathname + window.location.search);
+                if (href.indexOf('?') === -1) {
+                    href += '?next=' + redirect;
+                } else {
+                    href += '&next=' + redirect;
+                }
+                $t.attr('href', href);
+            });
         }
     };
 
