@@ -27,4 +27,6 @@ ttag_not_model = _(u'"%(tagname)s" expected a Django model, got %(type)s instead
 admin_chunktype_label = _(u'type')
 admin_summary_label = _(u'summary')
 admin_position_label = _(u'#')
+ttag_no_ancestors = _('%(obj)s must have `%(attr)s` to continue using'
+                      '`%(thing)s`')
 admin_modified_label = modified_label
