@@ -35,8 +35,7 @@ class EditRegionToolbar(BaseAdminLink, InclusionTag):
 
         Always returns the existing context.
         """
-        if 1:
-            return {}
+        # validate_region_name(region_name)
         site = get_admin_site(admin_site)
         if site is None:
             logger.debug('Invalid admin site')
