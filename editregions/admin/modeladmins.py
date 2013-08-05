@@ -483,7 +483,6 @@ class EditRegionAdmin(ModelAdmin):
     def media(self):
         base_media = super(EditRegionAdmin, self).media
         return base_media + shared_media
-admin.site.register(EditRegionChunk, EditRegionAdmin)
 
 
 class ChunkAdmin(AdminlinksMixin):
