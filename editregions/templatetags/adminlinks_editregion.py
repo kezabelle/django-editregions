@@ -35,11 +35,11 @@ class EditRegionToolbar(BaseAdminLink, InclusionTag):
 
         Always returns the existing context.
         """
-        # validate_region_name(region_name)
         site = get_admin_site(admin_site)
         if site is None:
             logger.debug('Invalid admin site')
             return {}
+
         content_type = get_content_type(obj)
         new_querystring = QueryDict(querystring, mutable=True)
         new_querystring.update({'content_type': content_type.pk,
@@ -58,4 +58,6 @@ class EditRegionToolbar(BaseAdminLink, InclusionTag):
             link['obj_name'] = obj._meta.verbose_name
         return link
 register.tag(name='render_adminlinks_editregion',
+             compile_function=EditRegionToolbar)
+register.tag(name='render_editregions_button',
              compile_function=EditRegionToolbar)
