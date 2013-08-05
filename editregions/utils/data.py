@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 import logging
 from django.contrib.contenttypes.models import ContentType
+from django.core.exceptions import ImproperlyConfigured
+from django.conf import settings
 from adminlinks.templatetags.utils import get_admin_site
 
 logger = logging.getLogger(__name__)
@@ -52,4 +54,14 @@ def get_modeladmin(obj, admin_namespace='admin'):
     Allows us to provide a class or instance and get back the modeladmin.
     """
     model = get_model_class(obj)
-    return get_admin_site(admin_namespace)._registry[model]
+    admin = get_admin_site(admin_namespace)
+    try:
+        return admin._registry[model]
+    except KeyError as e:
+        if settings.DEBUG:
+            msg = '{key} not found in {admin}'.format(key=e.args[0],
+                                                      admin=admin.__class__)
+            raise ImproperlyConfigured(msg)
+        raise
+    # except AttributeError <= could happen, but wtf should I do then, it's
+    # unrecoverable ...?
