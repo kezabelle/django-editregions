@@ -352,13 +352,17 @@ class EditRegionAdmin(ModelAdmin):
         templates = parent_obj.get_region_groups()
         template = get_first_valid_template(templates)
         AdminChunkWrapper = self.get_admin_wrapper_class()
-        filters = (AdminChunkWrapper(**{
+        filters = [AdminChunkWrapper(**{
             'opts': x._meta,
             'namespace': self.admin_site.app_name,
             'region': region,
             'content_type': ct,
             'content_id': pk,
-        }) for x in get_enabled_chunks_for_region(template, region))
+        }) for x in get_enabled_chunks_for_region(template, region)]
+        if len(filters) == 0:
+            msg = "region '{region}' has zero chunk types configured in the" \
+                  "`EDIT_REGIONS` dictionary".format(region=region)
+            logger.warning(msg)
         return filters
 
     def get_admin_wrapper_class(self):
@@ -658,7 +662,7 @@ class ChunkAdmin(AdminlinksMixin):
         # etc, so we don't want to redirect elsewhere, we just want to
         # update the querystring with fields required by the ChunkAdmin
         querystring = QueryDict(resp.redirect_parts[3], mutable=True)
-        
+
         # delete any values which could be wrong [but shouldn't be!]
         for x in ('content_id', 'content_type', 'region',):
             if x in querystring:
