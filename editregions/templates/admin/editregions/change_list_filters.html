@@ -7,9 +7,15 @@
         <ul class="add-chunks__available">
             {% for chunk in chunk_set.list %}
                 <li>
-                    {% if chunk.get_absolute_url %}<a href="{{ chunk.get_absolute_url }}" data-adminlinks="autoclose" data-no-turbolink>{% endif %}
+                    {% if chunk.get_absolute_url %}
+                        <a href="{{ chunk.get_absolute_url }}" data-adminlinks="autoclose" data-no-turbolink>
                         {{ chunk.label|capfirst }}
-                    {% if chunk.get_absolute_url %}</a>{% endif %}
+                        </a>
+                    {% else %}
+                        <span title="{% trans 'Not mounted/No permission' %}">
+                        {{ chunk.label|capfirst }}
+                        </span>
+                    {% endif %}
                 </li>
             {% endfor %}
         </ul>
