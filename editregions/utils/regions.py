@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import logging
-from django.core.exceptions import ValidationError
+from django.conf import settings
+from django.core.exceptions import ValidationError, ObjectDoesNotExist
 from django.db.models.loading import get_model
 from django.utils.datastructures import SortedDict
 import re
@@ -127,7 +128,10 @@ def get_enabled_chunks_for_region(template, name, given_settings=None):
             if model is not None and (count is None or count > 0):
                 resolved.update({model: count})
             if model is None:
-                logger.error('Unable to find model "%(chunk)s"' % {'chunk': chunk})
+                msg = 'Unable to load model "{cls}"'.format(cls=chunk)
+                if settings.DEBUG:
+                    raise ObjectDoesNotExist(msg)
+                logger.error(msg)
     if len(resolved) == 0:
         logger.debug('No chunks types found for "%(region)s"' % {'region': name})
     return resolved
