@@ -66,7 +66,7 @@ class EditRegionAdmin(ModelAdmin):
 
     list_display = [
         'get_position',
-        'get_region_name',
+        # 'get_region_name',
         'get_subclass_type',
         'get_subclass_summary',
         'get_last_modified',
