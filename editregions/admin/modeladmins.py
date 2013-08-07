@@ -628,6 +628,7 @@ class ChunkAdmin(AdminlinksMixin):
             not resp.has_header('location'),
             not hasattr(resp, 'redirect_parts'),
             hasattr(resp, 'canonical'), # something wants to be *final*
+            obj is None,
         )
         if any(return_early):
             return resp
