@@ -611,7 +611,7 @@ class ChunkAdmin(AdminlinksMixin):
         """
         return super(ChunkAdmin, self).change_view(request, *args, **kwargs)
 
-    def maybe_fix_redirection(self, request, response, obj):
+    def maybe_fix_redirection(self, request, response, obj=None):
         """
         This is basically a middleware for admin responses from add/edit
         screens.
