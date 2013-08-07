@@ -36,11 +36,7 @@ class EditRegionChunk(ChangeTracking, Generic):
                'parent_id={x.content_id}, position={x.position}'.format(x=self)
 
     def __unicode__(self):
-        ct = get_content_type(self.content_type_id).model_class()
-        return u'attached to %(content_object)s via region "%(region)s"' % {
-            'content_object': unicode(ct._meta.verbose_name),
-            'region': self.region,
-        }
+        return 'Chunk'
 
     def move(self, requested_position):
         from editregions.admin.forms import MovementForm
