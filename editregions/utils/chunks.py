@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 import logging
-from django.contrib.contenttypes.models import ContentType
-from django.core.exceptions import ImproperlyConfigured
-from django.db.models.fields.related import OneToOneField
+# from django.contrib.contenttypes.models import ContentType
+# from django.core.exceptions import ImproperlyConfigured
+# from django.db.models.fields.related import OneToOneField
 from adminlinks.templatetags.utils import convert_context_to_dict
 from editregions.utils.rendering import render_one_chunk
 from editregions.models import EditRegionChunk
@@ -34,17 +34,16 @@ def get_chunks_for_region(**base_filters):
     .. seealso:: :class:`~editregions.templatetags.editregion.EditRegionTag`
     """
     logger.debug('Finding EditRegionChunk subclasses using %r' % base_filters)
+    # import pdb; pdb.set_trace()
+    # chunks = get_enabled_chunks_for_region(template=template, name=region)
+    # qs = EditRegionChunk.polymorphs.filter(**base_filters)
+    # # try and select everything
+    # if not chunks:
+    #     qs = qs.select_subclasses()
+    # else:
+    #     qs = qs.select_subclasses(*get_related_names_for_enabled_chunks(chunks))
+    # return qs
     return EditRegionChunk.polymorphs.filter(**base_filters).select_subclasses()
-
-
-def get_related_names_for_enabled_chunks(enabled_chunks):
-    """
-    Accepts a list of regions out of get_enabled_chunks_for_region and attempts
-    to calculate back the related name to EditRegionChunk, for use in
-    select_subclasses.
-    """
-    return [x._meta.get_ancestor_link(EditRegionChunk).related_query_name()
-                        for x in enabled_chunks.keys()]
 
 
 def chunk_iteration_context(index, value, iterable):
@@ -71,7 +70,13 @@ def chunk_iteration_context(index, value, iterable):
         'region': value.region,
         'remaining_plugins': iterable[index_plus:],
         'used_plugins': iterable[:index],
-        'object': value,
+        # 'object': value,
+        'previous_plugin': None,
+        'previous': None,
+        'previous0': None,
+        'next_plugin': None,
+        'next': None,
+        'next0': None,
     }
 
     try:
@@ -86,11 +91,7 @@ def chunk_iteration_context(index, value, iterable):
         # minus numbers will still retrieve things from the `iterable`, only
         # from the other end.
         # Should be the first iteration, so no previous can exist.
-        plugin_context.update(
-            previous_plugin=None,
-            previous=None,
-            previous0=None
-        )
+        pass
 
     try:
         plugin_context.update(
@@ -101,13 +102,9 @@ def chunk_iteration_context(index, value, iterable):
     except IndexError:
         # Unable to get anything from `plugins` at position `index`.
         # Should be the last iteration, so there can be no next.
-        plugin_context.update(
-            next_plugin=None,
-            next=None,
-            next0=None
-        )
+        pass
 
-    return {'chunk': plugin_context}
+    return {'chunkloop': plugin_context}
 
 
 def render_all_chunks(template, context, region, found_chunks):
