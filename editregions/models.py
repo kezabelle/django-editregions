@@ -1,13 +1,20 @@
 # -*- coding: utf-8 -*-
 import logging
+import os
+import re
 from django.core.cache import cache, DEFAULT_CACHE_ALIAS
 from django.db.models.fields import CharField, PositiveIntegerField
 from django.db.models.signals import post_save
+from django.template.loader import select_template
+from django.template.context import Context
+from django.utils import simplejson as json
+from django.utils.datastructures import SortedDict
+from django.db.models.loading import get_model
 from editregions.constants import RENDERED_CACHE_KEY
 from model_utils.managers import PassThroughManager, InheritanceManager
 from editregions.querying import EditRegionChunkQuerySet
 from editregions.text import chunk_v, chunk_vplural
-from editregions.utils.data import get_content_type
+from editregions.utils.data import get_content_type, get_modeladmin
 from editregions.utils.regions import validate_region_name
 from helpfulfields.models import Generic, ChangeTracking
 
@@ -52,3 +59,70 @@ class EditRegionChunk(ChangeTracking, Generic):
         db_table = 'editregions_editregionchunk'
         verbose_name = chunk_v
         verbose_name_plural = chunk_vplural
+
+
+class EditRegionConfiguration(object):
+    def __init__(self, obj):
+        self.obj = obj
+        self.modeladmin = get_modeladmin(self.obj)
+        self.possible_templates = self.modeladmin.get_editregions_templates(
+            obj=self.obj)
+        self.get_first_valid_template()
+        self.get_template_region_configuration()
+        self.fallback_region_name_re = re.compile(r'[_\W]+')
+
+    def get_first_valid_template(self):
+        """
+        Given a bunch of templates (tuple, list), find the first one in the
+        settings dictionary. Assumes the incoming template list is ordered in
+        discovery-preference order.
+        """
+        if isinstance(self.possible_templates, basestring):
+            template_names = (self.possible_templates,)
+        else:
+            template_names = self.possible_templates
+        self.template = select_template('%s.json' % os.path.splitext(x)[0]
+                                        for x in template_names)
+
+    def get_template_region_configuration(self):
+        rendered_template = self.template.render(Context())
+        parsed_template = json.loads(rendered_template)
+        for key, config in parsed_template.items():
+            if 'models' in parsed_template[key]:
+                parsed_template[key]['models'] = self.get_enabled_chunks_for_region(parsed_template[key]['models'])
+
+            if 'name' not in parsed_template[key]:
+                logbits = {'region': key}
+                logger.debug('No declared name for "%(region)s" in configuration, '
+                             'falling back to using a regular expression' % logbits)
+                parsed_template[key]['name'] = re.sub(
+                    pattern=self.fallback_region_name_re, string=key, repl=' ')
+        self.config = parsed_template
+
+    def get_enabled_chunks_for_region(self, model_mapping):
+        """
+        Get the list of available chunks. This allows chunks to exist in the database
+        but get turned off after the fact, without deleting them.
+
+        Returns an dictionary like object (specifically, a `SortedDict`) whose
+        keys are the actual models, rather than dotted paths, and whose values are the
+        counts for each chunk.
+        """
+        resolved = SortedDict()
+        # Replace the dotted app_label/model_name combo with the actual model.
+        for chunk, count in model_mapping.items():
+            model = get_model(*chunk.split('.')[0:2])
+            # Once we have a model and there's no stupid limit set,
+            # add it to our new data structure.
+            # Note that while None > 0 appears correct,
+            # it isn't because None is a special value for infinite.
+            if model is not None and (count is None or count > 0):
+                resolved.update({model: count})
+            if model is None:
+                msg = 'Unable to load model "{cls}"'.format(cls=chunk)
+                if settings.DEBUG:
+                    raise ObjectDoesNotExist(msg)
+                logger.error(msg)
+        if len(resolved) == 0:
+            logger.debug('No chunks types found for "%(region)s"' % {'region': name})
+        return resolved
