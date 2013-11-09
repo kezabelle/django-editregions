@@ -32,11 +32,12 @@ from editregions.admin.changelist import EditRegionChangeList
 from editregions.admin.forms import MovementForm
 from editregions.admin.utils import (AdminChunkWrapper, shared_media,
                                      guard_querystring_m)
-from editregions.models import EditRegionChunk
+from editregions.models import EditRegionChunk, EditRegionConfiguration
 from editregions.utils.regions import (get_enabled_chunks_for_region,
                                        get_pretty_region_name,
                                        get_first_valid_template,
-                                       get_regions_for_template)
+                                       get_regions_for_template,
+                                       discover_template_and_configuration)
 from editregions.text import (admin_chunktype_label, admin_summary_label,
                               admin_position_label, admin_modified_label,
                               region_v)
@@ -348,9 +349,7 @@ class EditRegionAdmin(ModelAdmin):
             parent_obj = get_model_class(ct).objects.get(pk=pk)
         except ObjectDoesNotExist as e:
             return HttpResponseBadRequest('something went wrong')
-
-        templates = parent_obj.get_region_groups()
-        template = get_first_valid_template(templates)
+        erc = EditRegionConfiguration(parent_obj)
         AdminChunkWrapper = self.get_admin_wrapper_class()
         filters = [AdminChunkWrapper(**{
             'opts': x._meta,
@@ -358,10 +357,10 @@ class EditRegionAdmin(ModelAdmin):
             'region': region,
             'content_type': ct,
             'content_id': pk,
-        }) for x in get_enabled_chunks_for_region(template, region)]
+        }) for x in erc.config[region]['models']]
         if len(filters) == 0:
-            msg = "region '{region}' has zero chunk types configured in the" \
-                  "`EDIT_REGIONS` dictionary".format(region=region)
+            msg = "region '{region}' has zero chunk types configured".format(
+                region=region)
             logger.warning(msg)
         return filters
 
@@ -392,34 +391,6 @@ class EditRegionAdmin(ModelAdmin):
         return TemplateResponse(request, self.change_list_template,
                                 context, current_app=self.admin_site.name)
 
-    def get_regions_for_object(self, request, obj, **kwargs):
-        """
-        We only want to get regions once an object has been initially saved, so
-        that we can access the appropriate ContentType and Object ID pair.
-
-        If editing an existing object, regions found by scanning a template
-        will be returned, and sorted into a unique list in the order they appear
-        in the compiled template.
-        """
-        try:
-            logger.debug('Requesting region group choices from %(obj)r' % {
-                'obj': obj,
-            })
-            templates = obj.get_region_groups()
-        except AttributeError as e:
-            msg = ('%(obj)r must have a `get_region_groups` method to be '
-                   'used with %(cls)r' % {
-                       'obj': obj.__class__, 'cls': EditRegionInline
-                   })
-            logger.error(msg)
-            if settings.DEBUG:
-                raise ImproperlyConfigured(msg)
-            #: in production, we may not raise ImproperlyConfigured, in which
-            #: we would be accessing `templates` without it being set.
-            templates = ()
-        template = get_first_valid_template(templates)
-        return get_regions_for_template(template)
-
     def get_changelists_for_object(self, request, obj, **kwargs):
         changelists = []
 
@@ -435,8 +406,8 @@ class EditRegionAdmin(ModelAdmin):
             new_get = QueryDict('', mutable=True)
             new_get[REQUEST_VAR_CT] = get_content_type(obj).pk
             new_get[REQUEST_VAR_ID] = obj.pk
-
-            for region in self.get_regions_for_object(request, obj):
+            erc = EditRegionConfiguration(obj)
+            for region in erc.config:
                 new_get[REQUEST_VAR_REGION] = region
                 request.GET = new_get
                 our_list_display = self.list_display[:]

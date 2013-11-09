@@ -9,6 +9,7 @@ from django.contrib.admin.views.main import ChangeList
 from editregions.utils.regions import (get_pretty_region_name,
                                        get_first_valid_template)
 from editregions.utils.data import get_content_type
+from editregions.models import EditRegionConfiguration
 
 
 logger = logging.getLogger(__name__)
@@ -38,21 +39,6 @@ class EditRegionChangeList(ChangeList):
 
         parent_obj = (get_content_type(self.parent_content_type).model_class()
                       .objects.get(pk=self.parent_content_id))
-        try:
-            self.template = get_first_valid_template(parent_obj.get_region_groups())
-        except AttributeError as e:
-            msg = ('%(obj)r must have a `get_region_groups` method to be '
-                   'used with %(cls)r' % {
-                       'obj': parent_obj.__class__, 'cls': EditRegionChangeList
-                   })
-            logger.error(msg)
-            if settings.DEBUG:
-                raise ImproperlyConfigured(msg)
-
-        try:
-            self.get_region_display = get_pretty_region_name(self.template,
-                                                             self.region)
-        except TypeError as e:
-            # unable to parse with the re module because self.region is None
-            # and re expected string or buffer
-            self.get_region_display = self.region
+        erc = EditRegionConfiguration(parent_obj)
+        self.template = erc.template
+        self.get_region_display = erc.config[self.region]['name']
