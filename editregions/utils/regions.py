@@ -72,18 +72,18 @@ def validate_region_name(name):
 fallback_region_name_re = re.compile(r'[_\W]+')
 
 
-def get_first_valid_template(template_names):
-    """
-    Given a bunch of templates (tuple, list), find the first one in the
-    settings dictionary. Assumes the incoming template list is ordered in
-    discovery-preference order.
-    """
-    if isinstance(template_names, basestring):
-        template_names = (template_names,)
-
-    discovered = select_template('%s.json' % os.path.splitext(x)[0]
-                                 for x in template_names)
-    return discovered
+# def get_first_valid_template(template_names):
+#     """
+#     Given a bunch of templates (tuple, list), find the first one in the
+#     settings dictionary. Assumes the incoming template list is ordered in
+#     discovery-preference order.
+#     """
+#     if isinstance(template_names, basestring):
+#         template_names = (template_names,)
+#
+#     discovered = select_template('%s.json' % os.path.splitext(x)[0]
+#                                  for x in template_names)
+#     return discovered
 
 
 def get_template_region_configuration(template):
@@ -150,14 +150,14 @@ def get_enabled_chunks_for_region(model_mapping):
     return resolved
 
 
-def discover_template_and_configuration(template_names):
-    template = get_first_valid_template(template_names=template_names)
-    config = get_template_region_configuration(template)
-    for region_name in config:
-        if 'name' not in config[region_name]:
-            logbits = {'region': region_name}
-            logger.debug('No declared name for "%(region)s" in configuration, '
-                         'falling back to using a regular expression' % logbits)
-            config[region_name]['name'] = re.sub(pattern=fallback_region_name_re,
-                                                 string=region_name, repl=' ')
-    return template, config
+# def discover_template_and_configuration(template_names):
+#     template = get_first_valid_template(template_names=template_names)
+#     config = get_template_region_configuration(template)
+#     for region_name in config:
+#         if 'name' not in config[region_name]:
+#             logbits = {'region': region_name}
+#             logger.debug('No declared name for "%(region)s" in configuration, '
+#                          'falling back to using a regular expression' % logbits)
+#             config[region_name]['name'] = re.sub(pattern=fallback_region_name_re,
+#                                                  string=region_name, repl=' ')
+#     return template, config

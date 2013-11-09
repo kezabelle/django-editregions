@@ -6,12 +6,13 @@ from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
 from classytags.core import Options
 from classytags.arguments import Argument, StringArgument, Flag
+from django.core.cache import cache, DEFAULT_CACHE_ALIAS
 from django.core.exceptions import ImproperlyConfigured
+from editregions.constants import RENDERED_CACHE_KEY
 from editregions.models import EditRegionChunk
 from editregions.text import ttag_no_obj, ttag_not_model, ttag_no_ancestors
 from editregions.utils.chunks import get_chunks_for_region, render_all_chunks
-from editregions.utils.regions import (validate_region_name,
-                                       get_first_valid_template)
+from editregions.utils.regions import validate_region_name
 from editregions.utils.data import get_content_type
 
 register = template.Library()
@@ -67,7 +68,8 @@ class EditRegionTag(AsTag):
                                               inherit, **kwargs)
             return ''
         else:
-            return self.get_tag(context, name, content_object, inherit, **kwargs)
+            return self.get_tag(context, name, content_object, inherit,
+                                **kwargs)
 
     def get_content_type(self, content_object):
         try:
@@ -94,12 +96,10 @@ class EditRegionTag(AsTag):
         content_type = self.get_content_type(content_object)
         if content_type is None:
             return ()
-
+        erc = EditRegionConfiguration(content_object)
         results = get_chunks_for_region(content_id=content_object.pk,
                                         content_type=content_type, region=name)
-        templates = content_object.get_region_groups()
-        template = get_first_valid_template(templates)
-        chunks = list(render_all_chunks(template, context, name, results))
+        chunks = list(render_all_chunks(erc.template, context, name, results))
 
         if inherit and len(chunks) < 1:
             # make sure we have the damn method we need.
@@ -134,6 +134,6 @@ class EditRegionTag(AsTag):
         results = self.get_value(context, name, content_object, inherit, **kwargs)
         if results is None:
             return u''
-
+        import pdb; pdb.set_trace()
         return u'\n'.join(results)
 register.tag(EditRegionTag.name, EditRegionTag)

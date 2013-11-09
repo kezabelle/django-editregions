@@ -6,8 +6,6 @@ from django.core.exceptions import ImproperlyConfigured
 from editregions.constants import (REQUEST_VAR_REGION, REQUEST_VAR_CT,
                                    REQUEST_VAR_ID)
 from django.contrib.admin.views.main import ChangeList
-from editregions.utils.regions import (get_pretty_region_name,
-                                       get_first_valid_template)
 from editregions.utils.data import get_content_type
 from editregions.models import EditRegionConfiguration
 

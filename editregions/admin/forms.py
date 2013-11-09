@@ -9,7 +9,7 @@ from editregions.models import EditRegionChunk
 from editregions.admin.utils import shared_media
 from editregions.utils.chunks import get_chunks_for_region
 from editregions.utils.regions import (validate_region_name,
-                                       get_regions_for_template, get_first_valid_template)
+                                       get_regions_for_template)
 
 logger = logging.getLogger(__name__)
 
@@ -96,10 +96,8 @@ class MovementForm(Form):
         # rather than raise an error for an invalid region, just set it
         # back to whatever the region says it should be. Trust no-one.
         if 'region' in cd and cd['pk'] is not None:
-            templates = cd['pk'].content_object.get_region_groups()
-            template = get_first_valid_template(templates)
-            regions = get_regions_for_template(template)
-            if cd['region'] not in regions:
+            erc = EditRegionConfiguration(cd['pk'].content_object)
+            if cd['region'] not in erc.config:
                 cd['region'] = cd['pk'].region
         return cd
 

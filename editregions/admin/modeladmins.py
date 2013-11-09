@@ -35,9 +35,7 @@ from editregions.admin.utils import (AdminChunkWrapper, shared_media,
 from editregions.models import EditRegionChunk, EditRegionConfiguration
 from editregions.utils.regions import (get_enabled_chunks_for_region,
                                        get_pretty_region_name,
-                                       get_first_valid_template,
-                                       get_regions_for_template,
-                                       discover_template_and_configuration)
+                                       get_regions_for_template)
 from editregions.text import (admin_chunktype_label, admin_summary_label,
                               admin_position_label, admin_modified_label,
                               region_v)
@@ -117,9 +115,8 @@ class EditRegionAdmin(ModelAdmin):
         :return: the region name
         :rtype: string
         """
-        templates = obj.content_object.get_region_groups()
-        template = get_first_valid_template(templates)
-        region_name = get_pretty_region_name(template, obj.region)
+        erc = EditRegionConfiguration(obj.content_object)
+        region_name = erc.config[obj.region]
         return self.get_changelist_link_html(obj, data=region_name)
     get_region_name.allow_tags = True
     get_region_name.short_description = region_v
@@ -548,9 +545,8 @@ class ChunkAdmin(AdminlinksMixin):
         # the following is all just about discovering chunk limits
         parent_class = get_content_type(parent_ct).model_class()
         parent_obj = parent_class.objects.get(pk=parent_id)
-        templates = parent_obj.get_region_groups()
-        template = get_first_valid_template(templates)
-        available_chunks = get_enabled_chunks_for_region(template, region)
+        erc = EditRegionConfiguration(parent_obj)
+        available_chunks = erc.config[region]['models']
         limit = available_chunks[self.model]
         # now we have our possible limit, if there's a limit
         # (no infinity set via None) ensure we haven't hit it yet.
