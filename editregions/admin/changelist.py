@@ -30,7 +30,8 @@ class EditRegionChangeList(ChangeList):
             request = args[0]
             logger.debug('"request" assumed to be in args')
 
-        self.available_chunks = self.model_admin.get_changelist_filters(request.GET)
+        self.available_chunks = self.get_changelist_filters(
+            request_querydict=request.GET, obj=parent_obj, conf=parent_erc)
         self.formset = None
         self.region = request.GET.get(REQUEST_VAR_REGION, None)
         self.parent_content_type = request.GET.get(REQUEST_VAR_CT, None)
@@ -41,3 +42,33 @@ class EditRegionChangeList(ChangeList):
         #               .objects.get(pk=self.parent_content_id))
         self.template = parent_erc.template
         self.get_region_display = parent_erc.config[self.region]['name']
+        # self.query_set = self.query_set.select_subclasses()
+
+    def get_changelist_filters(self, request_querydict, obj, conf):
+        """
+        Get the list of chunks for the changelist sidebar.
+        Should only get called with a decent querydict, hopefully.
+
+        :return: list of available chunk types
+        """
+        region = request_querydict[REQUEST_VAR_REGION]
+        ct = request_querydict[REQUEST_VAR_CT]
+        # pk = request_querydict[REQUEST_VAR_ID]
+        # try:
+        #     parent_obj = get_model_class(ct).objects.get(pk=pk)
+        # except ObjectDoesNotExist as e:
+        #     return HttpResponseBadRequest('something went wrong')
+        # erc = EditRegionConfiguration(parent_obj)
+        AdminChunkWrapper = self.model_admin.get_admin_wrapper_class()
+        filters = [AdminChunkWrapper(**{
+            'opts': x._meta,
+            'namespace': self.model_admin.admin_site.app_name,
+            'region': region,
+            'content_type': ct,
+            'content_id': obj.pk,
+        }) for x in conf.config[region]['models']]
+        if len(filters) == 0:
+            msg = "region '{region}' has zero chunk types configured".format(
+                region=region)
+            logger.warning(msg)
+        return filters
