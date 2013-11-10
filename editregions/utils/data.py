@@ -2,14 +2,16 @@
 import logging
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ImproperlyConfigured
+from django.utils.datastructures import SortedDict
 from django.conf import settings
 from adminlinks.templatetags.utils import get_admin_site
+
 
 logger = logging.getLogger(__name__)
 
 
 def queryset_to_attr_map(queryset, attr):
-    output = {}
+    output = SortedDict()
     for obj in queryset:
         result = getattr(obj, attr)
         output[result] = obj

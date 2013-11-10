@@ -10,7 +10,7 @@ from django.utils.decorators import method_decorator, available_attrs
 from django.utils.text import truncate_words
 from editregions.constants import (REQUEST_VAR_REGION, REQUEST_VAR_ID,
                                    REQUEST_VAR_CT)
-from editregions.utils.rendering import render_one_summary
+from editregions.templatetags.editregion import EditRegionTag
 from helpfulfields.admin import changetracking_readonlys, changetracking_fieldset
 from editregions.utils.regions import validate_region_name
 from editregions.models import EditRegionChunk
@@ -187,7 +187,9 @@ class AdminChunkWrapper(object):
             context = {
                 'admin_summary': True,
             }
-            return truncate_words(render_one_summary(context, self.chunk), 20)
+            return truncate_words(EditRegionTag.render_one_summary(context,
+                                                                   self.chunk),
+                                  20)
         return ''
 
     def _get_admin_url(self, view='add'):

@@ -26,7 +26,7 @@ from editregions.constants import (REQUEST_VAR_REGION, REQUEST_VAR_CT,
                                    REQUEST_VAR_ID)
 from editregions.utils.data import (get_modeladmin, get_content_type,
                                     get_model_class)
-from editregions.utils.rendering import render_one_summary
+from editregions.templatetags.editregion import EditRegionTag
 from editregions.admin.changelist import EditRegionChangeList
 from editregions.admin.forms import MovementForm
 from editregions.admin.utils import (AdminChunkWrapper, shared_media,
@@ -144,7 +144,7 @@ class EditRegionAdmin(ModelAdmin):
         :rtype: string
         """
         context = {'admin_summary': True}
-        content = strip_tags(render_one_summary(context, obj))
+        content = EditRegionTag.render_one_summary(context, obj)
         return self.get_changelist_link_html(obj, data=truncate_words(content, 20))
     get_subclass_summary.allow_tags = True
     get_subclass_summary.short_description = admin_summary_label
