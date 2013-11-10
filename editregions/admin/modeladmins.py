@@ -353,7 +353,7 @@ class EditRegionAdmin(ModelAdmin):
         return TemplateResponse(request, self.change_list_template,
                                 context, current_app=self.admin_site.name)
 
-    def get_changelists_for_object(self, request, obj, **kwargs):
+    def get_changelists_for_object(self, request, obj, config=None, **kwargs):
         changelists = []
 
         if obj is not None:
@@ -368,8 +368,9 @@ class EditRegionAdmin(ModelAdmin):
             new_get = QueryDict('', mutable=True)
             new_get[REQUEST_VAR_CT] = get_content_type(obj).pk
             new_get[REQUEST_VAR_ID] = obj.pk
-            erc = EditRegionConfiguration(obj)
-            for region in erc.config:
+            if config is None:
+                config = EditRegionConfiguration(obj)
+            for region in config.config:
                 new_get[REQUEST_VAR_REGION] = region
                 request.GET = new_get
                 our_list_display = self.list_display[:]
@@ -384,7 +385,7 @@ class EditRegionAdmin(ModelAdmin):
                                 list_select_related=None, list_per_page=100,
                                 list_max_show_all=100, list_editable=None,
                                 model_admin=self, parent_obj=obj,
-                                parent_conf=erc)
+                                parent_conf=config)
                 changelists.append(cl)
             # as the internal request.GET may be lossy, we restore the original
             # data here.
@@ -525,7 +526,7 @@ class ChunkAdmin(AdminlinksMixin):
                          })
             already_created = self.model.objects.filter(
                 content_type=parent_ct, content_id=parent_id, region=region
-            ).count()
+            ).only('pk').count()
             if already_created >= limit:
                 logger.info('Already hit limit of %(limit)d, found %(exists)d '
                             'objects in the database' % {

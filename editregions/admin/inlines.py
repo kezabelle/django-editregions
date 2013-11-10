@@ -3,7 +3,7 @@ import logging
 from django.contrib.contenttypes.generic import GenericInlineModelAdmin
 from editregions.admin.forms import EditRegionInlineFormSet
 from editregions.constants import REQUEST_VAR_CT, REQUEST_VAR_ID
-from editregions.models import EditRegionChunk
+from editregions.models import EditRegionChunk, EditRegionConfiguration
 from editregions.utils.data import get_modeladmin
 
 logger = logging.getLogger(__name__)
@@ -36,6 +36,16 @@ class EditRegionInline(GenericInlineModelAdmin):
             logger.info('Editing an %(obj)r; we may be changing the region '
                         'group being used, so re-grabbing the DB version')
             obj = obj.__class__.objects.get(pk=obj.pk)
-        fset.region_changelists = modeladmin.get_changelists_for_object(request,
-                                                                        obj)
+        config = None
+        if obj is not None:
+            config = EditRegionConfiguration(obj)
+        fset.region_changelists = modeladmin.get_changelists_for_object(
+            request=request, obj=obj, config=config)
         return fset
+
+    def get_fieldsets(self, *args, **kwargs):
+        """
+        avoid re-calling get_formset()
+        """
+        # res = super(EditRegionInline, self).get_fieldsets(*args, **kwargs)
+        return [(None, {'fields': ['region', 'position']})]

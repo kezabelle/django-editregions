@@ -23,26 +23,17 @@ class EditRegionChangeList(ChangeList):
         parent_erc = kwargs.pop('parent_conf')
         parent_obj = kwargs.pop('parent_obj')
         super(EditRegionChangeList, self).__init__(*args, **kwargs)
-        try:
-            request = kwargs['request']
-            logger.debug('"request" taken from kwargs')
-        except KeyError as e:
-            request = args[0]
-            logger.debug('"request" assumed to be in args')
+        request = kwargs.pop('request')
+
+        self.region = request.GET.get(REQUEST_VAR_REGION, None)
+        self.parent_content_type = request.GET.get(REQUEST_VAR_CT, None)
+        self.parent_content_id = request.GET.get(REQUEST_VAR_ID, None)
 
         self.available_chunks = self.get_changelist_filters(
             request_querydict=request.GET, obj=parent_obj, conf=parent_erc)
         self.formset = None
-        self.region = request.GET.get(REQUEST_VAR_REGION, None)
-        self.parent_content_type = request.GET.get(REQUEST_VAR_CT, None)
-        self.parent_content_id = request.GET.get(REQUEST_VAR_ID, None)
-        self.querydict = request.GET.copy()
-
-        # parent_obj = (get_content_type(self.parent_content_type).model_class()
-        #               .objects.get(pk=self.parent_content_id))
         self.template = parent_erc.template
         self.get_region_display = parent_erc.config[self.region]['name']
-        # self.query_set = self.query_set.select_subclasses()
 
     def get_changelist_filters(self, request_querydict, obj, conf):
         """
@@ -51,24 +42,18 @@ class EditRegionChangeList(ChangeList):
 
         :return: list of available chunk types
         """
-        region = request_querydict[REQUEST_VAR_REGION]
-        ct = request_querydict[REQUEST_VAR_CT]
-        # pk = request_querydict[REQUEST_VAR_ID]
-        # try:
-        #     parent_obj = get_model_class(ct).objects.get(pk=pk)
-        # except ObjectDoesNotExist as e:
-        #     return HttpResponseBadRequest('something went wrong')
-        # erc = EditRegionConfiguration(parent_obj)
+        assert unicode(obj.pk) == unicode(self.parent_content_id), "Hmmm"
+
         AdminChunkWrapper = self.model_admin.get_admin_wrapper_class()
         filters = [AdminChunkWrapper(**{
             'opts': x._meta,
             'namespace': self.model_admin.admin_site.app_name,
-            'region': region,
-            'content_type': ct,
+            'region': self.region,
+            'content_type': self.parent_content_type,
             'content_id': obj.pk,
-        }) for x in conf.config[region]['models']]
+        }) for x in conf.config[self.region]['models']]
         if len(filters) == 0:
             msg = "region '{region}' has zero chunk types configured".format(
-                region=region)
+                region=self.region)
             logger.warning(msg)
         return filters

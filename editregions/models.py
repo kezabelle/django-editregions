@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from __future__ import unicode_literals
 import logging
 import os
 import re
@@ -43,7 +44,7 @@ class EditRegionChunk(ChangeTracking, Generic):
                'parent_id={x.content_id}, position={x.position}'.format(x=self)
 
     def __unicode__(self):
-        return 'Chunk'
+        return 'pk={x.pk}, region={x.region}, position={x.position}'.format(x=self)
 
     def move(self, requested_position):
         from editregions.admin.forms import MovementForm

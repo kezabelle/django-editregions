@@ -11,7 +11,7 @@ from django.core.exceptions import ImproperlyConfigured
 from editregions.constants import RENDERED_CACHE_KEY
 from editregions.models import EditRegionChunk, EditRegionConfiguration
 from editregions.text import ttag_no_obj, ttag_not_model, ttag_no_ancestors
-from editregions.utils.chunks import render_all_chunks
+from editregions.utils.rendering import render_all_chunks
 from editregions.utils.regions import validate_region_name
 from editregions.utils.data import get_content_type
 
@@ -97,7 +97,7 @@ class EditRegionTag(AsTag):
         if content_type is None:
             return ()
         erc = EditRegionConfiguration(content_object)
-        results = EditRegionChunk.objects.filter(
+        results = EditRegionChunk.polymorphs.filter(
             content_id=content_object.pk, content_type=content_type,
             region=name).select_subclasses()
         chunks = list(render_all_chunks(erc.template, context, name, results))
@@ -120,7 +120,7 @@ class EditRegionTag(AsTag):
                     logger.error(error)
             # if there are parents, see if we can get values from them.
             for parent in parents:
-                parent_results = EditRegionChunk.objects.filter(
+                parent_results = EditRegionChunk.polymorphs.filter(
                     content_id=parent.pk,
                     content_type=self.get_content_type(parent),
                     region=name).select_subclasses()
@@ -135,6 +135,5 @@ class EditRegionTag(AsTag):
         results = self.get_value(context, name, content_object, inherit, **kwargs)
         if results is None:
             return u''
-        import pdb; pdb.set_trace()
         return u'\n'.join(results)
 register.tag(EditRegionTag.name, EditRegionTag)
