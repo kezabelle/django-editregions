@@ -412,7 +412,8 @@ class EditRegionAdmin(ModelAdmin):
                                 date_hierarchy=None, search_fields=None,
                                 list_select_related=None, list_per_page=100,
                                 list_max_show_all=100, list_editable=None,
-                                model_admin=self)
+                                model_admin=self, parent_obj=obj,
+                                parent_conf=erc)
                 changelists.append(cl)
             # as the internal request.GET may be lossy, we restore the original
             # data here.

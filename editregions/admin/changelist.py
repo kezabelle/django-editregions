@@ -20,6 +20,8 @@ class EditRegionChangeList(ChangeList):
         Stash a bunch of extra stuff on the changelist. Note that this used to
         be inlined in the EditRegionChunk ModelAdmin.
         """
+        parent_erc = kwargs.pop('parent_conf')
+        parent_obj = kwargs.pop('parent_obj')
         super(EditRegionChangeList, self).__init__(*args, **kwargs)
         try:
             request = kwargs['request']
@@ -35,8 +37,7 @@ class EditRegionChangeList(ChangeList):
         self.parent_content_id = request.GET.get(REQUEST_VAR_ID, None)
         self.querydict = request.GET.copy()
 
-        parent_obj = (get_content_type(self.parent_content_type).model_class()
-                      .objects.get(pk=self.parent_content_id))
-        erc = EditRegionConfiguration(parent_obj)
-        self.template = erc.template
-        self.get_region_display = erc.config[self.region]['name']
+        # parent_obj = (get_content_type(self.parent_content_type).model_class()
+        #               .objects.get(pk=self.parent_content_id))
+        self.template = parent_erc.template
+        self.get_region_display = parent_erc.config[self.region]['name']
