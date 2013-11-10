@@ -3,9 +3,8 @@ from __future__ import unicode_literals
 import logging
 from django.core.exceptions import ValidationError
 from django.core.validators import RegexValidator, slug_re, MaxLengthValidator
-from editregions.utils.regions import (validate_region_name_error,
-                                       region_name_startswith,
-                                       region_name_endswith)
+from editregions.text import (validate_region_name_error,
+                              region_name_startswith, region_name_endswith)
 
 logger = logging.getLogger(__name__)
 
