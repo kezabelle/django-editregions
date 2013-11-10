@@ -24,7 +24,6 @@ from adminlinks.templatetags.utils import _add_link_to_context
 from editregions.admin.inlines import EditRegionInline
 from editregions.constants import (REQUEST_VAR_REGION, REQUEST_VAR_CT,
                                    REQUEST_VAR_ID)
-from editregions.utils.chunks import get_chunks_for_region
 from editregions.utils.data import (get_modeladmin, get_content_type,
                                     get_model_class)
 from editregions.utils.rendering import render_one_summary
@@ -33,9 +32,6 @@ from editregions.admin.forms import MovementForm
 from editregions.admin.utils import (AdminChunkWrapper, shared_media,
                                      guard_querystring_m)
 from editregions.models import EditRegionChunk, EditRegionConfiguration
-from editregions.utils.regions import (get_enabled_chunks_for_region,
-                                       get_pretty_region_name,
-                                       get_regions_for_template)
 from editregions.text import (admin_chunktype_label, admin_summary_label,
                               admin_position_label, admin_modified_label,
                               region_v)
@@ -301,9 +297,7 @@ class EditRegionAdmin(ModelAdmin):
     def queryset(self, *args, **kwargs):
         """
         Don't use the default queryset/manager, as it won't be our interface
-        to polymorphic (downcast) EditRegionChunk subclasses. Instead,
-        uses :func:`editregions.utils.chunks.get_chunks_for_region` and then
-        applies the expected ordering.
+        to polymorphic (downcast) EditRegionChunk subclasses.
 
         :param args: Stuff to pass through to
                :meth:`~django.contrib.admin.options.BaseModelAdmin.get_ordering`
@@ -312,7 +306,7 @@ class EditRegionAdmin(ModelAdmin):
         :return: our EditRegionChunks, but already downcast to their final form.
         :rtype: :class:`~django.db.models.query.QuerySet`
         """
-        qs = get_chunks_for_region()
+        qs = self.model.polymorphs.all().select_subclasses()
         ordering = self.get_ordering(*args, **kwargs)
         if ordering:
             qs = qs.order_by(*ordering)

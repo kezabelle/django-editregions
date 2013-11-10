@@ -5,45 +5,8 @@ import logging
 # from django.db.models.fields.related import OneToOneField
 from adminlinks.templatetags.utils import convert_context_to_dict
 from editregions.utils.rendering import render_one_chunk
-from editregions.models import EditRegionChunk
-from editregions.utils.regions import get_enabled_chunks_for_region
-from editregions.utils.data import get_content_type, get_model_class
 
 logger = logging.getLogger(__name__)
-
-def get_limits_for_chunk_in_region(region, chunk):
-    """
-    Try to figure out if this chunk type has a maximum limit in this region.
-    Returns an integer or None.
-    """
-    limits = 1
-    if limits is not None:
-        try:
-            return int(limits[chunk])
-        except KeyError:
-            # Nope, no limit for this chunk.
-            # Skipping down to returning None
-            pass
-    return None
-
-
-def get_chunks_for_region(**base_filters):
-    """
-    Mostly want to use content_id, content_type(_id) and region.
-
-    .. seealso:: :class:`~editregions.templatetags.editregion.EditRegionTag`
-    """
-    logger.debug('Finding EditRegionChunk subclasses using %r' % base_filters)
-    # import pdb; pdb.set_trace()
-    # chunks = get_enabled_chunks_for_region(template=template, name=region)
-    # qs = EditRegionChunk.polymorphs.filter(**base_filters)
-    # # try and select everything
-    # if not chunks:
-    #     qs = qs.select_subclasses()
-    # else:
-    #     qs = qs.select_subclasses(*get_related_names_for_enabled_chunks(chunks))
-    # return qs
-    return EditRegionChunk.polymorphs.filter(**base_filters).select_subclasses()
 
 
 def chunk_iteration_context(index, value, iterable):
@@ -113,7 +76,7 @@ def render_all_chunks(template, context, region, found_chunks):
     :used by:
         :class:`~editregions.templatetags.editregion.EditRegionTag`
     """
-    enabled = get_enabled_chunks_for_region(template=template, name=region)
+    # enabled = get_enabled_chunks_for_region(template=template, name=region)
     # enabled_relateds = get_related_names_for_enabled_chunks(enabled)
     # found_chunks.select_subclasses(*enabled_relateds)
     # print(found_chunks.subclasses)
@@ -121,12 +84,13 @@ def render_all_chunks(template, context, region, found_chunks):
 
     # filter our chunks which are no long enabled ...
     # this'll hit the ContentType cache after a while ...
-    to_render = [x for x in found_chunks if get_model_class(x) in enabled]
+    # to_render = [x for x in found_chunks if get_model_class(x) in enabled]
+    to_render = found_chunks
     logger.info('Rendering %(renderable)d of %(possible)d chunks' % {
         'renderable': len(to_render),
-        'possible': len(enabled),
+        'possible': len(to_render), #len(enabled),
     })
-    del enabled
+    # del enabled
     # output = []
 
     # In the future, it'd be nice to be able to just use the existing context and

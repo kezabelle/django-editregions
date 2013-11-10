@@ -9,9 +9,9 @@ from classytags.arguments import Argument, StringArgument, Flag
 from django.core.cache import cache, DEFAULT_CACHE_ALIAS
 from django.core.exceptions import ImproperlyConfigured
 from editregions.constants import RENDERED_CACHE_KEY
-from editregions.models import EditRegionChunk
+from editregions.models import EditRegionChunk, EditRegionConfiguration
 from editregions.text import ttag_no_obj, ttag_not_model, ttag_no_ancestors
-from editregions.utils.chunks import get_chunks_for_region, render_all_chunks
+from editregions.utils.chunks import render_all_chunks
 from editregions.utils.regions import validate_region_name
 from editregions.utils.data import get_content_type
 
@@ -97,8 +97,9 @@ class EditRegionTag(AsTag):
         if content_type is None:
             return ()
         erc = EditRegionConfiguration(content_object)
-        results = get_chunks_for_region(content_id=content_object.pk,
-                                        content_type=content_type, region=name)
+        results = EditRegionChunk.objects.filter(
+            content_id=content_object.pk, content_type=content_type,
+            region=name).select_subclasses()
         chunks = list(render_all_chunks(erc.template, context, name, results))
 
         if inherit and len(chunks) < 1:
@@ -119,10 +120,10 @@ class EditRegionTag(AsTag):
                     logger.error(error)
             # if there are parents, see if we can get values from them.
             for parent in parents:
-                parent_results = get_chunks_for_region(
+                parent_results = EditRegionChunk.objects.filter(
                     content_id=parent.pk,
                     content_type=self.get_content_type(parent),
-                    region=name)
+                    region=name).select_subclasses()
                 chunks = list(render_all_chunks(template, context, name,
                                                 parent_results))
                 if len(chunks) > 0:

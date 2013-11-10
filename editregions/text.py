@@ -34,3 +34,9 @@ admin_chunktype_label = _('type')
 admin_summary_label = _('summary')
 admin_position_label = _('#')
 admin_modified_label = modified_label
+
+validate_region_name_error = _('Enter a valid region name consisting of '
+                               'letters, numbers, underscores and hyphens.')
+
+region_name_startswith = _('Region names may not begin with "_"')
+region_name_endswith = _('Region names may not end with "_"')

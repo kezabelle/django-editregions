@@ -126,3 +126,15 @@ class EditRegionConfiguration(object):
         if len(resolved) == 0:
             logger.debug('No chunks types found for "%(region)s"' % {'region': name})
         return resolved
+
+    def get_limits_for(region, chunk):
+        """
+        Try to figure out if this chunk type has a maximum limit in this region.
+        Returns an integer or None.
+        """
+        try:
+            return int(self.config[region]['models'][chunk])
+        except KeyError:
+            # Nope, no limit for this chunk.
+            # Skipping down to returning None
+            return None

@@ -7,9 +7,7 @@ from django.forms.fields import IntegerField, CharField
 from django.utils.encoding import force_unicode
 from editregions.models import EditRegionChunk
 from editregions.admin.utils import shared_media
-from editregions.utils.chunks import get_chunks_for_region
-from editregions.utils.regions import (validate_region_name,
-                                       get_regions_for_template)
+from editregions.utils.regions import validate_region_name
 
 logger = logging.getLogger(__name__)
 
