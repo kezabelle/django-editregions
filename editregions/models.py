@@ -3,9 +3,11 @@ from __future__ import unicode_literals
 import logging
 import os
 import re
+from django.conf import settings
 from django.core.cache import cache, DEFAULT_CACHE_ALIAS
 from django.db.models.fields import CharField, PositiveIntegerField
 from django.db.models.signals import post_save
+from django.template import TemplateDoesNotExist
 from django.template.loader import select_template
 from django.template.context import Context
 from django.utils import simplejson as json
@@ -68,8 +70,8 @@ class EditRegionConfiguration(object):
         self.modeladmin = get_modeladmin(self.obj)
         self.possible_templates = self.modeladmin.get_editregions_templates(
             obj=self.obj)
-        self.get_first_valid_template()
-        self.get_template_region_configuration()
+        self.template = self.get_first_valid_template()
+        self.config = self.get_template_region_configuration()
         self.fallback_region_name_re = re.compile(r'[_\W]+')
 
     def get_first_valid_template(self):
@@ -82,10 +84,19 @@ class EditRegionConfiguration(object):
             template_names = (self.possible_templates,)
         else:
             template_names = self.possible_templates
-        self.template = select_template('%s.json' % os.path.splitext(x)[0]
+        try:
+            return select_template('%s.json' % os.path.splitext(x)[0]
                                         for x in template_names)
+        except TemplateDoesNotExist:
+            if settings.DEBUG:
+                raise
+            return None
 
     def get_template_region_configuration(self):
+        # if in production (DEBUG=False) and no JSON template was found,
+        # play nicely and don't error the whole request.
+        if self.template is None:
+            return {}
         rendered_template = self.template.render(Context())
         parsed_template = json.loads(rendered_template)
         for key, config in parsed_template.items():
@@ -98,7 +109,7 @@ class EditRegionConfiguration(object):
                              'falling back to using a regular expression' % logbits)
                 parsed_template[key]['name'] = re.sub(
                     pattern=self.fallback_region_name_re, string=key, repl=' ')
-        self.config = parsed_template
+        return parsed_template
 
     def get_enabled_chunks_for_region(self, model_mapping):
         """
