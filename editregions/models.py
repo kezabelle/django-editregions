@@ -10,6 +10,9 @@ from django.db.models.signals import post_save
 from django.template import TemplateDoesNotExist
 from django.template.loader import select_template
 from django.template.context import Context
+try:
+    import json
+except ImportError:
 from django.utils import simplejson as json
 from django.utils.datastructures import SortedDict
 from django.db.models.loading import get_model

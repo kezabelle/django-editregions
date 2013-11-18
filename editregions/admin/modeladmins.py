@@ -16,7 +16,10 @@ from django.http import HttpResponse, HttpResponseBadRequest, QueryDict
 from django.shortcuts import render_to_response
 from django.template import RequestContext
 from django.template.loader import render_to_string
-from django.utils import simplejson
+try:
+    import json
+except ImportError:
+    from django.utils import simplejson as json
 from django.utils.encoding import force_unicode
 from django.utils.html import strip_tags
 from django.utils.translation import ugettext_lazy as _
@@ -289,9 +292,9 @@ class EditRegionAdmin(ModelAdmin):
             }
             self.log_change(request, *form.change_message())
             self.log_change(request, *form.parent_change_message())
-            return HttpResponse(simplejson.dumps(json_data),
+            return HttpResponse(json.dumps(json_data),
                                 mimetype='application/json')
-        return HttpResponseBadRequest(simplejson.dumps(form.errors),
+        return HttpResponseBadRequest(json.dumps(form.errors),
                                       mimetype='application/json')
 
     def queryset(self, *args, **kwargs):
