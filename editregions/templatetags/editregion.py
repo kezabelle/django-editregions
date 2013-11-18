@@ -98,7 +98,14 @@ class EditRegionTag(AsTag):
         content_type = self.get_content_type(content_object)
         if content_type is None:
             return ()
-        erc = EditRegionConfiguration(content_object)
+
+        # cache on the object so that showing the first editregion does the
+        # configuration request, and additional ones re-use the config found.
+        if not hasattr(content_object, '__editregion_config'):
+            setattr(content_object, '__editregion_config',
+                    EditRegionConfiguration(content_object))
+        erc = getattr(content_object, '__editregion_config')
+
         results = EditRegionChunk.polymorphs.filter(
             content_id=content_object.pk, content_type=content_type,
             region=name).select_subclasses()
