@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 import logging
+from distutils.version import LooseVersion
+from django import get_version as django_version
 from django.db.models import F
 from django.forms import Form, Media
 from django.forms.util import ErrorList
@@ -132,9 +134,10 @@ class MovementForm(Form):
                                                         region=old_region,
                                                         position__gte=old_position)
 
-        # we don't mind updating the `modified` field for this one, because
-        # we moved it explicitly, and we may've also changed region ...
-        obj.save()
+        kwargs = {}
+        if LooseVersion(django_version()) >= LooseVersion('1.5'):
+            kwargs.update(update_fields=['region', 'position'])
+        obj.save(**kwargs)
 
         if old_chunks is not None:
             logger.debug('all chunks in old region, which were after our moved '
