@@ -134,8 +134,8 @@ class EditRegionTag(AsTag):
                     content_id=parent.pk,
                     content_type=self.get_content_type(parent),
                     region=name).select_subclasses()
-                chunks = list(EditRegionTag.render_all_chunks(template, context,
-                                                              name,
+                chunks = list(EditRegionTag.render_all_chunks(erc.template,
+                                                              context, name,
                                                               parent_results))
                 if len(chunks) > 0:
                     # stop processing further, we found some results!
