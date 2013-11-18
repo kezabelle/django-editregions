@@ -17,7 +17,6 @@ class Migration(SchemaMigration):
             ('content_id', self.gf('django.db.models.fields.CharField')(max_length=255, db_index=True)),
             ('region', self.gf('django.db.models.fields.CharField')(max_length=75)),
             ('position', self.gf('django.db.models.fields.PositiveIntegerField')(default=1, db_index=True)),
-            ('subcontent_type', self.gf('django.db.models.fields.related.ForeignKey')(related_name='+', to=orm['contenttypes.ContentType'])),
         ))
         db.send_create_signal('editregions', ['EditRegionChunk'])
 
@@ -37,15 +36,14 @@ class Migration(SchemaMigration):
             'name': ('django.db.models.fields.CharField', [], {'max_length': '100'})
         },
         'editregions.editregionchunk': {
-            'Meta': {'ordering': "('position', '-modified')", 'object_name': 'EditRegionChunk'},
+            'Meta': {'ordering': "['position']", 'object_name': 'EditRegionChunk'},
             'content_id': ('django.db.models.fields.CharField', [], {'max_length': '255', 'db_index': 'True'}),
             'content_type': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'+'", 'to': "orm['contenttypes.ContentType']"}),
             'created': ('django.db.models.fields.DateTimeField', [], {'auto_now_add': 'True', 'blank': 'True'}),
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'modified': ('django.db.models.fields.DateTimeField', [], {'auto_now': 'True', 'blank': 'True'}),
-            'position': ('django.db.models.fields.PositiveIntegerField', [], {'default': '1', 'db_index': 'True'}),
-            'region': ('django.db.models.fields.CharField', [], {'max_length': '75'}),
-            'subcontent_type': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'+'", 'to': "orm['contenttypes.ContentType']"})
+            'position': ('django.db.models.fields.PositiveIntegerField', [], {'default': 'None', 'db_index': 'True'}),
+            'region': ('django.db.models.fields.CharField', [], {'max_length': '75'})
         }
     }
 

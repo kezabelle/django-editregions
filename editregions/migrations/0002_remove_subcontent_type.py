@@ -6,17 +6,20 @@ from django.db import models
 
 
 class Migration(SchemaMigration):
+    depends_on = (
+        ('editregions', '0001_basic_setup'),
+    )
 
     def forwards(self, orm):
-        # Deleting field 'EditRegionChunk.subcontent_type'
-        db.delete_column('editregions_editregionchunk', 'subcontent_type_id')
+        # This serves to not break my existing installs, even though we've
+        # flattened the DB schema into 0001 now.
+        return
 
 
     def backwards(self, orm):
-        # Adding field 'EditRegionChunk.subcontent_type'
-        db.add_column('editregions_editregionchunk', 'subcontent_type',
-                      self.gf('django.db.models.fields.related.ForeignKey')(default=1, related_name='+', to=orm['contenttypes.ContentType']),
-                      keep_default=False)
+        # This serves to not break my existing installs, even though we've
+        # flattened the DB schema into 0001 now.
+        return
 
 
     models = {
