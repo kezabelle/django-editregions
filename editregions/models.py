@@ -88,12 +88,17 @@ class EditRegionConfiguration(object):
             template_names = (self.possible_templates,)
         else:
             template_names = self.possible_templates
+
+        json_template_names = ['%s.json' % os.path.splitext(x)[0]
+                               for x in template_names]
         try:
-            return select_template('%s.json' % os.path.splitext(x)[0]
-                                        for x in template_names)
+            return select_template(json_template_names)
         except TemplateDoesNotExist:
             if settings.DEBUG:
                 raise
+            logger.error('None of the following exist: {not_found}'.format(
+                not_found=', '.join(json_template_names)
+            ))
             return None
 
     def get_template_region_configuration(self):
