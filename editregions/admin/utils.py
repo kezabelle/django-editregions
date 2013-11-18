@@ -6,8 +6,8 @@ from django.core.exceptions import SuspiciousOperation, ValidationError
 from django.core.urlresolvers import reverse
 from django.forms import Media
 from django.http import QueryDict
+from django.template.defaultfilters import truncatewords
 from django.utils.decorators import method_decorator, available_attrs
-from django.utils.text import truncate_words
 from editregions.constants import (REQUEST_VAR_REGION, REQUEST_VAR_ID,
                                    REQUEST_VAR_CT)
 from editregions.templatetags.editregion import EditRegionTag
@@ -187,9 +187,8 @@ class AdminChunkWrapper(object):
             context = {
                 'admin_summary': True,
             }
-            return truncate_words(EditRegionTag.render_one_summary(context,
-                                                                   self.chunk),
-                                  20)
+            return truncatewords(
+                EditRegionTag.render_one_summary(context, self.chunk), 20)
         return ''
 
     def _get_admin_url(self, view='add'):
