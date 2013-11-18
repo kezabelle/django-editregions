@@ -74,12 +74,21 @@ class EditRegionTag(AsTag):
                                 **kwargs)
 
     def get_content_type(self, content_object):
+        """
+        Try and get the ContentType for the given object, and in
+        DEBUG showing an appropriate error message, while in production just
+        logging it for subscribers and moving on.
+        """
         try:
             return get_content_type(content_object)
         except ContentType.DoesNotExist:
             # the model doesn't exist in the content types table. I don'
             #  know why.
-            logger.error('content object does not exist')
+            if settings.DEBUG:
+                raise
+            logger.error(
+                'content object does not exist for {cls!r}'.format(
+                    cls=content_object))
             return None
         except AttributeError:
             # we didn't get a proper django model, but something has definitely
@@ -90,8 +99,7 @@ class EditRegionTag(AsTag):
             }
             if settings.DEBUG:
                 raise ImproperlyConfigured(error)
-            else:
-                logger.error(error)
+            logger.error(error)
             return None
 
     def get_value(self, context, name, content_object, inherit, **kwargs):
@@ -102,6 +110,9 @@ class EditRegionTag(AsTag):
         # cache on the object so that showing the first editregion does the
         # configuration request, and additional ones re-use the config found.
         if not hasattr(content_object, '__editregion_config'):
+            logger.debug('__editregion_config not on {cls!r} for this template '
+                         'rendering request, creating it'.format(
+                cls=content_object))
             setattr(content_object, '__editregion_config',
                     EditRegionConfiguration(content_object))
         erc = getattr(content_object, '__editregion_config')
@@ -117,7 +128,8 @@ class EditRegionTag(AsTag):
             try:
                 parents = content_object.get_ancestors()
             except AttributeError as e:
-                # doesn't have ancestors :(
+                # doesn't have ancestors conforming to the mptt/treebeard
+                # API, so it's probably a custom model that is BROKEN.
                 parents = ()
                 error = ttag_no_ancestors % {
                     'obj': content_object.__class__.__name__,
