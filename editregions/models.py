@@ -74,6 +74,7 @@ class EditRegionConfiguration(object):
         self.possible_templates = self.modeladmin.get_editregions_templates(
             obj=self.obj)
         self.template = self.get_first_valid_template()
+        self.has_configuration = self.template is not None
         self.config = self.get_template_region_configuration()
         self.fallback_region_name_re = re.compile(r'[_\W]+')
 
