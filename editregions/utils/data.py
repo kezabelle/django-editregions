@@ -6,7 +6,6 @@ from django.utils.datastructures import SortedDict
 from django.conf import settings
 from adminlinks.templatetags.utils import get_admin_site
 
-
 logger = logging.getLogger(__name__)
 
 

@@ -13,7 +13,7 @@ from django.template.context import Context
 try:
     import json
 except ImportError:
-from django.utils import simplejson as json
+    from django.utils import simplejson as json
 from django.utils.datastructures import SortedDict
 from django.db.models.loading import get_model
 from editregions.constants import RENDERED_CACHE_KEY
@@ -68,7 +68,15 @@ class EditRegionChunk(ChangeTracking, Generic):
 
 
 class EditRegionConfiguration(object):
-    def __init__(self, obj):
+    def __init__(self, obj=None):
+        if obj is not None and not hasattr(self, 'obj'):
+            self.configure(obj=obj)
+
+    def __get__(self, instance, owner):
+        if not hasattr(self, 'obj'):
+            self.configure(instance)
+
+    def configure(self, obj):
         self.obj = obj
         self.modeladmin = get_modeladmin(self.obj)
         self.possible_templates = self.modeladmin.get_editregions_templates(
