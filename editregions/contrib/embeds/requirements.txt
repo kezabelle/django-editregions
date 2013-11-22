@@ -1,1 +1,2 @@
 feedparser>=5.1.3,<6.0
+django-ace>=0.3.1

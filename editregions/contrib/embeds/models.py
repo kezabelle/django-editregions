@@ -4,7 +4,7 @@ import logging
 from hashlib import sha1 as cachehash
 from django.core.cache import cache
 from django.db.models.base import Model
-from django.db.models.fields import URLField, PositiveIntegerField, CharField
+from django.db.models.fields import URLField, PositiveIntegerField, CharField, TextField
 from django.utils.encoding import python_2_unicode_compatible
 from feedparser import parse
 from model_utils import Choices
@@ -17,7 +17,7 @@ from editregions.contrib.embeds.text import (iframe_vname_plural, iframe_vname,
                                              feed_vname_plural, feed_cache_day,
                                              feed_cache_hday, feed_cache_qday,
                                              feed_cache_hour, feed_cache_for_label,  # noqa
-                                             feed_cache_for_help)
+                                             feed_cache_for_help, js_vname, js_vname_plural)
 
 logger = logging.getLogger(__name__)
 
@@ -97,3 +97,16 @@ class Feed(EditRegionChunk, FeedBase):
     class Meta:
         verbose_name = feed_vname
         verbose_name_plural = feed_vname_plural
+
+
+class JavaScriptBase(Model):
+    content = TextField(blank=False, null=False)
+
+    class Meta:
+        abstract = True
+
+
+class JavaScript(EditRegionChunk, JavaScriptBase):
+    class Meta:
+        verbose_name = js_vname
+        verbose_name_plural = js_vname_plural

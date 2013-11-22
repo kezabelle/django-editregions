@@ -1,0 +1,18 @@
+.form-row label.required {
+    display: none;
+}
+
+.form-row .django-ace-widget {
+    min-width: 56.400em;
+    width: 100%;
+}
+
+
+body.embeds-javascript .field-content {
+    border-bottom: 0;
+    padding: 0;
+}
+
+body.embeds-javascript .module {
+    border: 0;
+}

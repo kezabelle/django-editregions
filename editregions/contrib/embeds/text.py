@@ -36,3 +36,7 @@ feed_cache_day = _('One day')
 feed_cache_hday = _('Twelve hours')
 feed_cache_qday = _('Six hours')
 feed_cache_hour = _('One hour')
+
+
+js_vname = _("JavaScript")
+js_vname_plural = _("JavaScripts")
