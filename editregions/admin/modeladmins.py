@@ -5,6 +5,7 @@ import logging
 from urlparse import urlsplit, urlunsplit
 from django.conf import settings
 import warnings
+from django.forms import Media
 from django.template.response import TemplateResponse
 from adminlinks.admin import AdminlinksMixin
 from django.contrib import admin
@@ -702,3 +703,8 @@ class ChunkAdmin(AdminlinksMixin):
         """
         warnings.warn('`render_into_summary` not implemented on %r' % self.__class__,
                       RuntimeWarning)
+
+    @property
+    def media(self):
+        media_instance = super(ChunkAdmin, self).media
+        return media_instance + Media(js=['editregions/js/childevents.js'])
