@@ -1,0 +1,27 @@
+{% comment %}
+
+Receives a new `feed` context variable.
+
+  * `feed.feed` is a dictionary which contains stuff like:
+    * link
+    * subtitle
+    * title
+  * `feed.entries` is a list of dictionaries containing things like:
+    * summary
+    * link
+    * title
+
+{% endcomment %}
+<div class="parsed_feed">
+    {% if feed.feed.title %}
+        <span>{{ feed.feed.title }}</span>
+    {% endif %}
+
+    {% if feed.entries|length > 0 %}
+        <ul>
+            {% for entry in feed.entries %}
+            <li><a href="{{ entry.link }}">{{ entry.title }}</a></li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+</div>
