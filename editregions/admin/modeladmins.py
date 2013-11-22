@@ -3,15 +3,13 @@ from __future__ import unicode_literals
 from functools import update_wrapper
 import logging
 from urlparse import urlsplit, urlunsplit
-from django.conf import settings
 import warnings
 from django.forms import Media
 from django.template.response import TemplateResponse
 from adminlinks.admin import AdminlinksMixin
-from django.contrib import admin
 from django.contrib.admin.options import ModelAdmin
 from django.contrib.admin.util import display_for_field, unquote
-from django.core.exceptions import (ObjectDoesNotExist, ImproperlyConfigured)
+from django.core.exceptions import ObjectDoesNotExist
 from django.core.urlresolvers import reverse, resolve
 from django.http import HttpResponse, HttpResponseBadRequest, QueryDict
 from django.shortcuts import render_to_response
@@ -22,7 +20,6 @@ try:
 except ImportError:
     from django.utils import simplejson as json
 from django.utils.encoding import force_unicode
-from django.utils.html import strip_tags
 from django.utils.translation import ugettext_lazy as _
 from adminlinks.templatetags.utils import _add_link_to_context
 from editregions.admin.inlines import EditRegionInline
