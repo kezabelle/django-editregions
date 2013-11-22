@@ -1,0 +1,2 @@
+django-wymeditor>=1.0
+django-tinymce>=1.5.2

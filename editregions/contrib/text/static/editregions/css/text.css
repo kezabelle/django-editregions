@@ -1,0 +1,12 @@
+.form-row label.required {
+    display: none;
+}
+
+body.text-mce .field-content {
+    border-bottom: 0;
+    padding: 0;
+}
+
+body.text-mce .module {
+    border: 0;
+}
