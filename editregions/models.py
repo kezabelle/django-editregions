@@ -4,9 +4,7 @@ import logging
 import os
 import re
 from django.conf import settings
-from django.core.cache import cache, DEFAULT_CACHE_ALIAS
 from django.db.models.fields import CharField, PositiveIntegerField
-from django.db.models.signals import post_save
 from django.template import TemplateDoesNotExist
 from django.template.loader import select_template
 from django.template.context import Context
@@ -16,11 +14,10 @@ except ImportError:
     from django.utils import simplejson as json
 from django.utils.datastructures import SortedDict
 from django.db.models.loading import get_model
-from editregions.constants import RENDERED_CACHE_KEY
 from model_utils.managers import PassThroughManager, InheritanceManager
 from editregions.querying import EditRegionChunkQuerySet
 from editregions.text import chunk_v, chunk_vplural
-from editregions.utils.data import get_content_type, get_modeladmin
+from editregions.utils.data import get_modeladmin
 from editregions.utils.regions import validate_region_name
 from helpfulfields.models import Generic, ChangeTracking
 
