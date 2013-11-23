@@ -1,9 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
-from distutils.version import LooseVersion
 import functools
 import logging
-from django import get_version
 from django.core.exceptions import SuspiciousOperation, ValidationError
 from django.core.urlresolvers import reverse
 from django.forms import Media
@@ -13,6 +11,7 @@ from django.utils.decorators import method_decorator, available_attrs
 from editregions.constants import (REQUEST_VAR_REGION, REQUEST_VAR_ID,
                                    REQUEST_VAR_CT)
 from editregions.templatetags.editregion import EditRegionTag
+from editregions.utils.versioning import is_django_16plus
 from helpfulfields.admin import changetracking_readonlys, changetracking_fieldset
 from editregions.utils.regions import validate_region_name
 from editregions.models import EditRegionChunk
@@ -21,18 +20,8 @@ from adminlinks.templatetags.utils import MODELADMIN_REVERSE
 
 logger = logging.getLogger(__name__)
 
-# TODO: is this needed?
-exclude_content_type_fields = ['content_type', 'content_id']
-
-# TODO: is this needed?
-datetimes_fields = changetracking_readonlys
-
-# TODO: is this still needed?
-datetimes_fieldset = changetracking_fieldset
-
-
 def django_jqueryui_version():
-    if LooseVersion(get_version()) >= LooseVersion('1.6'):
+    if is_django_16plus():
         return 'editregions/js/jquery.ui.1-10-3.custom.js'
     return 'editregions/js/jquery.ui.1-8-24.custom.js'
 

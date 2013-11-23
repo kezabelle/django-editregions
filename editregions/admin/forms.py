@@ -1,13 +1,12 @@
 # -*- coding: utf-8 -*-
 import logging
-from distutils.version import LooseVersion
-from django import get_version as django_version
 from django.db.models import F
 from django.forms import Form, Media
 from django.forms.util import ErrorList
 from django.forms.fields import IntegerField, CharField
 from django.utils.encoding import force_unicode
 from editregions.models import EditRegionChunk
+from editregions.utils.versioning import is_django_15plus
 from editregions.admin.utils import shared_media
 from editregions.utils.regions import validate_region_name
 
@@ -135,7 +134,7 @@ class MovementForm(Form):
                                                         position__gte=old_position)
 
         kwargs = {}
-        if LooseVersion(django_version()) >= LooseVersion('1.5'):
+        if is_django_15plus():
             kwargs.update(update_fields=['region', 'position'])
         obj.save(**kwargs)
 
