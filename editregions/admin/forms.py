@@ -1,12 +1,13 @@
 # -*- coding: utf-8 -*-
 import logging
+from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import F
 from django.forms import Form, Media
 from django.forms.util import ErrorList
 from django.forms.fields import IntegerField, CharField
 from django.utils.encoding import force_unicode
-from editregions.models import EditRegionChunk
 from editregions.utils.versioning import is_django_15plus
+from editregions.models import EditRegionChunk, EditRegionConfiguration
 from editregions.admin.utils import shared_media
 from editregions.utils.regions import validate_region_name
 
@@ -88,7 +89,7 @@ class MovementForm(Form):
         pk = cd.get('pk', 0)
         try:
             cd['pk'] = self.Meta.model.polymorphs.get_subclass(pk=pk)
-        except self.Meta.model.DoesNotExist as e:
+        except ObjectDoesNotExist as e:
             cd['pk'] = None
             self._errors['pk'] = e.msg
 
@@ -110,10 +111,10 @@ class MovementForm(Form):
         old_region = obj.region
         new_region = self.cleaned_data.get('region', obj.region)
 
-        next_chunks = EditRegionChunk.objects.filter(content_type=obj.content_type,
-                                                     content_id=obj.content_id,
-                                                     region=new_region,
-                                                     position__gte=obj.position)
+        next_chunks = EditRegionChunk.objects.filter(
+            content_type=obj.content_type, content_id=obj.content_id,
+            region=new_region, position__gte=obj.position)
+
         logger.debug('Push objects which should be affected, including the one '
                      'we in the position we need.')
         next_chunks.update(position=F('position') + 1)
@@ -128,10 +129,9 @@ class MovementForm(Form):
             logger.debug('object moved from {old} to {new}'.format(
                          old=old_region, new=new_region))
             obj.region = new_region
-            old_chunks = EditRegionChunk.objects.filter(content_type=obj.content_type,
-                                                        content_id=obj.content_id,
-                                                        region=old_region,
-                                                        position__gte=old_position)
+            old_chunks = EditRegionChunk.objects.filter(
+                content_type=obj.content_type, content_id=obj.content_id,
+                region=old_region, position__gte=old_position)
 
         kwargs = {}
         if is_django_15plus():
