@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
+from distutils.version import LooseVersion
 import functools
 import logging
+from django import get_version
 from django.core.exceptions import SuspiciousOperation, ValidationError
 from django.core.urlresolvers import reverse
 from django.forms import Media
@@ -28,6 +30,12 @@ datetimes_fields = changetracking_readonlys
 # TODO: is this still needed?
 datetimes_fieldset = changetracking_fieldset
 
+
+def django_jqueryui_version():
+    if LooseVersion(get_version()) >= LooseVersion('1.6'):
+        return 'editregions/js/jquery.ui.1-10-3.custom.js'
+    return 'editregions/js/jquery.ui.1-8-24.custom.js'
+
 shared_media = Media(
     css={
         'screen': [
@@ -39,12 +47,7 @@ shared_media = Media(
     js=[
         'admin/js/jquery.rebind.js',
         'adminlinks/js/jquery.fancyiframe.js',
-        'editregions/js/jquery.ui.1-8-24.custom.js',
-        # 'editregions/js/jquery.ui.core.js',
-        # 'editregions/js/jquery.ui.widget.js',
-        # 'editregions/js/jquery.ui.mouse.js',
-        # 'editregions/js/jquery.ui.touch-punch.js',
-        # 'editregions/js/jquery.ui.sortable.js',
+        django_jqueryui_version(),
         'editregions/js/dragging.js',
     ],
 )
