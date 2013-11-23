@@ -8,6 +8,8 @@ from django.db.models.fields import CharField, PositiveIntegerField
 from django.template import TemplateDoesNotExist
 from django.template.loader import select_template
 from django.template.context import Context
+from django.utils.encoding import python_2_unicode_compatible
+
 try:
     import json
 except ImportError:
@@ -24,6 +26,7 @@ from helpfulfields.models import Generic, ChangeTracking
 logger = logging.getLogger(__name__)
 
 
+@python_2_unicode_compatible
 class EditRegionChunk(ChangeTracking, Generic):
     """
     Every edit region is made up of these, which serve as pointers for other
@@ -45,8 +48,9 @@ class EditRegionChunk(ChangeTracking, Generic):
                'region={x.region}, parent_type={x.content_type_id}, ' \
                'parent_id={x.content_id}, position={x.position}'.format(x=self)
 
-    def __unicode__(self):
-        return 'pk={x.pk}, region={x.region}, position={x.position}'.format(x=self)
+    def __str__(self):
+        return 'pk={x.pk}, region={x.region}, position={x.position}'.format(
+            x=self)
 
     def move(self, requested_position):
         from editregions.admin.forms import MovementForm
