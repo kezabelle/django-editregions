@@ -37,8 +37,6 @@ class EditRegionChunk(ChangeTracking, Generic):
     """
     region = CharField(max_length=75, validators=[validate_region_name])
     position = PositiveIntegerField(default=None, db_index=True)
-    #subcontent_type = ForeignKey(ContentType, verbose_name=render_label,
-    #                             help_text=render_help, related_name='+')
 
     objects = PassThroughManager.for_queryset_class(EditRegionChunkQuerySet)()
     polymorphs = InheritanceManager()
