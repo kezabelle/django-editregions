@@ -1,0 +1,6 @@
+{% if chunkloop.object.dimensions %}
+{% load imagekit %}
+{% thumbnail chunkloop.object.dimensions_as_str chunkloop.object.data -- title=chunkloop.object.title %}
+{% else %}
+{% include "editregions/uploads/file.html" %}
+{% endif %}

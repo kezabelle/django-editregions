@@ -1,9 +1,18 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 import os
+from django.core.files.images import get_image_dimensions
 from django.utils.encoding import python_2_unicode_compatible
+from django.utils.functional import cached_property
 from django.utils.translation import ugettext_lazy as _
 from django.db.models import Model, FileField, CharField
+try:
+    from django.utils.image import Image
+except ImportError:  # 1.4?
+    try:
+        from PIL import Image
+    except ImportError:
+        import Image
 from editregions.models import EditRegionChunk
 
 
@@ -18,7 +27,31 @@ class FileBase(Model):
         return os.path.basename(self.data.name)
 
     def get_filetype(self):
-        return os.path.splitext(self.data.name)[1][1:]
+        return os.path.splitext(self.data.path)[1][1:].lower()
+
+    def is_image(self):
+        # taken from ImageField
+        try:
+            Image.open(self.data).verify()
+            return True
+        except Exception:
+            return False
+
+    def _get_dimensions(self):
+        if self.is_image():
+            return get_image_dimensions(self.data)
+        return None
+
+    @cached_property
+    def dimensions(self):
+        return self._get_dimensions()
+
+    def dimensions_as_str(self):
+        try:
+            return '%dx%d' % self.dimensions
+        except TypeError:
+            # wasn't an image after all ...
+            return ''
 
     class Meta:
         abstract = True
