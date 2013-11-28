@@ -1,1 +1,1 @@
-<a href="{{ chunkloop.object.data.url }}?t={{ chunkloop.object.modified|date:'zu' }}">{{ chunkloop.object }}</a>
+<a href="{{ chunkloop.object.data.url }}?t={{ chunkloop.object.modified|date:'zu' }}" data-pk="{{ chunkloop.object.pk }}" data-position="{{ chunkloop.counter }}" data-region="{{ chunkloop.region }}" data-modified="{{ chunkloop.object.modified|date:'r' }}">{{ chunkloop.object }}</a>

@@ -1,2 +1,3 @@
 {% load imagekit %}
-{% thumbnail chunkloop.object.dimensions_as_str chunkloop.object.data -- title=chunkloop.object.title %}
+{% thumbnail chunkloop.object.dimensions_as_str chunkloop.object.data as t %}
+<img src="{{ t.url }}" width="{{ t.width }}" height="{{ t.height }}" title="{{ chunkloop.object.title }}" data-pk="{{ chunkloop.object.pk }}" data-position="{{ chunkloop.counter }}" data-region="{{ chunkloop.region }}" data-modified="{{ chunkloop.object.modified|date:'r' }}">

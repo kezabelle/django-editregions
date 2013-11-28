@@ -12,7 +12,7 @@ Receives a new `feed` context variable.
     * title
 
 {% endcomment %}
-<div class="parsed_feed">
+<div class="parsed_feed" data-pk="{{ chunkloop.object.pk }}" data-position="{{ chunkloop.counter }}" data-region="{{ chunkloop.region }}" data-modified="{{ chunkloop.object.modified|date:'r' }}">
     {% if feed.feed.title %}
         <span>{{ feed.feed.title }}</span>
     {% endif %}
