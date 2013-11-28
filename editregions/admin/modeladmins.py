@@ -15,6 +15,8 @@ from django.http import HttpResponse, HttpResponseBadRequest, QueryDict
 from django.shortcuts import render_to_response
 from django.template import RequestContext
 from django.template.loader import render_to_string
+from editregions.utils.db import get_chunks_in_region_count
+
 try:
     import json
 except ImportError:
@@ -477,9 +479,10 @@ class ChunkAdmin(AdminlinksMixin):
         obj.content_id = request.GET[REQUEST_VAR_ID]
         obj.region = request.GET[REQUEST_VAR_REGION]
         if obj.position is None:
-            found = EditRegionChunk.objects.filter(
-                content_type=obj.content_type, content_id=obj.content_id,
-                region=obj.region).count()
+            found = get_chunks_in_region_count(EditRegionChunk,
+                                               content_type=obj.content_type,
+                                               obj_id=obj.content_id,
+                                               region=obj.region).count()
             found2 = max(0, found)
             obj.position = found2 + 1
         super(ChunkAdmin, self).save_model(request, obj, form, change)
@@ -525,9 +528,10 @@ class ChunkAdmin(AdminlinksMixin):
                              'cls': self.model,
                              'region': region,
                          })
-            already_created = self.model.objects.filter(
-                content_type=parent_ct, content_id=parent_id, region=region
-            ).only('pk').count()
+            already_created = get_chunks_in_region_count(self.model,
+                                                         content_type=parent_ct,
+                                                         obj_id=parent_id,
+                                                         region=region)
             if already_created >= limit:
                 logger.info('Already hit limit of %(limit)d, found %(exists)d '
                             'objects in the database' % {

@@ -6,6 +6,7 @@ from django.forms import Form, Media
 from django.forms.util import ErrorList
 from django.forms.fields import IntegerField, CharField
 from django.utils.encoding import force_unicode
+from editregions.utils.db import get_maximum_pk, get_next_chunks, set_new_position
 from editregions.utils.versioning import is_django_15plus
 from editregions.models import EditRegionChunk, EditRegionConfiguration
 from editregions.admin.utils import shared_media
@@ -74,8 +75,7 @@ class MovementForm(Form):
         super(MovementForm, self).__init__(*args, **kwargs)
 
         try:
-            self.fields['pk'].max_value = (self.Meta.model.objects.all().only('pk')
-                                           .order_by('-pk')[0].pk)
+            self.fields['pk'].max_value = get_maximum_pk(self.Meta.model)
         except IndexError as e:
             # there probably aren't any objects in the DB yet, so the only thing
             # to move about is the minimum ... I think.
@@ -111,9 +111,8 @@ class MovementForm(Form):
         old_region = obj.region
         new_region = self.cleaned_data.get('region', obj.region)
 
-        next_chunks = EditRegionChunk.objects.filter(
-            content_type=obj.content_type, content_id=obj.content_id,
-            region=new_region, position__gte=obj.position)
+        next_chunks = get_next_chunks(EditRegionChunk, position=obj.position,
+                                      region=new_region)
 
         logger.debug('Push objects which should be affected, including the one '
                      'we in the position we need.')
@@ -129,9 +128,8 @@ class MovementForm(Form):
             logger.debug('object moved from {old} to {new}'.format(
                          old=old_region, new=new_region))
             obj.region = new_region
-            old_chunks = EditRegionChunk.objects.filter(
-                content_type=obj.content_type, content_id=obj.content_id,
-                region=old_region, position__gte=old_position)
+            old_chunks = get_next_chunks(EditRegionChunk, position=old_position,
+                                         region=old_region)
 
         kwargs = {}
         if is_django_15plus():
@@ -156,7 +154,8 @@ class MovementForm(Form):
                 logger.debug('{obj!r} out of position, moving from'
                              '{obj.position} to {new_position}'.format(
                              obj=obj, new_position=new_position))
-                EditRegionChunk.objects.filter(pk=obj.pk).update(position=new_position)
+                set_new_position(EditRegionChunk, pk=obj.pk,
+                                 position=new_position)
         return obj
 
     def change_message(self):
