@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 import logging
-from hashlib import sha1 as cachehash
+from hashlib import sha1
 from django.core.cache import cache
 from django.db.models.base import Model
 from django.db.models.fields import URLField, PositiveIntegerField, CharField, TextField
@@ -86,11 +86,13 @@ class Feed(EditRegionChunk, FeedBase):
         return self.url
 
     def get_from_cache(self):
-        feed_key = 'feed_{0}'.format(cachehash(self.url).hexdigest())
+        feed_key = 'feed_{0}'.format(sha1(self.url).hexdigest())
         feed = cache.get(feed_key, None)
         if feed is None:
             logger.debug('Feed not in cache, fetching... {0}'.format(self.url))
+            feed_request_started.send(sender=self, instance=self)
             feed = parse(self.url)
+            feed_request_finished.send(sender=self, instance=self, feed=feed)
             cache.set(feed_key, feed, self.cache_for)
         return feed
 

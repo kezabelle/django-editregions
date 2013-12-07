@@ -47,6 +47,13 @@ class FeedAdmin(ChunkAdmin, ModelAdmin):
         }),
     ]
 
+    def save_model(self, request, obj, *args, **kwargs):
+        """
+        Cache immeidiately if possible.
+        """
+        super(FeedAdmin, self).save_model(request, obj, *args, **kwargs)
+        obj.get_from_cache()
+
     def render_into_region(self, obj, context):
         context.update({'feed': obj.get_from_cache()})
         return render_to_string('editregions/embeds/feed.html', context)
