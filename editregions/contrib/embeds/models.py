@@ -70,6 +70,7 @@ class FeedBase(Model):
         abstract = True
 
 
+@python_2_unicode_compatible
 class Feed(EditRegionChunk, FeedBase):
     FEED_CACHE_DURATIONS = Choices(
         (86400, 'a_day', feed_cache_day),
@@ -82,7 +83,7 @@ class Feed(EditRegionChunk, FeedBase):
                                      verbose_name=feed_cache_for_label,
                                      help_text=feed_cache_for_help)
 
-    def __unicode__(self):
+    def __str__(self):
         return self.url
 
     def get_from_cache(self):
