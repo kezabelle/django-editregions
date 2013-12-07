@@ -581,7 +581,7 @@ class ChunkAdmin(AdminlinksMixin):
             return resp
 
         # get the modeladmin in question, from the URL provided.
-        func = resolve(resp.redirect_parts[2]).func.func_closure[0].cell_contents
+        func = resolve(resp.redirect_parts[2]).func.__closure__[0].cell_contents
 
         # it doesn't look like a chunk admin, so we can't know we need to
         # redirect back to the parent.
