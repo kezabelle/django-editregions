@@ -2,7 +2,12 @@
 from __future__ import unicode_literals
 from functools import update_wrapper
 import logging
-from urlparse import urlsplit, urlunsplit
+try:
+    from django.utils.six.moves import urllib_parse
+    urlsplit = urllib_parse.urlsplit
+    urlunsplit = urllib_parse.urlunsplit
+except (ImportError, AttributeError) as e:  # Python 2, < Django 1.5
+    from urlparse import urlsplit, urlunsplit
 import warnings
 from django.forms import Media
 from django.template.response import TemplateResponse
