@@ -21,7 +21,10 @@ try:
     import json
 except ImportError:
     from django.utils import simplejson as json
-from django.utils.encoding import force_unicode
+try:
+    from django.utils.encoding import force_text
+except ImportError:  # < Django 1.5
+    from django.utils.encoding import force_unicode as force_text
 from django.utils.translation import ugettext_lazy as _
 from adminlinks.templatetags.utils import _add_link_to_context
 from editregions.admin.inlines import EditRegionInline
@@ -341,8 +344,8 @@ class EditRegionAdmin(ModelAdmin):
         opts = self.model._meta
         app_label = opts.app_label
         context.update({
-            'module_name': force_unicode(opts.verbose_name_plural),
-            'title': _('Select %s to change') % force_unicode(opts.verbose_name),
+            'module_name': force_text(opts.verbose_name_plural),
+            'title': _('Select %s to change') % force_text(opts.verbose_name),
             'media': self.media,
             'app_label': app_label,
             'cl': {

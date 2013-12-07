@@ -5,7 +5,10 @@ from django.db.models import F
 from django.forms import Form, Media
 from django.forms.util import ErrorList
 from django.forms.fields import IntegerField, CharField
-from django.utils.encoding import force_unicode
+try:
+    from django.utils.encoding import force_text
+except ImportError:  # < Django 1.5
+    from django.utils.encoding import force_unicode as force_text
 from editregions.utils.db import get_maximum_pk, get_next_chunks, set_new_position
 from editregions.utils.versioning import is_django_15plus
 from editregions.models import EditRegionChunk, EditRegionConfiguration
@@ -167,7 +170,7 @@ class MovementForm(Form):
     def parent_change_message(self):
         obj = self.cleaned_data['pk']
         msg = 'Moved {vname} (pk: {obj.pk}) to position {obj.position} in ' \
-              'region "{obj.region}"'.format(vname=force_unicode(obj._meta.verbose_name),
+              'region "{obj.region}"'.format(vname=force_text(obj._meta.verbose_name),
                                              obj=obj)
         logger.info(msg)
         return obj.content_object, msg
