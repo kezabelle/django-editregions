@@ -42,7 +42,7 @@ class EditRegionChangeList(ChangeList):
 
         :return: list of available chunk types
         """
-        assert unicode(obj.pk) == unicode(self.parent_content_id), "Hmmm"
+        assert str(obj.pk) == str(self.parent_content_id), "Hmmm"
 
         AdminChunkWrapper = self.model_admin.get_admin_wrapper_class()
         filters = [AdminChunkWrapper(**{
