@@ -45,13 +45,16 @@ class EditRegionChangeList(ChangeList):
         assert str(obj.pk) == str(self.parent_content_id), "Hmmm"
 
         AdminChunkWrapper = self.model_admin.get_admin_wrapper_class()
-        filters = [AdminChunkWrapper(**{
-            'opts': x._meta,
-            'namespace': self.model_admin.admin_site.app_name,
-            'region': self.region,
-            'content_type': self.parent_content_type,
-            'content_id': obj.pk,
-        }) for x in conf.config[self.region]['models']]
+        if 'models' in conf.config[self.region]:
+            filters = list(AdminChunkWrapper(**{
+                'opts': x._meta,
+                'namespace': self.model_admin.admin_site.app_name,
+                'region': self.region,
+                'content_type': self.parent_content_type,
+                'content_id': obj.pk,
+            }) for x in conf.config[self.region]['models'])
+        else:
+            filters = ()
         if len(filters) == 0:
             msg = "region '{region}' has zero chunk types configured".format(
                 region=self.region)
