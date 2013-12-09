@@ -9,7 +9,10 @@ from django.template import TemplateDoesNotExist
 from django.template.loader import select_template
 from django.template.context import Context
 from django.utils.encoding import python_2_unicode_compatible
-
+try:
+    from django.utils.six import string_types
+except ImportError:  # Python 2, Django < 1.5
+    string_types = basestring,
 try:
     import json
 except ImportError:
@@ -92,7 +95,7 @@ class EditRegionConfiguration(object):
         settings dictionary. Assumes the incoming template list is ordered in
         discovery-preference order.
         """
-        if isinstance(self.possible_templates, basestring):
+        if isinstance(self.possible_templates, string_types):
             template_names = (self.possible_templates,)
         else:
             template_names = self.possible_templates
