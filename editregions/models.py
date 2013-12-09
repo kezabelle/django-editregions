@@ -163,7 +163,8 @@ class EditRegionConfiguration(object):
                     raise ImproperlyConfigured(msg)
                 logger.error(msg)
         if len(resolved) == 0:
-            logger.debug('No chunks types found for "%(region)s"' % {'region': name})
+            logger.debug('No chunks types found from `model_mapping` '
+                         '{map!r}'.format(map=model_mapping))
         return resolved
 
     def get_limits_for(region, chunk):
