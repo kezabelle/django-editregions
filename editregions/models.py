@@ -150,7 +150,7 @@ class EditRegionConfiguration(object):
             # add it to our new data structure.
             # Note that while None > 0 appears correct,
             # it isn't because None is a special value for infinite.
-            if model is not None and (count is None or count > 0):
+            if model is not None and (count is None or int(count) > 0):
                 resolved.update({model: count})
             if model is None:
                 msg = 'Unable to load model "{cls}" from app "{app}"'.format(
