@@ -107,7 +107,7 @@ class EditRegionConfiguration(object):
         except TemplateDoesNotExist:
             if settings.DEBUG:
                 raise
-            logger.error('None of the following exist: {not_found}'.format(
+            logger.exception('None of the following exist: {not_found}'.format(
                 not_found=', '.join(json_template_names)
             ))
             return None
