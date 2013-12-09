@@ -67,6 +67,8 @@ class EditRegionChunk(ChangeTracking, Generic):
 
 
 class EditRegionConfiguration(object):
+    fallback_region_name_re = re.compile(r'[_\W]+')
+
     def __init__(self, obj=None):
         if obj is not None and not hasattr(self, 'obj'):
             self.configure(obj=obj)
@@ -83,7 +85,6 @@ class EditRegionConfiguration(object):
         self.template = self.get_first_valid_template()
         self.has_configuration = self.template is not None
         self.config = self.get_template_region_configuration()
-        self.fallback_region_name_re = re.compile(r'[_\W]+')
 
     def get_first_valid_template(self):
         """
