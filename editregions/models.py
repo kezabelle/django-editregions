@@ -4,6 +4,7 @@ import logging
 import os
 import re
 from django.conf import settings
+from django.core.exceptions import ImproperlyConfigured
 from django.db.models.fields import CharField, PositiveIntegerField
 from django.template import TemplateDoesNotExist
 from django.template.loader import select_template
@@ -18,7 +19,7 @@ try:
 except ImportError:
     from django.utils import simplejson as json
 from django.utils.datastructures import SortedDict
-from django.db.models.loading import get_model
+from django.db.models.loading import get_model, get_app
 from model_utils.managers import PassThroughManager, InheritanceManager
 from editregions.querying import EditRegionChunkQuerySet
 from editregions.text import chunk_v, chunk_vplural
@@ -143,7 +144,8 @@ class EditRegionConfiguration(object):
         resolved = SortedDict()
         # Replace the dotted app_label/model_name combo with the actual model.
         for chunk, count in model_mapping.items():
-            model = get_model(*chunk.split('.')[0:2])
+            app, modelname = chunk.split('.')[0:2]
+            model = get_model(app_label=app, model_name=modelname)
             # Once we have a model and there's no stupid limit set,
             # add it to our new data structure.
             # Note that while None > 0 appears correct,
@@ -151,9 +153,14 @@ class EditRegionConfiguration(object):
             if model is not None and (count is None or count > 0):
                 resolved.update({model: count})
             if model is None:
-                msg = 'Unable to load model "{cls}"'.format(cls=chunk)
+                msg = 'Unable to load model "{cls}" from app "{app}"'.format(
+                    cls=modelname, app=app)
                 if settings.DEBUG:
-                    raise ObjectDoesNotExist(msg)
+                    # request the *app* package, which may raise an explanatory
+                    # exception for us ...
+                    get_app(app)
+                    # app exists, but the model doesn't.
+                    raise ImproperlyConfigured(msg)
                 logger.error(msg)
         if len(resolved) == 0:
             logger.debug('No chunks types found for "%(region)s"' % {'region': name})
