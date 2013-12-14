@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
+from collections import defaultdict
 import logging
 import os
 import re
@@ -10,10 +11,13 @@ from django.template import TemplateDoesNotExist
 from django.template.loader import select_template
 from django.template.context import Context
 from django.utils.encoding import python_2_unicode_compatible
+from django.utils.functional import cached_property
+
 try:
     from django.utils.six import string_types
 except ImportError:  # Python 2, Django < 1.5
     string_types = basestring,
+
 try:
     import json
 except ImportError:
@@ -23,7 +27,7 @@ from django.db.models.loading import get_model, get_app
 from model_utils.managers import PassThroughManager, InheritanceManager
 from editregions.querying import EditRegionChunkQuerySet
 from editregions.text import chunk_v, chunk_vplural
-from editregions.utils.data import get_modeladmin
+from editregions.utils.data import get_modeladmin, get_content_type
 from editregions.utils.regions import validate_region_name
 from helpfulfields.models import Generic, ChangeTracking
 
@@ -178,3 +182,28 @@ class EditRegionConfiguration(object):
             # Nope, no limit for this chunk.
             # Skipping down to returning None
             return None
+
+    @cached_property
+    def _fetch_chunks(self):
+        models = set()
+        regions = set()
+        for region, subconfig in self.config.items():
+            regions.add(region)
+            if 'models' in subconfig:
+                models |= (set(subconfig['models'].keys()))
+        ct = get_content_type(self.obj)
+        chunks = (EditRegionChunk.polymorphs.filter(content_type=ct,
+                                                    content_id=self.obj.pk,
+                                                    region__in=regions)
+                  .select_subclasses(*models))
+
+        final_results = defaultdict(list)
+        for chunk in chunks.iterator():
+            final_results[chunk.region].append(chunk)
+        return final_results
+
+    def fetch_chunks(self):
+        return self._fetch_chunks
+
+    def fetch_chunks_for(self, region):
+        return self._fetch_chunks.get(region, None)
