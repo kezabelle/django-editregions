@@ -19,9 +19,13 @@ except ImportError:  # Python 2, Django < 1.5
     string_types = basestring,
 
 try:
-    import json
-except ImportError:
-    from django.utils import simplejson as json
+    import ujson as json
+except ImportError:  # Haven't got an ultrajson package
+    try:
+        import json
+    except ImportError:  # Haven't got json, Python < 2.6, probably Django < 1.6
+        from django.utils import simplejson as json
+
 from django.utils.datastructures import SortedDict
 from django.db.models.loading import get_model, get_app
 from model_utils.managers import PassThroughManager, InheritanceManager
