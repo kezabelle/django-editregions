@@ -126,7 +126,11 @@ class EditRegionConfiguration(object):
         # play nicely and don't error the whole request.
         if self.template is None:
             return {}
-        rendered_template = self.template.render(Context())
+        rendered_template = self.template.render(Context()).strip()
+        if len(rendered_template) == 0:
+            logger.warning("Template was empty after being rendered")
+            return {}
+        # Allow JSON decoding to bubble up an error.
         parsed_template = json.loads(rendered_template)
         for key, config in parsed_template.items():
             if 'models' in parsed_template[key]:
