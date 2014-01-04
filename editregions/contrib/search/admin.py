@@ -2,8 +2,6 @@
 from __future__ import unicode_literals
 from django.contrib import admin
 from django.template.loader import render_to_string
-from editregions.contrib.search.text import advanced_options_label
-
 try:
     from django.utils.encoding import force_text
 except ImportError:  # < Django 1.5
@@ -11,9 +9,12 @@ except ImportError:  # < Django 1.5
 from haystack.query import SearchQuerySet
 from editregions.admin.modeladmins import ChunkAdmin
 from editregions.contrib.search.models import MoreLikeThis, SearchResults
+from editregions.contrib.search.forms import MoreLikeThisForm, SearchResultsForm
+from editregions.contrib.search.text import advanced_options_label
 
 
 class MoreLikeThisAdmin(ChunkAdmin, admin.ModelAdmin):
+    form = MoreLikeThisForm
     list_display = ['max_num', 'connection', 'created', 'modified']
     fieldsets = [
         (None, {
@@ -47,6 +48,7 @@ admin.site.register(MoreLikeThis, MoreLikeThisAdmin)
 
 
 class SearchResultsAdmin(ChunkAdmin, admin.ModelAdmin):
+    form = SearchResultsForm
     list_display = ['query', 'max_num', 'connection', 'created', 'modified']
     fieldsets = [
         (None, {
