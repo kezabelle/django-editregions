@@ -1,7 +1,7 @@
 {% if more_like_this|length > 0 %}
-<ol class="mlt">
+<ol class="mlt" data-pk="{{ chunkloop.object.pk }}" data-position="{{ chunkloop.counter }}" data-region="{{ chunkloop.region }}" data-modified="{{ chunkloop.object.modified|date:'r' }}">
     {% for s in more_like_this %}
-    <li class="mlt-item">
+    <li class="mlt-item" data-pk="{{ s.pk }}">
         <a class="mlt-item-link" href="{% firstof s.url s.get_absolute_url s.object.get_absolute_url %}">{% firstof s.title s.name s.object.get_title s.object.title s.object.name %}</a>
     </li>
     {% endfor %}

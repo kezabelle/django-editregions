@@ -1,8 +1,8 @@
 {% if search_results|length > 0 %}
-<dl class="search-results">
+<dl class="search-results" data-pk="{{ chunkloop.object.pk }}" data-position="{{ chunkloop.counter }}" data-region="{{ chunkloop.region }}" data-modified="{{ chunkloop.object.modified|date:'r' }}">
     <dt class="search-query">&#8220;{{ chunkloop.object.query }}&#8221;</dt>
     {% for s in search_results %}
-    <dd class="search-result">
+    <dd class="search-result" data-pk="{{ s.pk }}" data-score="{{ s.score }}">
         <a class="search-result-link" href="{% firstof s.url s.get_absolute_url s.object.get_absolute_url %}">{% firstof s.title s.name s.object.get_title s.object.title s.object.name %}</a>
     </dd>
     {% endfor %}
