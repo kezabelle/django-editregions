@@ -21,3 +21,4 @@ query_help = _("the search terms (or complex query) to use when finding the "
 boost_label = _("prioritise")
 boost_help = _("comma separated list of words which should be considered more "
                "important, when sorting the best matches.")
+csv_validator_error = _("prioritised words should be comma separated")

@@ -13,7 +13,7 @@ from editregions.contrib.search.text import (max_num_label, max_num_help,
                                              request_objects_label,
                                              request_objects_help, query_label,
                                              query_help, boost_label,
-                                             boost_help)
+                                             boost_help, csv_validator_error)
 from editregions.models import EditRegionChunk
 
 logger = logging.getLogger(__name__)
@@ -29,7 +29,6 @@ def configured_haystack_connection(value):
         raise ValidationError('Invalid search backend provided.')
 
 
-@python_2_unicode_compatible
 class SearchConfigBase(Model):
     max_num = PositiveIntegerField(default=3, verbose_name=max_num_label,
                                    help_text=max_num_help, validators=[
@@ -44,15 +43,16 @@ class SearchConfigBase(Model):
                                    verbose_name=request_objects_label,
                                    help_text=request_objects_help)
 
-    def __str__(self):
-        return '{o.max_num!s} from "{o.connection!s}"'.format(o=self)
-
     class Meta:
         abstract = True
 
 
+@python_2_unicode_compatible
 class MoreLikeThis(EditRegionChunk, SearchConfigBase):
     """For mounting this chunk on the Django admin"""
+    def __str__(self):
+        return '{o.max_num!s} from "{o.connection!s}"'.format(o=self)
+
     class Meta:
         verbose_name = _("More like this")
         verbose_name_plural = _("More like this")
@@ -61,16 +61,15 @@ class MoreLikeThis(EditRegionChunk, SearchConfigBase):
 def csv_validator(value):
     if len(value) > 0:
         if ',' not in value and ' ' in value:
-            raise ValidationError('Boostable words must be comma separated')
+            raise ValidationError(csv_validator_error)
 
 
-@python_2_unicode_compatible
 class SearchResultsBase(SearchConfigBase):
     #: query to perform against Haystack
     query = CharField(max_length=255, verbose_name=query_label,
                       help_text=query_help)
     #: CSV separated words to treat as higher value.
-    boost = CharField(max_length=255, verbose_name=boost_label,
+    boost = CharField(max_length=255, blank=True, verbose_name=boost_label,
                       help_text=boost_help, validators=[csv_validator])
     boost_amount = 1.5
 
@@ -86,6 +85,13 @@ class SearchResultsBase(SearchConfigBase):
                      for word in possible_boosts
                      if word.strip())
 
+    class Meta:
+        abstract = True
+
+
+@python_2_unicode_compatible
+class SearchResults(EditRegionChunk, SearchResultsBase):
+    """For mounting this chunk on the Django admin"""
     def __str__(self):
         if self.max_num < 1:
             return ''
@@ -97,12 +103,6 @@ class SearchResultsBase(SearchConfigBase):
             bits.append('from "{0}"'.format(self.connection))
         return ' '.join(bits)
 
-    class Meta:
-        abstract = True
-
-
-class SearchResults(EditRegionChunk, SearchResultsBase):
-    """For mounting this chunk on the Django admin"""
     class Meta:
         verbose_name = _("Search results")
         verbose_name_plural = _("Search results")
