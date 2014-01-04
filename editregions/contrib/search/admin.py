@@ -1,7 +1,10 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
+import logging
 from django.contrib import admin
 from django.template.loader import render_to_string
+from haystack.exceptions import NotHandled
+
 try:
     from django.utils.encoding import force_text
 except ImportError:  # < Django 1.5
@@ -11,6 +14,8 @@ from editregions.admin.modeladmins import ChunkAdmin
 from editregions.contrib.search.models import MoreLikeThis, SearchResults
 from editregions.contrib.search.forms import MoreLikeThisForm, SearchResultsForm
 from editregions.contrib.search.text import advanced_options_label
+
+logger = logging.getLogger(__name__)
 
 
 class MoreLikeThisAdmin(ChunkAdmin, admin.ModelAdmin):
@@ -28,10 +33,15 @@ class MoreLikeThisAdmin(ChunkAdmin, admin.ModelAdmin):
 
     def render_into_region(self, obj, context):
         sqs = SearchQuerySet().using(obj.connection)
-        mlt = sqs.more_like_this(obj.content_object)[0:obj.max_num]
         if obj.request_objects:
-            mlt = mlt.load_all()
-        context.update(more_like_this=tuple(mlt))
+            sqs = sqs.load_all()
+        try:
+            mlt = sqs.more_like_this(obj.content_object)[0:obj.max_num]
+            context.update({'more_like_this': tuple(mlt)})
+        except NotHandled:
+            logger.exception("Haystack hasn't been configured to handle this "
+                             "object type.")
+            context.update({'more_like_this': ()})
         return render_to_string('editregions/search/mlt.html', context)
 
     def render_into_summary(self, obj, context):
