@@ -62,7 +62,7 @@ class SearchResultsAdmin(ChunkAdmin, admin.ModelAdmin):
 
     def render_into_region(self, obj, context):
         sqs = SearchQuerySet().using(obj.connection)
-        results = sqs.auto_query(obj.query)[0:obj.max_num]
+        results = sqs.auto_query(obj.query)
 
         # and now, in advanced usage, we allow for boosting words in the results
         actual_boosts = obj.get_boosts()
@@ -74,7 +74,7 @@ class SearchResultsAdmin(ChunkAdmin, admin.ModelAdmin):
         # requires them.
         if obj.request_objects:
             results = results.load_all()
-        context.update(search_results=tuple(results))
+        context.update({'search_results': results[0:obj.max_num]})
         return render_to_string('editregions/search/query_results.html',
                                 context)
 
