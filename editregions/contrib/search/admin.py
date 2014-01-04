@@ -2,6 +2,8 @@
 from __future__ import unicode_literals
 from django.contrib import admin
 from django.template.loader import render_to_string
+from editregions.contrib.search.text import advanced_options_label
+
 try:
     from django.utils.encoding import force_text
 except ImportError:  # < Django 1.5
@@ -13,6 +15,15 @@ from editregions.contrib.search.models import MoreLikeThis, SearchResults
 
 class MoreLikeThisAdmin(ChunkAdmin, admin.ModelAdmin):
     list_display = ['max_num', 'connection', 'created', 'modified']
+    fieldsets = [
+        (None, {
+            'fields': ['max_num'],
+        }),
+        (advanced_options_label, {
+            'fields': ['connection', 'request_objects'],
+            'classes': ('collapse',),
+        }),
+    ]
 
     def render_into_region(self, obj, context):
         sqs = SearchQuerySet().using(obj.connection)
@@ -37,6 +48,15 @@ admin.site.register(MoreLikeThis, MoreLikeThisAdmin)
 
 class SearchResultsAdmin(ChunkAdmin, admin.ModelAdmin):
     list_display = ['query', 'max_num', 'connection', 'created', 'modified']
+    fieldsets = [
+        (None, {
+            'fields': ['query', 'max_num', 'boost'],
+        }),
+        (advanced_options_label, {
+            'fields': ['connection', 'request_objects'],
+            'classes': ('collapse',),
+        }),
+    ]
 
     def render_into_region(self, obj, context):
         sqs = SearchQuerySet().using(obj.connection)

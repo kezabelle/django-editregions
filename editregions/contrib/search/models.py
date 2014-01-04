@@ -8,6 +8,12 @@ from django.utils.translation import ugettext_lazy as _
 from django.db.models import (Model, PositiveIntegerField, CharField,
                               BooleanField)
 from django.utils.encoding import python_2_unicode_compatible, force_text
+from editregions.contrib.search.text import (max_num_label, max_num_help,
+                                             connection_label, connection_help,
+                                             request_objects_label,
+                                             request_objects_help, query_label,
+                                             query_help, boost_label,
+                                             boost_help)
 from editregions.models import EditRegionChunk
 
 logger = logging.getLogger(__name__)
@@ -25,11 +31,18 @@ def configured_haystack_connection(value):
 
 @python_2_unicode_compatible
 class SearchConfigBase(Model):
-    max_num = PositiveIntegerField(default=3, validators=[
-        MinValueValidator(0), MaxValueValidator(1000)])
-    connection = CharField(default="default", max_length=50, validators=[
-        configured_haystack_connection])
-    request_objects = BooleanField(default=False)
+    max_num = PositiveIntegerField(default=3, verbose_name=max_num_label,
+                                   help_text=max_num_help, validators=[
+                                       MinValueValidator(0),
+                                       MaxValueValidator(1000)
+                                   ])
+    connection = CharField(default="default", max_length=50,
+                           verbose_name=connection_label,
+                           help_text=connection_help, validators=[
+                               configured_haystack_connection])
+    request_objects = BooleanField(default=False,
+                                   verbose_name=request_objects_label,
+                                   help_text=request_objects_help)
 
     def __str__(self):
         return '{o.max_num!s} from "{o.connection!s}"'.format(o=self)
@@ -54,9 +67,11 @@ def csv_validator(value):
 @python_2_unicode_compatible
 class SearchResultsBase(SearchConfigBase):
     #: query to perform against Haystack
-    query = CharField(max_length=255)
+    query = CharField(max_length=255, verbose_name=query_label,
+                      help_text=query_help)
     #: CSV separated words to treat as higher value.
-    boost = CharField(max_length=255, validators=[csv_validator])
+    boost = CharField(max_length=255, verbose_name=boost_label,
+                      help_text=boost_help, validators=[csv_validator])
     boost_amount = 1.5
 
     def clean(self):
