@@ -490,7 +490,7 @@ class ChunkAdmin(AdminlinksMixin):
             found = get_chunks_in_region_count(EditRegionChunk,
                                                content_type=obj.content_type,
                                                obj_id=obj.content_id,
-                                               region=obj.region).count()
+                                               region=obj.region)
             found2 = max(0, found)
             obj.position = found2 + 1
         super(ChunkAdmin, self).save_model(request, obj, form, change)
