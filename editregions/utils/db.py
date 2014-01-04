@@ -27,9 +27,9 @@ def get_next_chunks(pagemodel, obj, position, **kwargs):
 
 
 def get_chunks_in_region_count(pagemodel, content_type, obj_id, region):
-    return max(0, pagemodel.objects.filter(content_type=obj.content_type,
-                                           content_id=obj.content_id,
-                                           region=obj.region).only('pk').count())  # noqa
+    return max(0, pagemodel.objects.filter(content_type=content_type,
+                                           content_id=obj_id,
+                                           region=region).only('pk').count())  # noqa
 
 
 def set_new_position(model, pk, position):
