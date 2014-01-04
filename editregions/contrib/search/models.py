@@ -38,6 +38,19 @@ class SearchResultsBase(SearchConfigBase):
     query = CharField(max_length=255)
     #: CSV separated words to treat as higher value.
     boost = CharField(max_length=255)
+    boost_amount = 1.5
+
+    def clean(self):
+        self.query = self.query.strip(' ')
+        # force a trailing comma if none exists.
+        if self.boost and not self.boost.endswith(','):
+            self.boost = '{0},'.format(self.boost)
+
+    def get_boosts(self):
+        possible_boosts = self.boost.split(',')
+        return tuple((word.strip(), self.boost_amount)
+                     for word in possible_boosts
+                     if word.strip())
 
     def __str__(self):
         if self.max_num < 1:
