@@ -1,8 +1,8 @@
 {% if more_like_this|length > 0 %}
-<ol>
+<ol class="mlt">
     {% for s in more_like_this %}
-    <li>
-        <a href="{% firstof s.url s.get_absolute_url s.object.get_absolute_url %}">{% firstof s.title s.name s.object.get_title s.object.title s.object.name %}</a>
+    <li class="mlt-item">
+        <a class="mlt-item-link" href="{% firstof s.url s.get_absolute_url s.object.get_absolute_url %}">{% firstof s.title s.name s.object.get_title s.object.title s.object.name %}</a>
     </li>
     {% endfor %}
 </ol>
