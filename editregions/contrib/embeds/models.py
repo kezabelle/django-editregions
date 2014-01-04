@@ -4,7 +4,8 @@ import logging
 from hashlib import sha1
 from django.core.cache import cache
 from django.db.models.base import Model
-from django.db.models.fields import URLField, PositiveIntegerField, CharField, TextField
+from django.db.models.fields import (URLField, PositiveIntegerField, CharField,
+                                     TextField)
 from django.utils.encoding import python_2_unicode_compatible
 from feedparser import parse
 from model_utils import Choices
@@ -17,7 +18,10 @@ from editregions.contrib.embeds.text import (iframe_vname_plural, iframe_vname,
                                              feed_vname_plural, feed_cache_day,
                                              feed_cache_hday, feed_cache_qday,
                                              feed_cache_hour, feed_cache_for_label,  # noqa
-                                             feed_cache_for_help, js_vname, js_vname_plural)
+                                             feed_cache_for_help, js_vname,
+                                             js_vname_plural)
+from editregions.contrib.embeds.signals import (feed_request_started,
+                                                feed_request_finished)
 
 logger = logging.getLogger(__name__)
 
