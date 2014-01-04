@@ -1,0 +1,12 @@
+{% if search_results|length > 0 %}
+<dl>
+    <dt>&#8220;{{ chunkloop.object.query }}&#8221;</dt>
+    {% for s in search_results %}
+    <dd>
+        <a href="{% firstof s.url s.get_absolute_url s.object.get_absolute_url %}">{% firstof s.title s.name s.object.get_title s.object.title s.object.name %}</a>
+    </dd>
+    {% endfor %}
+</dl>
+{% else %}
+    <!-- no search results for "{{ chunkloop.object.query }}" via {{ chunkloop.object.connection }} -->
+{% endif %}
