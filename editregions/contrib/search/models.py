@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 import logging
+from django.conf import settings
+from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.utils.translation import ugettext_lazy as _
 from django.db.models import (Model, PositiveIntegerField, CharField,
@@ -11,11 +13,22 @@ from editregions.models import EditRegionChunk
 logger = logging.getLogger(__name__)
 
 
+def configured_haystack_connection(value):
+    """
+    Validator for making sure the provided connection is one of those
+    configured in the project's settings.
+    """
+    connections = getattr(settings, 'HAYSTACK_CONNECTIONS', {})
+    if value[:50] not in connections.keys():
+        raise ValidationError('Invalid search backend provided.')
+
+
 @python_2_unicode_compatible
 class SearchConfigBase(Model):
     max_num = PositiveIntegerField(default=3, validators=[
         MinValueValidator(0), MaxValueValidator(1000)])
-    connection = CharField(default="default", max_length=50)
+    connection = CharField(default="default", max_length=50, validators=[
+        configured_haystack_connection])
     request_objects = BooleanField(default=False)
 
     def __str__(self):
@@ -32,12 +45,18 @@ class MoreLikeThis(EditRegionChunk, SearchConfigBase):
         verbose_name_plural = _("More like this")
 
 
+def csv_validator(value):
+    if len(value) > 0:
+        if ',' not in value and ' ' in value:
+            raise ValidationError('Boostable words must be comma separated')
+
+
 @python_2_unicode_compatible
 class SearchResultsBase(SearchConfigBase):
     #: query to perform against Haystack
     query = CharField(max_length=255)
     #: CSV separated words to treat as higher value.
-    boost = CharField(max_length=255)
+    boost = CharField(max_length=255, validators=[csv_validator])
     boost_amount = 1.5
 
     def clean(self):
