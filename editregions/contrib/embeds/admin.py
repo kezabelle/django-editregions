@@ -4,9 +4,14 @@ from django.contrib import admin
 from django.contrib.admin.options import ModelAdmin
 from django.forms import Media
 from django.template.loader import render_to_string
+from django.utils.encoding import force_text
 from editregions.admin.modeladmins import ChunkAdmin
-from editregions.contrib.embeds.forms import JavaScriptEditorForm
-from editregions.contrib.embeds.models import Iframe, Feed, JavaScript
+from editregions.contrib.embeds.forms import (JavaScriptEditorForm,
+                                              JavascriptAssetForm,
+                                              StylesheetAssetForm)
+from editregions.contrib.embeds.models import (Iframe, Feed, JavaScript,
+                                               JavascriptAsset,
+                                               StylesheetAsset)
 from editregions.contrib.embeds.text import (dimensions_fieldset_label,
                                              iframe_details_fieldset_label,
                                              feed_cache_fieldset_label)
@@ -86,3 +91,29 @@ class JavaScriptAdmin(ChunkAdmin, ModelAdmin):
 
 
 admin.site.register(JavaScript, JavaScriptAdmin)
+
+
+class JavascriptAssetAdmin(ChunkAdmin, ModelAdmin):
+    form = JavascriptAssetForm
+    list_display = ['local', 'external', 'created', 'modified']
+    fields = ['local', 'external']
+
+    def render_into_region(self, obj, context):
+        return render_to_string('editregions/embeds/javascript_src.html', context)
+
+    def render_into_summary(self, obj, context):
+        return force_text(obj)
+admin.site.register(JavascriptAsset, JavascriptAssetAdmin)
+
+
+class StylesheetAssetAdmin(ChunkAdmin, ModelAdmin):
+    form = StylesheetAssetForm
+    list_display = ['local', 'external', 'created', 'modified']
+    fields = ['local', 'external']
+
+    def render_into_region(self, obj, context):
+        return render_to_string('editregions/embeds/stylesheet_src.html', context)
+
+    def render_into_summary(self, obj, context):
+        return force_text(obj)
+admin.site.register(StylesheetAsset, StylesheetAssetAdmin)

@@ -1,0 +1,6 @@
+{% if chunkloop.object.external %}
+<script type="text/javascript" src="{{ chunkloop.object.external_scheme_relative }}"></script>
+{% else %}
+{% load static %}
+<script type="text/javascript" src="{% static chunkloop.object.local %}"></script>
+{% endif %}

@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 import logging
 from hashlib import sha1
 from django.core.cache import cache
+from django.core.exceptions import ValidationError
 from django.db.models.base import Model
 from django.db.models.fields import (URLField, PositiveIntegerField, CharField,
                                      TextField)
@@ -117,3 +118,56 @@ class JavaScript(EditRegionChunk, JavaScriptBase):
     class Meta:
         verbose_name = js_vname
         verbose_name_plural = js_vname_plural
+
+
+class AssetBase(Model):
+    local = CharField(max_length=2048, null=False, blank=True)
+    external = CharField(max_length=2048, null=False, blank=True)
+
+    def clean(self):
+        if self.local and self.external:
+            raise ValidationError("Please choose either a local file or an "
+                                  "external URL")
+        if not self.local and not self.external:
+            raise ValidationError("Please provide a local file or an "
+                                  "external URL.")
+
+    def external_scheme_relative(self):
+        requirements = (
+            self.external.startswith('http'),
+            '://' in self.external,
+        )
+        if self.external and all(requirements):
+            self.external = self.external.split('://')[1]
+        return self.external
+
+    class Meta:
+        abstract = True
+
+
+@python_2_unicode_compatible
+class JavascriptAsset(EditRegionChunk, AssetBase):
+    def __str__(self):
+        if self.local:
+            return 'Local file: {0}'.format(self.local)
+        if self.external:
+            return 'External URL: {0}'.format(self.external)
+        return 'None'
+
+    class Meta:
+        verbose_name = "javascript file"
+        verbose_name_plural = "javascript files"
+
+
+@python_2_unicode_compatible
+class StylesheetAsset(EditRegionChunk, AssetBase):
+    def __str__(self):
+        if self.local:
+            return 'Local file: {0}'.format(self.local)
+        if self.external:
+            return 'External URL: {0}'.format(self.external)
+        return 'None'
+
+    class Meta:
+        verbose_name = "stylesheet file"
+        verbose_name_plural = "stylesheet files"
