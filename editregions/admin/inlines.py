@@ -4,7 +4,8 @@ from django.contrib.contenttypes.generic import GenericInlineModelAdmin
 from editregions.admin.forms import EditRegionInlineFormSet
 from editregions.constants import REQUEST_VAR_CT, REQUEST_VAR_ID
 from editregions.models import EditRegionChunk, EditRegionConfiguration
-from editregions.utils.data import get_modeladmin
+from editregions.utils.data import (get_modeladmin, attach_configuration,
+                                    get_configuration)
 
 logger = logging.getLogger(__name__)
 
