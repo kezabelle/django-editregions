@@ -185,43 +185,34 @@ class EditRegionTag(AsTag):
         :used by:
             :class:`~editregions.templatetags.editregion.EditRegionTag`
         """
-        # enabled = get_enabled_chunks_for_region(template=template, name=region)
-        # enabled_relateds = get_related_names_for_enabled_chunks(enabled)
-        # found_chunks.select_subclasses(*enabled_relateds)
-        # print(found_chunks.subclasses)
-        # print(found_chunks.query.select_related)
-
-        # filter our chunks which are no long enabled ...
-        # this'll hit the ContentType cache after a while ...
-        # to_render = [x for x in found_chunks if get_model_class(x) in enabled]
-        to_render = found_chunks
         logger.info('Rendering %(renderable)d of %(possible)d chunks' % {
-            'renderable': len(to_render),
-            'possible': len(to_render), #len(enabled),
+            'renderable': len(found_chunks),
+            'possible': len(found_chunks),
         })
-        # del enabled
-        # output = []
 
         # In the future, it'd be nice to be able to just use the existing context and
         # do context.push()/pop() ... but we can't, because otherwise nothing
         # shows up in debug_toolbar, because Context() has no items() attribute.
         # See https://code.djangoproject.com/ticket/20287#ticket
         # LAME.
-        for index, chunk in enumerate(to_render):
+        original_context_length = len(context.dicts)
+        for index, chunk in enumerate(found_chunks):
             # new_context = convert_context_to_dict(context)
-            new_context = copy(context)
-            new_context.update(EditRegionTag.chunk_iteration_context(index,
-                                                                     chunk,
-                                                                     to_render))
-            output = EditRegionTag.render_one_chunk(new_context, chunk)
+            context.update(EditRegionTag.chunk_iteration_context(index,
+                                                                 chunk,
+                                                                 found_chunks))
+            output = EditRegionTag.render_one_chunk(context, chunk)
+            # heal the context back to it's state prior to our fiddling with it
+            ctx_length = len(context.dicts)
+            while ctx_length > 1 and ctx_length > original_context_length:
+                logger.debug('Removing excess context dicts.')
+                context.pop()
+                ctx_length = len(context.dicts)
             # a chunk may return None if the ModelAdmin responsible for
             # rendering it doesn't implement the correct methods (instead raising
             # a warning to stderr), so we screen it all here.
             if output is not None:
                 yield output
-            del index, chunk, output
-        del to_render
-
 
     @staticmethod
     def chunk_iteration_context(index, value, iterable):
