@@ -16,6 +16,20 @@ More flexible with:
 
 * django-moreloaders
 
+Bundled "chunks"
+----------------
+
+models capable of being embedded into editable regions:
+
+* WYM and TinyMCE text editors.
+* File upload (including image handling...)
+* Inline javascript
+* External CSS & Javascript (both local & via remote URL)
+* iframes
+* external RSS feeds
+* Haystack "more like this"
+* Haystack search results for a given query
+
 Usage
 -----
 
