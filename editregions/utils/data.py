@@ -3,6 +3,7 @@ import logging
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ImproperlyConfigured
 from django.utils.datastructures import SortedDict
+from django.utils.functional import SimpleLazyObject
 from django.conf import settings
 try:
     from django.utils.six import string_types
@@ -70,3 +71,17 @@ def get_modeladmin(obj, admin_namespace='admin'):
         raise
     # except AttributeError <= could happen, but wtf should I do then, it's
     # unrecoverable ...?
+
+
+def attach_configuration(obj, config_class):
+    created = False
+    if not hasattr(obj, '__editregion_config'):
+        logger.debug('__editregion_config not on {cls!r} for this template '
+                     'rendering request, creating it'.format(cls=obj))
+        config = SimpleLazyObject(lambda: config_class(obj))
+        setattr(obj, '__editregion_config', config)
+        created = True
+    return obj, created
+
+def get_configuration(obj):
+    return getattr(obj, '__editregion_config', None)
