@@ -179,7 +179,7 @@ class EditRegionConfiguration(object):
                          '{map!r}'.format(map=model_mapping))
         return resolved
 
-    def get_limits_for(region, chunk):
+    def get_limits_for(self, region, chunk):
         """
         Try to figure out if this chunk type has a maximum limit in this region.
         Returns an integer or None.
