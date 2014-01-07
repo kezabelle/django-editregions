@@ -115,9 +115,7 @@ class EditRegionTag(AsTag):
                     EditRegionConfiguration(content_object))
         erc = getattr(content_object, '__editregion_config')
 
-        results = EditRegionChunk.polymorphs.filter(
-            content_id=content_object.pk, content_type=content_type,
-            region=name).select_subclasses()
+        results = erc.fetch_chunks_for(region=name)
         chunks = list(EditRegionTag.render_all_chunks(erc.template, context,
                                                       name, results))
 

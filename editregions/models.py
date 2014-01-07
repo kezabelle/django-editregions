@@ -193,25 +193,41 @@ class EditRegionConfiguration(object):
 
     @cached_property
     def _fetch_chunks(self):
+        logger.info("Requesting chunks")
         models = set()
         regions = set()
+        final_results = defaultdict(list)
+
+        # figure out what models we need to ask for.
         for region, subconfig in self.config.items():
             regions.add(region)
-            if 'models' in subconfig:
-                models |= (set(subconfig['models'].keys()))
-        ct = get_content_type(self.obj)
-        chunks = (EditRegionChunk.polymorphs.filter(content_type=ct,
-                                                    content_id=self.obj.pk,
-                                                    region__in=regions)
-                  .select_subclasses(*models))
+            klasses = subconfig.get('models', {}).keys()
+            models |= set(klasses)
+        models = tuple(models)
 
-        final_results = defaultdict(list)
-        for chunk in chunks.iterator():
+        kws = {
+            'content_type': get_content_type(self.obj),
+            'content_id': self.obj.pk,
+        }
+        # avoids doing an IN (?, ?) query if only one region exists
+        # avoids doing *any* query if no regions exist.
+        region_count = len(regions)
+        if region_count < 1:
+            return final_results
+        elif region_count == 1:
+            kws.update(region=regions.pop())
+        elif region_count > 1:
+            kws.update(region__in=regions)
+
+        # populate the resultset
+        chunks = EditRegionChunk.polymorphs.filter(**kws).select_subclasses(*models)  # noqa
+        for index, chunk in enumerate(chunks.iterator(), start=1):
             final_results[chunk.region].append(chunk)
+        logger.info("Requesting chunks resulted in {0} items".format(index))
         return final_results
 
     def fetch_chunks(self):
         return self._fetch_chunks
 
     def fetch_chunks_for(self, region):
-        return self._fetch_chunks.get(region, None)
+        return self._fetch_chunks.get(region, ())
