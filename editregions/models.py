@@ -221,6 +221,7 @@ class EditRegionConfiguration(object):
 
         # populate the resultset
         chunks = EditRegionChunk.polymorphs.filter(**kws).select_subclasses(*models)  # noqa
+        index = 0
         for index, chunk in enumerate(chunks.iterator(), start=1):
             final_results[chunk.region].append(chunk)
         logger.info("Requesting chunks resulted in {0} items".format(index))
