@@ -434,6 +434,18 @@ class EditRegionAdmin(ModelAdmin):
         base_media = super(EditRegionAdmin, self).media
         return base_media + shared_media
 
+    def render_into_region(self, obj, context):
+        logger.warning("`render_into_region` called because the requested "
+                       "chunk wasn't cast down - likely the model is no longer "
+                       "enabled in the configuration.")
+        return None
+
+    def render_into_summary(self, obj, context):
+        logger.warning("`render_into_summary` called because the requested "
+                       "chunk wasn't cast down - likely the model is no longer "
+                       "enabled in the configuration.")
+        return force_text(obj)
+
 
 class ChunkAdmin(AdminlinksMixin):
     actions = None
