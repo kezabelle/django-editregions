@@ -10,6 +10,7 @@ try:
 except ImportError:  # < Django 1.5
     from django.utils.encoding import force_unicode as force_text
 from editregions.utils.db import get_maximum_pk, get_next_chunks, set_new_position
+from editregions.utils.data import attach_configuration, get_configuration
 from editregions.utils.versioning import is_django_15plus
 from editregions.models import EditRegionChunk, EditRegionConfiguration
 from editregions.admin.utils import shared_media
@@ -99,7 +100,9 @@ class MovementForm(Form):
         # rather than raise an error for an invalid region, just set it
         # back to whatever the region says it should be. Trust no-one.
         if 'region' in cd and cd['pk'] is not None:
-            erc = EditRegionConfiguration(cd['pk'].content_object)
+            attach_configuration(cd['pk'].content_object,
+                                 EditRegionConfiguration)
+            erc = get_configuration(cd['pk'].content_object)
             if cd['region'] not in erc.config:
                 cd['region'] = cd['pk'].region
         return cd

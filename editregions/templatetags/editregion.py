@@ -12,7 +12,8 @@ from django.core.exceptions import ImproperlyConfigured
 from editregions.models import EditRegionChunk, EditRegionConfiguration
 from editregions.text import ttag_no_obj, ttag_not_model, ttag_no_ancestors
 from editregions.utils.regions import validate_region_name
-from editregions.utils.data import get_content_type, get_modeladmin
+from editregions.utils.data import (get_content_type, get_modeladmin,
+                                    attach_configuration, get_configuration)
 
 
 register = template.Library()
@@ -107,13 +108,8 @@ class EditRegionTag(AsTag):
 
         # cache on the object so that showing the first editregion does the
         # configuration request, and additional ones re-use the config found.
-        if not hasattr(content_object, '__editregion_config'):
-            logger.debug('__editregion_config not on {cls!r} for this template '
-                         'rendering request, creating it'.format(
-                cls=content_object))
-            setattr(content_object, '__editregion_config',
-                    EditRegionConfiguration(content_object))
-        erc = getattr(content_object, '__editregion_config')
+        attach_configuration(content_object, EditRegionConfiguration)
+        erc = get_configuration(content_object)
 
         results = erc.fetch_chunks_for(region=name)
         chunks = list(EditRegionTag.render_all_chunks(erc.template, context,

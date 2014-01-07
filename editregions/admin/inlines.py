@@ -38,7 +38,8 @@ class EditRegionInline(GenericInlineModelAdmin):
             obj = obj.__class__.objects.get(pk=obj.pk)
         config = None
         if obj is not None:
-            config = EditRegionConfiguration(obj)
+            attach_configuration(obj, EditRegionConfiguration)
+            config = get_configuration(obj)
             fset.has_editregions = config.has_configuration
         fset.region_changelists = modeladmin.get_changelists_for_object(
             request=request, obj=obj, config=config)
