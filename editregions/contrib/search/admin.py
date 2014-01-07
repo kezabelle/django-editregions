@@ -42,7 +42,8 @@ class MoreLikeThisAdmin(ChunkAdmin, admin.ModelAdmin):
             logger.exception("Haystack hasn't been configured to handle this "
                              "object type.")
             context.update({'more_like_this': ()})
-        return render_to_string('editregions/search/mlt.html', context)
+        return render_to_string('editregions/search/mlt.html',
+                                context_instance=context)
 
     def render_into_summary(self, obj, context):
         if obj.max_num < 1:
@@ -86,7 +87,7 @@ class SearchResultsAdmin(ChunkAdmin, admin.ModelAdmin):
             results = results.load_all()
         context.update({'search_results': results[0:obj.max_num]})
         return render_to_string('editregions/search/query_results.html',
-                                context)
+                                context_instance=context)
 
     def render_into_summary(self, obj, context):
         return force_text(obj)

@@ -30,7 +30,8 @@ class IframeAdmin(ChunkAdmin, ModelAdmin):
     ]
 
     def render_into_region(self, obj, context):
-        return render_to_string('editregions/embeds/iframe.html', context)
+        return render_to_string('editregions/embeds/iframe.html',
+                                context_instance=context)
 
     def render_into_summary(self, obj, context):
         summary = str(obj)
@@ -61,7 +62,8 @@ class FeedAdmin(ChunkAdmin, ModelAdmin):
 
     def render_into_region(self, obj, context):
         context.update({'feed': obj.get_from_cache()})
-        return render_to_string('editregions/embeds/feed.html', context)
+        return render_to_string('editregions/embeds/feed.html',
+                                context_instance=context)
 
     def render_into_summary(self, obj, context):
         feed = obj.get_from_cache()
@@ -77,7 +79,8 @@ class JavaScriptAdmin(ChunkAdmin, ModelAdmin):
     ]
 
     def render_into_region(self, obj, context):
-        return render_to_string('editregions/embeds/javascript.html', context)
+        return render_to_string('editregions/embeds/javascript.html',
+                                context_instance=context)
 
     def render_into_summary(self, obj, context):
         return obj.content

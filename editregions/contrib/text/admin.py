@@ -17,7 +17,8 @@ class WYMAdmin(ChunkAdmin, ModelAdmin):
     ]
 
     def render_into_region(self, obj, context):
-        return render_to_string('editregions/text/html.html', context)
+        return render_to_string('editregions/text/html.html',
+                                context_instance=context)
 
     def render_into_summary(self, obj, context):
         return striptags(obj.content)
@@ -32,7 +33,8 @@ class MCEAdmin(ChunkAdmin, ModelAdmin):
     ]
 
     def render_into_region(self, obj, context):
-        return render_to_string('editregions/text/html.html', context)
+        return render_to_string('editregions/text/html.html',
+                                context_instance=context)
 
     def render_into_summary(self, obj, context):
         return striptags(obj.content)

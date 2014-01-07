@@ -25,7 +25,7 @@ class FileAdmin(ChunkAdmin, ModelAdmin):
                 'editregions/uploads/file_{0}.html'.format(obj.get_filetype())
             )
         templates.append('editregions/uploads/file.html')
-        return render_to_string(templates, context)
+        return render_to_string(templates, context_instance=context)
 
     def render_into_summary(self, obj, context):
         if obj.title and obj.data:
