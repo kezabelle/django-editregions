@@ -163,7 +163,9 @@ class EditRegionTag(AsTag):
                          'ModelAdmin instance for the first time')
             renderer = get_modeladmin(chunk)
         if not hasattr(renderer, 'render_into_region'):
-            raise ImproperlyConfigured('%r does not have a `render_into_region` method' % renderer.__class__)
+            msg = ('{0.__class__!r} does not have a `render_into_region` '
+                   'method'.format(renderer))
+            raise ImproperlyConfigured(msg)
         return renderer.render_into_region(context=context, obj=chunk)
 
     @staticmethod
