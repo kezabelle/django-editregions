@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from contextlib import contextmanager
 import logging
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ImproperlyConfigured
@@ -83,5 +84,19 @@ def attach_configuration(obj, config_class):
         created = True
     return obj, created
 
+
 def get_configuration(obj):
     return getattr(obj, '__editregion_config', None)
+
+
+@contextmanager
+def healed_context(context):
+    original_context_length = len(context.dicts)
+    yield context
+    ctx_length = len(context.dicts)
+    while ctx_length > 1 and ctx_length > original_context_length:
+        logger.debug('Removing excess context dicts (target size {0},'
+                     'working size {1})'.format(original_context_length,
+                                               ctx_length))
+        context.pop()
+        ctx_length = len(context.dicts)
