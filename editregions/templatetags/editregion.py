@@ -110,10 +110,8 @@ class EditRegionTag(AsTag):
         # configuration request, and additional ones re-use the config found.
         attach_configuration(content_object, EditRegionConfiguration)
         erc = get_configuration(content_object)
-
         results = erc.fetch_chunks_for(region=name)
-        chunks = list(EditRegionTag.render_all_chunks(erc.template, context,
-                                                      name, results))
+        chunks = list(EditRegionTag.render_all_chunks(context, results))
 
         if inherit and len(chunks) < 1:
             # make sure we have the damn method we need.
@@ -132,16 +130,19 @@ class EditRegionTag(AsTag):
                     raise ImproperlyConfigured(error)
                 else:
                     logger.error(error)
+
             # if there are parents, see if we can get values from them.
-            for parent in parents:
-                parent_results = EditRegionChunk.polymorphs.filter(
-                    content_id=parent.pk,
-                    content_type=self.get_content_type(parent),
-                    region=name).select_subclasses()
-                chunks = list(EditRegionTag.render_all_chunks(erc.template,
-                                                              context, name,
+            for distance, parent in enumerate(parents, start=1):
+                attach_configuration(parent, EditRegionConfiguration)
+                parent_erc = get_configuration(parent)
+                parent_results = parent_erc.fetch_chunks_for(region=name)
+                chunks = list(EditRegionTag.render_all_chunks(context,
                                                               parent_results))
-                if len(chunks) > 0:
+                chunk_count = len(chunks)
+                if chunk_count > 0:
+                    logging.info("Found {1} chunks after {0} iterations over "
+                                 "objects in `get_ancestors`".format(
+                                     distance, chunk_count))
                     # stop processing further, we found some results!
                     break
         return chunks
