@@ -19,6 +19,7 @@ Options:
 
 """
 from __future__ import print_function, with_statement
+import re
 import os
 import sys
 import operator
@@ -71,12 +72,12 @@ def find_tabs_trailing_whitespace(file):
     return file, marked
 
 
-utf8s = '# -*- coding: utf-8 -*-'
+encoding_regex = r"coding[:=]\s*([-\w.]+)"
 def find_no_utf8_headers(file):
     marked = {}
     with open(file) as f:
         for lineno, line in enumerate(f.readlines()):
-            if line.strip() == utf8s:
+            if re.search(encoding_regex, line.strip()):
                 marked[lineno] = line
     return file, marked
 
@@ -123,6 +124,7 @@ def dispatch_tabs_spaces(directory):
 
 def dispatch_utf8_headers(directory, do_update=True):
     dir = os.path.realpath(directory)
+    utf8s = '# -*- coding: utf-8 -*-'
     print('{color}the following files are missing {fmt}{reset}'.format(
         fmt=utf8s, color=Fore.GREEN, reset=Fore.RESET))
 
