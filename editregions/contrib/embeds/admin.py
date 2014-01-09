@@ -102,7 +102,11 @@ class JavascriptAssetAdmin(ChunkAdmin, ModelAdmin):
     fields = ['local', 'external']
 
     def render_into_region(self, obj, context):
-        return render_to_string('editregions/embeds/javascript_src.html', context)
+        return None
+
+    def render_into_mediagroup(self, obj, context):
+        return render_to_string('editregions/embeds/javascript_src.html',
+                                context_instance=context)
 
     def render_into_summary(self, obj, context):
         return force_text(obj)
@@ -115,7 +119,11 @@ class StylesheetAssetAdmin(ChunkAdmin, ModelAdmin):
     fields = ['local', 'external']
 
     def render_into_region(self, obj, context):
-        return render_to_string('editregions/embeds/stylesheet_src.html', context)
+        return None
+
+    def render_into_mediagroup(self, obj, context):
+        return render_to_string('editregions/embeds/stylesheet_src.html',
+                                context_instance=context)
 
     def render_into_summary(self, obj, context):
         return force_text(obj)
