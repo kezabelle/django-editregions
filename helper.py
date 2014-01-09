@@ -6,6 +6,7 @@ Usage:
     helper.py serve
     helper.py docstrings [-d <dir> | --directory=<dir>]
     helper.py whitespace [-d <dir> | --directory=<dir>]
+    helper.py untested_methods [-d <dir> | --directory=<dir>]
     helper.py utf8_headers [-d <dir> | --directory=<dir>]
     helper.py migrate
     helper.py docs
@@ -81,11 +82,48 @@ def find_no_utf8_headers(file):
                 marked[lineno] = line
     return file, marked
 
+def find_untested_methods(file):
+    marked = {}
+    with open(file) as f:
+        previous_indent_level = 0
+        for lineno, line in enumerate(f.readlines()):
+            indent_level = len(line) - len(line.lstrip())
+            line = line.strip()
+            if line and line.startswith('def') and line not in ('__str__', '__unicode__', '__repr__'):
+                marked[lineno] = line
+
+            if indent_level == previous_indent_level and line.startswith('.. testcase: '):
+                del marked[lineno]
+            previous_indent_level = indent_level
+    return file, marked
+
 def dispatch_docstrings(directory):
     """ Simple dispatch function to call find_python_files and find_no_docstrings """
     dir = os.path.realpath(directory)
     for file in find_python_files(dir):
+        # skip migrations folders
+        if 'migrations' in file:
+            continue
         file, results = find_no_docstrings(file)
+        if len(results.keys()) > 0:
+            sorted_results = sorted(results.items(), key=operator.itemgetter(0))
+            for k,v in sorted_results:
+                print('%(color_file)s%(file)s%(color_reset)s @ %(color_line)sline %(line)d%(color_reset)s: %(function)s' % {
+                    'color_file': Fore.YELLOW,
+                    'color_reset': Fore.RESET,
+                    'color_line': Fore.RED,
+                    'file': file,
+                    'line': k,
+                    'function': v
+                })
+
+
+def dispatch_test_methods(directory):
+    dir = os.path.realpath(directory)
+    for file in find_python_files(dir):
+        if 'tests' in file or 'migrations' in file:
+            continue
+        file, results = find_untested_methods(file)
         if len(results.keys()) > 0:
             sorted_results = sorted(results.items(), key=operator.itemgetter(0))
             for k,v in sorted_results:
@@ -188,6 +226,8 @@ if __name__ == '__main__':
         dispatch_tabs_spaces(arguments['--directory'])
     if arguments['utf8_headers']:
         dispatch_utf8_headers(arguments['--directory'])
+    if arguments['untested_methods']:
+        dispatch_test_methods(arguments['--directory'])
     if arguments['serve']:
         dispatch_django_server(arguments['--directory'])
     if arguments['migrate']:
