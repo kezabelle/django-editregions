@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from django.contrib.staticfiles.finders import get_finders
 from django.contrib.staticfiles.utils import matches_patterns
 
