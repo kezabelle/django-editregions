@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 """Package helper
 
 Usage:
@@ -69,12 +70,13 @@ def find_tabs_trailing_whitespace(file):
                 marked[lineno] = line
     return file, marked
 
+
+utf8s = '# -*- coding: utf-8 -*-'
 def find_no_utf8_headers(file):
-    search = '# -*- coding: utf-8 -*-'
     marked = {}
     with open(file) as f:
         for lineno, line in enumerate(f.readlines()):
-            if line.strip() == search:
+            if line.strip() == utf8s:
                 marked[lineno] = line
     return file, marked
 
@@ -119,17 +121,25 @@ def dispatch_tabs_spaces(directory):
                 'file': file,
             })
 
-def dispatch_utf8_headers(directory):
+def dispatch_utf8_headers(directory, do_update=True):
     dir = os.path.realpath(directory)
-    for file in find_python_files(dir):
-        file, results = find_no_utf8_headers(file)
+    print('{color}the following files are missing {fmt}{reset}'.format(
+        fmt=utf8s, color=Fore.GREEN, reset=Fore.RESET))
+
+    for filename in find_python_files(dir):
+        filename, results = find_no_utf8_headers(filename)
         if len(results.keys()) < 1:
             print('%(color_file)s%(file)s%(color_reset)s%(color_reset)s has no utf8 comment' % {
                 'color_file': Fore.YELLOW,
                 'color_reset': Fore.RESET,
                 'color_line': Fore.RED,
-                'file': file,
+                'file': filename,
             })
+            if do_update:
+                with open(filename, 'r') as original:
+                    data = original.read()
+                with open(filename, 'w') as modified:
+                    modified.write(utf8s + "\n" + data)
 
 def dispatch_django_server(directory):
     import settings
@@ -168,7 +178,7 @@ def dispatch_migrate():
 
 if __name__ == '__main__':
     arguments = docopt(__doc__)
-    if arguments['--help']:
+    if arguments.get('--help'):
         print(__doc__)
     if arguments['docstrings']:
         dispatch_docstrings(arguments['--directory'])
