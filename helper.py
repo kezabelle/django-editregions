@@ -101,9 +101,11 @@ def dispatch_docstrings(directory):
 
 def dispatch_tabs_spaces(directory):
     dir = os.path.realpath(directory)
+    errors = 0
     for file in find_python_files(dir):
         file, results = find_tabs_trailing_whitespace(file)
         if len(results.keys()) > 0:
+            errors += 1
             sorted_results = sorted(results.items(), key=operator.itemgetter(0))
             for k,v in sorted_results:
                 print('%(color_file)s%(file)s%(color_reset)s @ %(color_line)sline %(lineno)d%(color_reset)s: %(line)s' % {
@@ -114,13 +116,11 @@ def dispatch_tabs_spaces(directory):
                     'lineno': k,
                     'line': v.strip(),
                 })
-        else:
-            print('%(color_success)sNo whitespace issues found in %(color_file)s%(file)s%(color_reset)s' % {
-                'color_success': Fore.GREEN,
-                'color_reset': Fore.RESET,
-                'color_file': Fore.YELLOW,
-                'file': file,
-            })
+    if errors < 1:
+        print('%(color_success)sNo whitespace issues found%(color_reset)s' % {
+            'color_success': Fore.GREEN,
+            'color_reset': Fore.RESET,
+        })
 
 def dispatch_utf8_headers(directory, do_update=True):
     dir = os.path.realpath(directory)
