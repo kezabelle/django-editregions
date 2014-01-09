@@ -262,3 +262,8 @@ class EditRegionTag(AsTag):
 
         return {'chunkloop': plugin_context}
 register.tag(EditRegionTag.name, EditRegionTag)
+
+
+class EditRegionMediaTag(EditRegionTag):
+    name = 'editregion_media'
+register.tag(EditRegionMediaTag.name, EditRegionMediaTag)
