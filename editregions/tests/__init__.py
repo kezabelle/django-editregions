@@ -12,7 +12,7 @@ from .models import *
 # from .admin.utils import *
 #
 #
-# from .utils.data import *
+from .utils.data import *
 # from .utils.db import *
 from .utils.regions import *
 # from .utils.versioning import *

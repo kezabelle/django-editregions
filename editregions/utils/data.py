@@ -35,8 +35,8 @@ def get_content_type(input):
                     'into component parts for lookup `get_by_natural_key`')
         parts = tuple(input.split('.')[0:2])
         try:
-            return ContentType.objects.get_by_natural_key(app_label=parts[0],
-                                                          model=parts[1])
+            return ContentType.objects.get_by_natural_key(
+                app_label=parts[0].lower(), model=parts[1].lower())
         except ContentType.DoesNotExist as e:
             # give a clearer indication wtf went wrong.
             msg = 'Unable to find ContentType for app: %s, model: %s' % parts
