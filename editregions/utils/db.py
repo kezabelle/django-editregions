@@ -6,11 +6,7 @@ def get_maximum_pk(pagemodel):
     Used in the movement form to provide a maximum value for validation
     :param pagemodel: the model to filter on, usually `Page`
     """
-    try:
-        return pagemodel.objects.all().only('pk').order_by('-pk')[0].pk
-    except AttributeError:
-        # NoneType has no pk, so the maximum position is ...
-        return 1
+    return max(1, pagemodel.objects.all().count())
 
 
 def get_next_chunks(pagemodel, obj, position, **kwargs):

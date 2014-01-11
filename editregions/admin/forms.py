@@ -77,16 +77,7 @@ class MovementForm(Form):
 
     def __init__(self, *args, **kwargs):
         super(MovementForm, self).__init__(*args, **kwargs)
-
-        try:
-            self.fields['pk'].max_value = get_maximum_pk(self.Meta.model)
-        except IndexError as e:
-            # there probably aren't any objects in the DB yet, so the only thing
-            # to move about is the minimum ... I think.
-            self.fields['pk'].max_value = self.fields['pk'].min_value
-
-        # TODO: maximum position should be count() of those in region for this
-        # minus 1, I think.
+        self.fields['pk'].max_value = get_maximum_pk(self.Meta.model)
 
     def clean(self):
         cd = super(MovementForm, self).clean()

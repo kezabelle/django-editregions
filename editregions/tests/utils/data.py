@@ -55,7 +55,7 @@ class GetModelAdminTestCase(GetContentTypeTestCase):
 
     @override_settings(DEBUG=True)
     def test_class_not_in_admin(self):
-        with self.assertRaises(ImproperlyConfigured): 
+        with self.assertRaises(ImproperlyConfigured):
             get_modeladmin(Permission)
 
     @override_settings(DEBUG=False)
