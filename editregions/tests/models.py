@@ -24,6 +24,7 @@ class TestUserAdmin(UserAdmin):
     def get_editregions_templates(self, obj):
         return ['sample_editregion_template.html']
 
+
 class TestBadUserAdmin(UserAdmin):
     def get_editregions_templates(self, obj):
         return ['x/y/z.html']
