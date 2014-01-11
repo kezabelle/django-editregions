@@ -196,6 +196,9 @@ class EditRegionConfiguration(object):
         except KeyError:
             # Nope, no limit for this chunk.
             # Skipping down to returning None
+            return 0
+        except TypeError:
+            # chunk limit was None
             return None
 
     @cached_property

@@ -12,7 +12,7 @@ from model_utils.managers import (PassThroughManager, InheritanceManager,
 from editregions.models import EditRegionChunk, EditRegionConfiguration
 from editregions.querying import EditRegionChunkQuerySet
 from editregions.utils.data import get_content_type
-from django.contrib.auth.models import User, Group
+from django.contrib.auth.models import User, Group, Permission
 
 try:
     from django.utils.encoding import force_text
@@ -220,9 +220,38 @@ class EditRegionConfigurationTestCase(TestCase):
                 'auth.Group': None,
                 'x.Y': 1,
             })
-#
-#     def test_get_limits_for(self):
-#         self.assertEqual(1, 2)
+
+    def test_get_limits_for_no_models(self):
+        self.blank_conf = EditRegionConfiguration()
+        self.blank_conf.template = Template('''{
+            "x": {
+                "name": "test"
+            }
+        }''')
+        self.blank_conf.config = self.blank_conf.get_template_region_configuration()  # noqa
+        result = self.blank_conf.get_limits_for(region='x', chunk=User)
+        self.assertEqual(0, result)
+
+    def test_get_limits_for(self):
+        self.blank_conf = EditRegionConfiguration()
+        self.blank_conf.template = Template('''{
+            "x": {
+                "name": "test",
+                "models": {
+                    "auth.User": 1,
+                    "auth.Group": 0,
+                    "auth.Permission": null
+                }
+            }
+        }''')
+        self.blank_conf.config = self.blank_conf.get_template_region_configuration()  # noqa
+        result = self.blank_conf.get_limits_for(region='x', chunk=User)
+        self.assertEqual(1, result)
+        # 0 means don't show up!
+        result = self.blank_conf.get_limits_for(region='x', chunk=Group)
+        self.assertEqual(0, result)
+        result = self.blank_conf.get_limits_for(region='x', chunk=Permission)
+        self.assertEqual(None, result)
 #
 #     def test_fetch_chunks(self):
 #         self.assertEqual(1, 2)
