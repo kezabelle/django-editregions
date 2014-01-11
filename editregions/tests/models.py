@@ -2,14 +2,18 @@
 from django.contrib import admin
 from django.contrib.admin.sites import NotRegistered
 from django.contrib.auth.admin import UserAdmin
+from django.core.exceptions import ImproperlyConfigured
+from django.template import Template
+from django.test.utils import override_settings
 from django.utils.unittest.case import TestCase
 from django.test import TestCase as DjangoTestCase
 from model_utils.managers import (PassThroughManager, InheritanceManager,
                                   InheritanceQuerySet)
-from editregions.models import EditRegionChunk
+from editregions.models import EditRegionChunk, EditRegionConfiguration
 from editregions.querying import EditRegionChunkQuerySet
 from editregions.utils.data import get_content_type
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Group
+
 try:
     from django.utils.encoding import force_text
 except ImportError:
@@ -18,7 +22,11 @@ except ImportError:
 
 class TestUserAdmin(UserAdmin):
     def get_editregions_templates(self, obj):
-        return ['x/y.html']
+        return ['sample_editregion_template.html']
+
+class TestBadUserAdmin(UserAdmin):
+    def get_editregions_templates(self, obj):
+        return ['x/y/z.html']
 
 
 class EditRegionChunkTestCase(DjangoTestCase):
@@ -101,24 +109,117 @@ class EditRegionChunkTestCase(DjangoTestCase):
         self.assertIsInstance(EditRegionChunk.polymorphs.select_subclasses(),
                               InheritanceQuerySet)
 
-    def test_content_object(self):
+    def test_content_object_was_bound(self):
         expected = self.model_dependencies['user']
         received = self.chunks['base'].content_object
         self.assertEqual(expected, received)
-#
-#
-# class EditRegionConfigurationTestCase(TestCase):
-#     def test_configure(self):
-#         self.assertEqual(1, 2)
-#
-#     def test_get_first_valid_template(self):
-#         self.assertEqual(1, 2)
-#
-#     def test_get_template_region_configuration(self):
-#         self.assertEqual(1, 2)
-#
-#     def test_get_enabled_chunks_for_region(self):
-#         self.assertEqual(1, 2)
+
+
+class EditRegionConfigurationTestCase(TestCase):
+    def setUp(self):
+        sample_user, created = User.objects.get_or_create()
+        self.model_dependencies = {
+            'user': sample_user,
+        }
+
+    def test_configure_basic(self):
+        user = self.model_dependencies['user']
+        self.blank_conf = EditRegionConfiguration()
+        self.blank_conf.configure(obj=user)
+        self.assertEqual(self.blank_conf.obj, user)
+        self.assertEqual(self.blank_conf.modeladmin, admin.site._registry[User])
+        matching_templates = (TestUserAdmin(model=User,
+                                            admin_site=admin.site)
+                              .get_editregions_templates(user))
+        self.assertEqual(self.blank_conf.possible_templates, matching_templates)
+        self.assertIsInstance(self.blank_conf.template, Template)
+        self.assertTrue(self.blank_conf.has_configuration)
+        self.assertEqual(self.blank_conf.config, {})
+
+    def test_configure_template_not_discovered(self):
+        user = self.model_dependencies['user']
+        self.blank_conf = EditRegionConfiguration()
+
+        try:
+            admin.site.unregister(User)
+        except NotRegistered:
+            pass
+        admin.site.register(User, TestBadUserAdmin)
+
+        self.blank_conf.configure(obj=user)
+        self.assertEqual(self.blank_conf.template, None)
+
+    def test_configure_template_discovered(self):
+        user = self.model_dependencies['user']
+        self.blank_conf = EditRegionConfiguration()
+        self.blank_conf.configure(obj=user)
+        self.assertIsInstance(self.blank_conf.template, Template)
+
+    def test_get_first_valid_template(self):
+        self.blank_conf = EditRegionConfiguration()
+        self.blank_conf.possible_templates = ['sample_editregion_template.html']
+        received = self.blank_conf.get_first_valid_template()
+        self.assertIsInstance(received, Template)
+
+    def test_get_first_valid_template_failed(self):
+        self.blank_conf = EditRegionConfiguration()
+        self.blank_conf.possible_templates = ['zzzzzz.html']
+        received = self.blank_conf.get_first_valid_template()
+        self.assertIsNone(received)
+
+    def test_get_template_region_configuration(self):
+        self.blank_conf = EditRegionConfiguration()
+        self.blank_conf.template = Template('''{
+            "x": {
+                "name": "test"
+            }
+        }''')
+        result = self.blank_conf.get_template_region_configuration()
+        self.assertEqual(result, {
+            'x': {'name': 'test'},
+        })
+
+    def test_get_template_region_configuration_failed(self):
+        self.blank_conf = EditRegionConfiguration()
+        self.blank_conf.template = Template("xyz")
+        with self.assertRaisesRegexp(ValueError,
+                                     r'No JSON object could be decoded'):
+            self.blank_conf.get_template_region_configuration()
+
+    def test_get_enabled_chunks_for_region_empty(self):
+        self.blank_conf = EditRegionConfiguration()
+        expected = {}
+        received = self.blank_conf.get_enabled_chunks_for_region({})
+        self.assertEqual(expected, received)
+
+    def test_get_enabled_chunks_for_region(self):
+        self.blank_conf = EditRegionConfiguration()
+        expected = {User: 1, Group: None}
+        received = self.blank_conf.get_enabled_chunks_for_region({
+            'auth.User': 1,
+            'auth.Group': None
+        })
+        self.assertEqual(expected, received)
+
+    def test_get_enabled_chunks_for_region_bad_models_silent_fail(self):
+        self.blank_conf = EditRegionConfiguration()
+        expected = {User: 1, Group: None}
+        received = self.blank_conf.get_enabled_chunks_for_region({
+            'auth.User': 1,
+            'auth.Group': None,
+            'x.Y': 1,
+        })
+        self.assertEqual(expected, received)
+
+    @override_settings(DEBUG=True)
+    def test_get_enabled_chunks_for_region_bad_models_loud_fail(self):
+        self.blank_conf = EditRegionConfiguration()
+        with self.assertRaises(ImproperlyConfigured):
+            self.blank_conf.get_enabled_chunks_for_region({
+                'auth.User': 1,
+                'auth.Group': None,
+                'x.Y': 1,
+            })
 #
 #     def test_get_limits_for(self):
 #         self.assertEqual(1, 2)
