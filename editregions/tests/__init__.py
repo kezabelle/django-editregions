@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # from .constants import *
-# from .models import *
+from .models import *
 # from .querying import *
 # from .text import *
 #

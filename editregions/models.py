@@ -5,7 +5,7 @@ import logging
 import os
 import re
 from django.conf import settings
-from django.core.exceptions import ImproperlyConfigured
+from django.core.exceptions import ImproperlyConfigured, ValidationError
 from django.db.models.fields import CharField, PositiveIntegerField
 from django.template import TemplateDoesNotExist
 from django.template.loader import select_template
@@ -54,9 +54,9 @@ class EditRegionChunk(ChangeTracking, Generic):
     polymorphs = InheritanceManager()
 
     def __repr__(self):
-        return '<{x.__module__}.{x.__class__.__name__} pk={x.pk},' \
+        return '<{x.__module__}.{x.__class__.__name__} pk={x.pk}, ' \
                'region={x.region}, parent_type={x.content_type_id}, ' \
-               'parent_id={x.content_id}, position={x.position}'.format(x=self)
+               'parent_id={x.content_id}, position={x.position}>'.format(x=self)
 
     def __str__(self):
         return 'pk={x.pk}, region={x.region}, position={x.position}'.format(
@@ -69,6 +69,13 @@ class EditRegionChunk(ChangeTracking, Generic):
             return form.save()
         return form.errors
     move.alters_data = True
+
+    def clean(self):
+        if self.position is None:
+            self.position = 0
+        if self.content_id is None:
+            raise ValidationError("{0.__class__ requires `content_id` to be "
+                                  "the parent object's primary key")
 
     class Meta:
         abstract = False

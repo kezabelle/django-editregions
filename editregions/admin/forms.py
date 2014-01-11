@@ -117,8 +117,8 @@ class MovementForm(Form):
         old_region = obj.region
         new_region = self.cleaned_data.get('region', obj.region)
 
-        next_chunks = get_next_chunks(EditRegionChunk, position=obj.position,
-                                      region=new_region)
+        next_chunks = get_next_chunks(EditRegionChunk, obj=obj,
+                                      position=obj.position, region=new_region)
 
         logger.debug('Push objects which should be affected, including the one '
                      'we in the position we need.')
@@ -134,7 +134,8 @@ class MovementForm(Form):
             logger.debug('object moved from {old} to {new}'.format(
                          old=old_region, new=new_region))
             obj.region = new_region
-            old_chunks = get_next_chunks(EditRegionChunk, position=old_position,
+            old_chunks = get_next_chunks(EditRegionChunk, obj=obj,
+                                         position=old_position,
                                          region=old_region)
 
         kwargs = {}
@@ -149,9 +150,8 @@ class MovementForm(Form):
             old_chunks.update(position=F('position') - 1)
         del old_chunks, old_region  # we're finished handling the previous.
 
-        new_chunks = EditRegionChunk.objects.filter(content_type=obj.content_type,
-                                                    content_id=obj.content_id,
-                                                    region=new_region)
+        new_chunks = get_next_chunks(EditRegionChunk, obj=obj,
+                                     position=0, region=new_region)
         # find all the existing objects and iterate over each of them,
         # doing an update (rather than save, to avoid changing the `modified`
         # field) if they're not in the correct position.
