@@ -21,6 +21,9 @@ logger = logging.getLogger(__name__)
 
 
 def django_jqueryui_version():
+    """
+    .. testcase:: JQueryUIVersion
+    """
     if is_django_16plus():
         return 'editregions/js/jquery.ui.1-10-3.custom.js'
     return 'editregions/js/jquery.ui.1-8-24.custom.js'

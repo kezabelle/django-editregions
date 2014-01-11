@@ -1,17 +1,23 @@
 # -*- coding: utf-8 -*-
 from django.contrib.auth.models import User, Group
-from django.db.models import Model, PositiveSmallIntegerField
 from django.utils.unittest.case import TestCase
 from django.test import TestCase as DjangoTestCase
 from editregions.models import EditRegionChunk
 from editregions.utils.data import get_content_type
-from editregions.utils.db import get_maximum_pk, set_new_position, get_chunks_in_region_count
+from editregions.utils.db import (get_maximum_pk, set_new_position,
+                                  get_chunks_in_region_count)
+try:
+    from django.utils.encoding import force_text
+except ImportError:
+    from django.utils.encoding import force_unicode as force_text
 
 
 class GetMaximumPKTestCase(DjangoTestCase):
     def test_getting_max_pk(self):
         for x in range(0, 10):
             y = User(username=x)
+            y.set_password(force_text(x))
+            y.full_clean()
             y.save()
         self.assertEqual(11, get_maximum_pk(User))
 

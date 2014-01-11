@@ -9,13 +9,13 @@ from .models import *
 # from .admin.forms import *
 # from .admin.inlines import *
 # from .admin.modeladmins import *
-# from .admin.utils import *
+from .admin.utils import *
 #
 #
 from .utils.data import *
 from .utils.db import *
 from .utils.regions import *
-# from .utils.versioning import *
+from .utils.versioning import *
 #
 #
 # from .templatetags.adminlinks_editregion import *

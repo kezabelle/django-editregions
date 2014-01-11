@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 import os
 
+ROOT_URLCONF = 'test_urls'
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
@@ -24,6 +26,16 @@ SKIP_SOUTH_TESTS = True # To disable South's own unit tests
 
 BASE_DIR = os.path.realpath(os.path.dirname(__file__))
 
+TEMPLATE_CONTEXT_PROCESSORS = (
+    "django.core.context_processors.request",
+    "django.core.context_processors.csrf",
+)
+
 TEMPLATE_DIRS = (
     os.path.realpath(os.path.join(BASE_DIR, 'editregions', 'tests', 'templates')),
+)
+
+# Use a fast hasher to speed up tests.
+PASSWORD_HASHERS = (
+    'django.contrib.auth.hashers.MD5PasswordHasher',
 )
