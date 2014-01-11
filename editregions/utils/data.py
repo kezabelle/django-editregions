@@ -3,7 +3,6 @@ from contextlib import contextmanager
 import logging
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ImproperlyConfigured
-from django.utils.datastructures import SortedDict
 from django.utils.functional import SimpleLazyObject
 from django.conf import settings
 try:
@@ -13,14 +12,6 @@ except ImportError:
 from adminlinks.templatetags.utils import get_admin_site
 
 logger = logging.getLogger(__name__)
-
-
-def queryset_to_attr_map(queryset, attr):
-    output = SortedDict()
-    for obj in queryset:
-        result = getattr(obj, attr)
-        output[result] = obj
-    return output
 
 
 def get_model_class(obj):
