@@ -12,13 +12,13 @@ from editregions.constants import (REQUEST_VAR_REGION, REQUEST_VAR_ID,
                                    REQUEST_VAR_CT)
 from editregions.templatetags.editregion import EditRegionTag
 from editregions.utils.versioning import is_django_16plus
-from helpfulfields.admin import changetracking_readonlys, changetracking_fieldset
 from editregions.utils.regions import validate_region_name
 from editregions.models import EditRegionChunk
 from adminlinks.templatetags.utils import MODELADMIN_REVERSE
 
 
 logger = logging.getLogger(__name__)
+
 
 def django_jqueryui_version():
     if is_django_16plus():
@@ -228,26 +228,3 @@ class AdminChunkWrapper(object):
         if self.exists and not attr.startswith('_'):
             return getattr(self.chunk, attr)
         raise AttributeError
-
-
-class FakeObj(object):
-    """
-    Used by
-    :meth:`~editregions.admin.modeladmins.ChunkAdmin.get_response_delete_context`
-    to fake some attributes and allow access as if it were the original object,
-    when after confirmation, it won't exist any more.
-    """
-    __slots__ = ['pk', 'id', 'content_object']
-
-    def __init__(self, obj_id, **kwargs):
-        self.pk = obj_id
-        self.id = obj_id
-        # setting `content_object` to None is required for the delete view
-        # to work, because ChunkAdmin.get_response_delete_context eventually
-        # calls get_changelists_for_object, at which point None is guarded
-        # against and we can avoid doing pointless work.
-        self.content_object = None
-
-    def _get_pk_val(self):
-        return self.pk
-
