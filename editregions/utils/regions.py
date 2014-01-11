@@ -24,6 +24,8 @@ def validate_region_name(name):
         :meth:`~editregions.modeladmins2.EditRegionInline.get_region_name`
         :meth:`~editregions.templatetags.adminlinks_editregion.EditRegionToolbar.get_context`
         :meth:`~editregions.templatetags.editregion.EditRegionTag.render_tag`
+
+    .. testcase:: ValidateRegionNameTestCase
     """
     if name.startswith('_'):
         raise ValidationError(region_name_startswith)

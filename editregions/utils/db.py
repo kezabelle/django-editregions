@@ -5,6 +5,8 @@ def get_maximum_pk(pagemodel):
     """
     Used in the movement form to provide a maximum value for validation
     :param pagemodel: the model to filter on, usually `Page`
+
+    .. testcase:: GetMaximumPKTestCase
     """
     return max(1, pagemodel.objects.all().count())
 
@@ -23,6 +25,9 @@ def get_next_chunks(pagemodel, obj, position, **kwargs):
 
 
 def get_chunks_in_region_count(pagemodel, content_type, obj_id, region):
+    """
+    .. testcase:: GetChunksInRegionCountTestCase
+    """
     return max(0, pagemodel.objects.filter(content_type=content_type,
                                            content_id=obj_id,
                                            region=region).only('pk').count())  # noqa
@@ -31,5 +36,7 @@ def get_chunks_in_region_count(pagemodel, content_type, obj_id, region):
 def set_new_position(model, pk, position):
     """
     Doesn't fire any signals.
+
+    .. testcase:: SetNewPositionTestCase
     """
     return model.objects.filter(pk=pk).update(position=position)

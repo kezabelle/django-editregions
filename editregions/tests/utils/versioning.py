@@ -19,5 +19,5 @@ class VersionsTestCase(TestCase):
         self.assertFalse(is_django_15plus())
 
     @skipUnless(django.VERSION < (1, 5, 0), "test only applies to Django < 1.5")
-    def test_is_at_least_16(self): 
+    def test_is_at_least_16(self):
         self.assertFalse(is_django_16plus())

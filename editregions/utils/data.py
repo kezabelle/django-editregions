@@ -21,11 +21,20 @@ def get_model_class(obj):
 
     :param obj: a model instance
     :return: an installed model class, or None.
+
+    .. testcase:: GetModelClassTestCase
     """
     return get_content_type(obj).model_class()
 
 
 def get_content_type(input):
+    """
+    :param input:
+    :return: the matching content type
+    :rtype: ContentType
+
+    .. testcase:: GetContentTypeTestCase
+    """
     if hasattr(input, '_meta'):
         logger.info('Input is a Django model, using `get_for_model`')
         return ContentType.objects.get_for_model(input)
@@ -50,6 +59,8 @@ def get_modeladmin(obj, admin_namespace='admin'):
     """
     convienience function around finding the modeladmin we want.
     Allows us to provide a class or instance and get back the modeladmin.
+
+    .. testcase:: GetModelAdminTestCase
     """
     model = get_model_class(obj)
     admin = get_admin_site(admin_namespace)
@@ -66,6 +77,9 @@ def get_modeladmin(obj, admin_namespace='admin'):
 
 
 def attach_configuration(obj, config_class):
+    """
+    .. testcase:: AttachConfigurationTestCase
+    """
     created = False
     if not hasattr(obj, '__editregion_config'):
         logger.debug('__editregion_config not on {cls!r} for this template '
@@ -77,11 +91,17 @@ def attach_configuration(obj, config_class):
 
 
 def get_configuration(obj):
+    """
+    .. testcase:: GetConfigurationTestCase
+    """
     return getattr(obj, '__editregion_config', None)
 
 
 @contextmanager
 def healed_context(context):
+    """
+    .. testcase:: HealedContextTestCase
+    """
     original_context_length = len(context.dicts)
     yield context
     ctx_length = len(context.dicts)
