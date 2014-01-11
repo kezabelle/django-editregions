@@ -55,12 +55,12 @@ class GetModelAdminTestCase(GetContentTypeTestCase):
         self.user_ct = admin.site._registry[User]
 
     @override_settings(DEBUG=True)
-    def test_class_not_in_admin(self):
+    def test_class_not_in_admin_debug(self):
         with self.assertRaises(ImproperlyConfigured):
             get_modeladmin(Permission)
 
     @override_settings(DEBUG=False)
-    def test_class_not_in_admin(self):
+    def test_class_not_in_admin_production(self):
         with self.assertRaises(KeyError):
             get_modeladmin(Permission)
 
