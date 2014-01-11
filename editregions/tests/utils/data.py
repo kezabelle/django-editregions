@@ -4,13 +4,14 @@ from django.contrib.admin.sites import NotRegistered
 from django.contrib.auth.admin import UserAdmin
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ImproperlyConfigured
+from django.template import Context
 from django.test.utils import override_settings
 from django.utils.functional import SimpleLazyObject
 from django.utils.unittest import TestCase
 from django.test import TestCase as DjangoTestCase
 from django.contrib.auth.models import User, Permission
 from editregions.models import EditRegionConfiguration
-from editregions.utils.data import get_content_type, get_model_class, get_modeladmin, attach_configuration, get_configuration
+from editregions.utils.data import get_content_type, get_model_class, get_modeladmin, attach_configuration, get_configuration, healed_context
 
 
 class GetContentTypeTestCase(DjangoTestCase):
@@ -91,3 +92,46 @@ class GetConfigurationTestCase(TestCase):
         user = User()
         self.assertNotIsInstance(get_configuration(user), SimpleLazyObject)
         self.assertIsNone(get_configuration(user))
+
+
+class HealedContextTestCase(TestCase):
+    def test_healing(self):
+        context = Context()
+        length = len(context.dicts)
+        with healed_context(context) as ctx:
+            ctx.update({'a': 1})
+            ctx.update({'b': 2})
+            ctx.update({'c': 3})
+        new_length = len(context.dicts)
+        self.assertEqual(length, new_length)
+        self.assertIn('True', context)
+        self.assertIn('False', context)
+        self.assertIn('None', context)
+        self.assertNotIn('b', context)
+        is_same = Context()
+        # comparing Context() to Context() doesn't work ;|
+        self.assertEqual(is_same.dicts, context.dicts)
+
+    def test_healing_prefilled(self):
+        context = Context({'b': 2})
+        length = len(context.dicts)
+        with healed_context(context) as ctx:
+            ctx.update({'a': 1})
+        new_length = len(context.dicts)
+        self.assertEqual(length, new_length)
+        self.assertIn('True', context)
+        self.assertIn('False', context)
+        self.assertIn('None', context)
+        self.assertIn('b', context)
+        self.assertNotIn('a', context)
+
+    def test_healing_no_actions(self):
+        context = Context()
+        length = len(context.dicts)
+        with healed_context(context) as ctx:
+            pass
+        new_length = len(context.dicts)
+        self.assertEqual(length, new_length)
+        self.assertIn('True', context)
+        self.assertIn('False', context)
+        self.assertIn('None', context)
