@@ -1,11 +1,14 @@
 # -*- coding: utf-8 -*-
 import django
 from django.contrib import admin
+from django.contrib.admin.sites import NotRegistered
 from django.contrib.auth.models import User
 from django.core.urlresolvers import NoReverseMatch
 from django.utils.unittest.case import TestCase, skipUnless
 from django.test import TestCase as DjangoTestCase
 from editregions.admin.utils import django_jqueryui_version, AdminChunkWrapper
+from editregions.contrib.embeds.admin import IframeAdmin
+from editregions.contrib.embeds.models import Iframe
 from editregions.models import EditRegionChunk
 from editregions.utils.data import get_content_type
 try:
@@ -39,7 +42,19 @@ class AdminChunkWrapperTestCase(DjangoTestCase):
         obj.full_clean()
         obj.save()
 
+        iframe = Iframe(position=2, region='test', content_type=ct,
+                        content_id=user.pk, url='https://news.bbc.co.uk/')
+        iframe.full_clean()
+        iframe.save()
+
+        try:
+            admin.site.unregister(Iframe)
+        except NotRegistered:
+            pass
+        admin.site.register(Iframe, IframeAdmin)
+
         self.base_obj = obj
+        self.obj = iframe
         self.user = user
         self.user_content_type = user
 
@@ -82,3 +97,16 @@ class AdminChunkWrapperTestCase(DjangoTestCase):
             self.assertEqual(wrapped.get_manage_url(), '')
         with self.assertRaises(NoReverseMatch):
             self.assertEqual(wrapped.get_move_url(), '')
+
+    def test_urls_for_mounted_chunk(self):
+        wrapped = AdminChunkWrapper(opts=self.obj._meta, obj=self.obj,
+                                    namespace=admin.site.name,
+                                    content_id=self.obj.content_id,
+                                    content_type=self.obj.content_type,
+                                    region=self.obj.region)
+        del_url = ('/admin_mountpoint/embeds/iframe/2/delete/?'
+                   'region=test&content_id=1&content_type=4')
+        self.assertEqual(wrapped.get_delete_url(), del_url)
+        hist_url = ('/admin_mountpoint/embeds/iframe/2/history/?'
+                    'region=test&content_id=1&content_type=4')
+        self.assertEqual(wrapped.get_history_url(), hist_url)

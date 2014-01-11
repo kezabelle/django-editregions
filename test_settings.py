@@ -19,6 +19,7 @@ INSTALLED_APPS = (
     'helpfulfields',
     # main app in test
     'editregions',
+    'editregions.contrib.embeds',
 )
 
 SOUTH_TESTS_MIGRATE = False # To disable migrations and use syncdb instead
