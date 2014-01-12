@@ -38,6 +38,7 @@ class EditRegionInline(GenericInlineModelAdmin):
                         'group being used, so re-grabbing the DB version')
             obj = obj.__class__.objects.get(pk=obj.pk)
         config = None
+        fset.has_editregions = False
         if obj is not None:
             attach_configuration(obj, EditRegionConfiguration)
             config = get_configuration(obj)
