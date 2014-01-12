@@ -84,7 +84,11 @@ def attach_configuration(obj, config_class):
     if not hasattr(obj, '__editregion_config'):
         logger.debug('__editregion_config not on {cls!r} for this template '
                      'rendering request, creating it'.format(cls=obj))
-        config = SimpleLazyObject(lambda: config_class(obj))
+
+        def _generate_config():
+            return config_class(obj)
+
+        config = SimpleLazyObject(_generate_config)   
         setattr(obj, '__editregion_config', config)
         created = True
     return obj, created
