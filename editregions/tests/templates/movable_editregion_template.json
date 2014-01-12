@@ -2,7 +2,7 @@
     "test": {
         "name": "whee!",
         "models": {
-            "embeds.Iframe": null
+            "embeds.Iframe": 2
         }
     },
     "test2": {

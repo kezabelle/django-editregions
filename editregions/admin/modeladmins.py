@@ -498,13 +498,13 @@ class ChunkAdmin(AdminlinksMixin):
         obj.content_type_id = request.GET[REQUEST_VAR_CT]
         obj.content_id = request.GET[REQUEST_VAR_ID]
         obj.region = request.GET[REQUEST_VAR_REGION]
-        if obj.position is None:
-            found = get_chunks_in_region_count(EditRegionChunk,
-                                               content_type=obj.content_type,
-                                               obj_id=obj.content_id,
-                                               region=obj.region)
-            found2 = max(0, found)
-            obj.position = found2 + 1
+        # if obj.position is None:
+        #     found = get_chunks_in_region_count(EditRegionChunk,
+        #                                        content_type=obj.content_type,
+        #                                        obj_id=obj.content_id,
+        #                                        region=obj.region)
+        #     found2 = max(0, found)
+        #     obj.position = found2 + 1
         super(ChunkAdmin, self).save_model(request, obj, form, change)
 
     def response_max(self, request, limit, found):
@@ -624,18 +624,17 @@ class ChunkAdmin(AdminlinksMixin):
         querystring = QueryDict(resp.redirect_parts[3], mutable=True)
 
         # delete any values which could be wrong [but shouldn't be!]
-        for x in ('content_id', 'content_type', 'region',):
+        for x in (REQUEST_VAR_REGION, REQUEST_VAR_CT, REQUEST_VAR_ID):
             if x in querystring:
                 del querystring[x]
         querystring.update(content_id=obj.content_id,
                            content_type=obj.content_type_id,
                            region=obj.region)
-        if self.wants_to_autoclose(request):
-            querystring.update(_autoclose=1)
         resp.redirect_parts[3] = querystring.urlencode()
         resp['Location'] = urlunsplit(resp.redirect_parts)
         return resp
 
+    @guard_querystring_m
     def delete_view(self, request, object_id, extra_context=None):
         """
         This override exists to guard the querystring, but also to provide

@@ -3,12 +3,18 @@ import warnings
 from django.contrib import admin
 from django.contrib.admin import ModelAdmin
 from django.contrib.admin.models import LogEntry, ADDITION, CHANGE, DELETION
+from django.contrib.admin.sites import NotRegistered
+from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth.models import User
+from django.core.exceptions import SuspiciousOperation
+from django.core.urlresolvers import reverse
 from django.forms import ModelForm
+from django.http import HttpResponse, HttpResponseRedirect, HttpResponsePermanentRedirect
 from django.test import RequestFactory
 from django.utils.unittest.case import TestCase
 from django.test import TestCase as DjangoTestCase
 from editregions.admin.modeladmins import ChunkAdmin
+from editregions.constants import REQUEST_VAR_CT, REQUEST_VAR_ID, REQUEST_VAR_REGION
 from editregions.contrib.embeds.models import Iframe
 from editregions.utils.data import get_content_type
 try:
@@ -17,13 +23,25 @@ except ImportError:
     from django.utils.encoding import force_unicode as force_text
 
 
+class RealishAdmin(ChunkAdmin, ModelAdmin):
+    pass
+
+
+class TestUserAdmin(UserAdmin):
+    def get_editregions_templates(self, obj):
+        return ['movable_editregion_template.json']
+
+
 class ChunkAdminTestCase(DjangoTestCase):
     def setUp(self):
         self.chunk_admin = ChunkAdmin()
         self.chunk_admin.admin_site = admin.site
-        class RealishAdmin(ChunkAdmin, ModelAdmin):
-            pass
         self.realish_admin = RealishAdmin
+        try:
+            admin.site.unregister(User)
+        except NotRegistered:
+            pass
+        admin.site.register(User, TestUserAdmin)
 
     def test_get_model_perms(self):
         request = RequestFactory().get('/')
@@ -215,3 +233,178 @@ class ChunkAdminTestCase(DjangoTestCase):
         logs = LogEntry.objects.filter(content_type=ct, object_id=user.pk,
                                        user=user, action_flag=DELETION)
         self.assertEqual(force_text(logs[0]), 'Deleted "we deleted a thing!."')
+
+    def _test_view(self, func='add_view', generate_chunks=1):
+        user = User(username='test', is_staff=True, is_superuser=True,
+                    is_active=True)
+        user.set_password('test')
+        user.full_clean()
+        user.save()
+        ct = get_content_type(User)
+        request = RequestFactory().get('/', {
+            REQUEST_VAR_CT: ct.pk,
+            REQUEST_VAR_ID: user.pk,
+            REQUEST_VAR_REGION: 'test'
+        })
+        request.user = user
+        admin_instance = self.realish_admin(model=Iframe, admin_site=admin.site)
+
+        for x in range(0, generate_chunks):
+            iframe = Iframe(position=2, region='test', content_type=ct,
+                            content_id=user.pk, url='https://news.bbc.co.uk/')
+            iframe.full_clean()
+            iframe.save()
+
+        kwargs = {'request': request}
+        if func != 'add_view':
+            kwargs.update({'object_id': force_text(iframe.pk)})
+        view = getattr(admin_instance, func)
+        view(**kwargs)
+
+        # now do the view again without the fields required by the decorator
+        request = RequestFactory().get('/')
+        request.user = user
+        kwargs.update({'request': request})
+        with self.assertRaises(SuspiciousOperation):
+            view(**kwargs)
+
+    def test_change_view(self):
+        self._test_view(func='change_view')
+
+    def test_delete_view(self):
+        self._test_view(func='delete_view')
+
+    def test_add_view(self):
+        self._test_view(func='add_view')
+
+    def test_add_view_hitting_limit(self):
+        self._test_view(func='add_view', generate_chunks=3)
+
+
+class MaybeFixRedirectionTestCase(DjangoTestCase):
+    def setUp(self):
+        self.realish_admin = RealishAdmin
+        try:
+            admin.site.unregister(User)
+        except NotRegistered:
+            pass
+        admin.site.register(User, TestUserAdmin)
+
+    def test_leave_unchanged(self):
+        request = RequestFactory().get('/')
+        response_200 = HttpResponse(content='ok')
+        admin_instance = self.realish_admin(model=Iframe, admin_site=admin.site)
+        new_response = admin_instance.maybe_fix_redirection(
+            request=request, response=response_200)
+        # returned unchanged
+        self.assertEqual('ok', new_response.content)
+        self.assertEqual(200, new_response.status_code)
+
+    def test_returned_data_changed(self):
+        request = RequestFactory().get('/')
+        admin_instance = self.realish_admin(model=Iframe, admin_site=admin.site)
+        response_302 = HttpResponseRedirect(redirect_to='/admin_mountpoint/')
+        new_response = admin_instance.maybe_fix_redirection(
+            request=request, response=response_302)
+        # returned early because it was a redirect, but we updated the
+        # querystring anyway
+        self.assertEqual(302, new_response.status_code)
+        self.assertEqual('/admin_mountpoint/?_data_changed=1',
+                         new_response['Location'])
+
+    def test_to_other_url(self):
+        user = User(username='test', is_staff=True, is_superuser=True,
+                    is_active=True)
+        user.set_password('test')
+        user.full_clean()
+        user.save()
+        request = RequestFactory().get('/')
+        response_302 = HttpResponseRedirect(redirect_to='/admin_mountpoint/')
+        admin_instance = self.realish_admin(model=Iframe, admin_site=admin.site)
+        new_response = admin_instance.maybe_fix_redirection(
+            request=request, response=response_302, obj=user)
+        # was a redirect, but not to a chunkadmin instance.
+        self.assertEqual(302, new_response.status_code)
+        self.assertEqual('/admin_mountpoint/?_data_changed=1',
+                         new_response['Location'])
+
+    def test_to_chunkadmin_instance(self):
+        user = User(username='test', is_staff=True, is_superuser=True,
+                    is_active=True)
+        user.set_password('test')
+        user.full_clean()
+        user.save()
+        admin_instance = self.realish_admin(model=Iframe, admin_site=admin.site)
+        request = RequestFactory().get('/')
+        request.user = user
+        iframe_admin = reverse('admin:embeds_iframe_add')
+        response_301 = HttpResponsePermanentRedirect(redirect_to=iframe_admin)
+
+        ct = get_content_type(User)
+        iframe = Iframe(position=2, region='test', content_type=ct,
+                        content_id=user.pk, url='https://news.bbc.co.uk/')
+        iframe.full_clean()
+        iframe.save()
+
+        new_response = admin_instance.maybe_fix_redirection(
+            request=request, response=response_301, obj=iframe)
+        # was a redirect, to a chunkadmin instance
+        self.assertEqual(301, new_response.status_code)
+        self.assertEqual('/admin_mountpoint/auth/user/2/?_data_changed=1',
+                         new_response['Location'])
+
+    def test_autoclose_chunkadmin(self):
+        user = User(username='test', is_staff=True, is_superuser=True,
+                    is_active=True)
+        user.set_password('test')
+        user.full_clean()
+        user.save()
+        admin_instance = self.realish_admin(model=Iframe, admin_site=admin.site)
+        request = RequestFactory().get('/', {
+            '_autoclose': 1,
+        })
+        request.user = user
+        iframe_admin = reverse('admin:embeds_iframe_add')
+        response_301 = HttpResponsePermanentRedirect(redirect_to=iframe_admin)
+
+        ct = get_content_type(User)
+        iframe = Iframe(position=2, region='test', content_type=ct,
+                        content_id=user.pk, url='https://news.bbc.co.uk/')
+        iframe.full_clean()
+        iframe.save()
+
+        new_response = admin_instance.maybe_fix_redirection(
+            request=request, response=response_301, obj=iframe)
+        # was a redirect, to a chunkadmin instance
+        self.assertEqual(301, new_response.status_code)
+        self.assertEqual('/admin_mountpoint/embeds/iframe/add/?region=test'
+                         '&_data_changed=1&_autoclose=1&content_type=4'
+                         '&content_id=2',
+                         new_response['Location'])
+
+    def test_continue_editing_parent_object(self):
+        user = User(username='test', is_staff=True, is_superuser=True,
+                    is_active=True)
+        user.set_password('test')
+        user.full_clean()
+        user.save()
+        admin_instance = self.realish_admin(model=Iframe, admin_site=admin.site)
+        request = RequestFactory().get('/', {
+            '_continue': 1,
+        })
+        request.user = user
+        iframe_admin = reverse('admin:embeds_iframe_add')
+        response_301 = HttpResponsePermanentRedirect(redirect_to=iframe_admin)
+
+        ct = get_content_type(User)
+        iframe = Iframe(position=2, region='test', content_type=ct,
+                        content_id=user.pk, url='https://news.bbc.co.uk/')
+        iframe.full_clean()
+        iframe.save()
+
+        new_response = admin_instance.maybe_fix_redirection(
+            request=request, response=response_301, obj=iframe)
+        # was a redirect, to a chunkadmin instance
+        self.assertEqual(301, new_response.status_code)
+        self.assertEqual('/admin_mountpoint/auth/user/2/?_data_changed=1',
+                         new_response['Location'])
