@@ -149,12 +149,12 @@ class MovementForm(Form):
         # find all the existing objects and iterate over each of them,
         # doing an update (rather than save, to avoid changing the `modified`
         # field) if they're not in the correct position.
-        for new_position, obj in enumerate(new_chunks.iterator(), 1):
-            if obj.position != new_position:
+        for new_position, _obj in enumerate(new_chunks.iterator(), 1):
+            if _obj.position != new_position:
                 logger.debug('{obj!r} out of position, moving from'
                              '{obj.position} to {new_position}'.format(
-                             obj=obj, new_position=new_position))
-                set_new_position(EditRegionChunk, pk=obj.pk,
+                             obj=_obj, new_position=new_position))
+                set_new_position(EditRegionChunk, pk=_obj.pk,
                                  position=new_position)
         return obj
 

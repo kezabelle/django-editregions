@@ -76,7 +76,8 @@ class MovementFormTestCase(DjangoTestCase):
         self.assertEqual(form.cleaned_data, {'pk': obj,
                                              'position': 3,
                                              'region': 'test'})
-    def test_moving(self):
+
+    def test_moving_position_only(self):
         obj = EditRegionChunk.objects.all()[0]
         request = RequestFactory().post('/', {'position': 3, 'pk': obj.pk})
         form = MovementForm(data=request.POST)
@@ -88,4 +89,6 @@ class MovementFormTestCase(DjangoTestCase):
         form.is_valid()
         with self.assertNumQueries(4):
             result = form.save()
-            # self.assertEqual(result.pk, obj.pk)
+            self.assertEqual(result.pk, obj.pk)
+            self.assertNotEqual(result.position, obj.position)
+            self.assertEqual(result.position, 3)
