@@ -85,7 +85,7 @@ class EditRegionTag(AsTag):
             #  know why.
             if settings.DEBUG:
                 raise
-            logger.error(
+            logger.exception(
                 'content object does not exist for {cls!r}'.format(
                     cls=content_object))
             return None
@@ -98,7 +98,13 @@ class EditRegionTag(AsTag):
             }
             if settings.DEBUG:
                 raise ImproperlyConfigured(error)
-            logger.error(error)
+            logger.exception(error)
+            return None
+        except ValueError:
+            error = "content_object was probably '', check the context provided"
+            if settings.DEBUG:
+                raise ValueError(error)
+            logger.exception(error)
             return None
 
     def get_value(self, context, name, content_object, inherit, **kwargs):

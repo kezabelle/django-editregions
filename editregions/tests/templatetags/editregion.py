@@ -4,8 +4,10 @@ from django.contrib import admin
 from django.contrib.admin.sites import NotRegistered
 from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth.models import User
+from django.core.exceptions import ImproperlyConfigured
 from django.template import Template, RequestContext, Context
 from django.test import TestCase as DjangoTestCase, RequestFactory
+from django.test.utils import override_settings
 from editregions.contrib.embeds.models import Iframe
 from editregions.templatetags.editregion import EditRegionTag
 from editregions.utils.data import get_content_type
@@ -187,3 +189,49 @@ class EditRegionTemplateTagTestCase(DjangoTestCase):
         """)
         rendered = tmpl.render(ctx).strip()
         self.assertEqual(2256, len(rendered))
+
+    @override_settings(DEBUG=True)
+    def test_blank_content_object_debug(self):
+        """ in debug, error loudly to the user """
+        tmpl = Template("""
+        output:
+        {% load editregion %}
+        {% editregion "test" obj %}
+        """)
+        with self.assertRaisesRegexp(ValueError, "content_object was probably "
+                                                 "'', check the context "
+                                                 "provided"):
+            tmpl.render(Context()).strip()
+
+    @override_settings(DEBUG=False)
+    def test_blank_content_object_production(self):
+        """ in production, error silently to a logger """
+        tmpl = Template("""
+        output:
+        {% load editregion %}
+        {% editregion "test" obj %}
+        """)
+        self.assertEqual('output:', tmpl.render(Context()).strip())
+
+    @override_settings(DEBUG=True)
+    def test_none_content_object_debug(self):
+        """ in debug, error loudly to the user """
+        tmpl = Template("""
+        output:
+        {% load editregion %}
+        {% editregion "test" None %}
+        """)
+        with self.assertRaisesRegexp(ImproperlyConfigured,
+                                     'no object provided to the "editregion" '
+                                     'template tag forregion "test"'):
+            tmpl.render(Context()).strip()
+
+    @override_settings(DEBUG=False)
+    def test_none_content_object_production(self):
+        """ in production, error silently to a logger """
+        tmpl = Template("""
+        output:
+        {% load editregion %}
+        {% editregion "test" None %}
+        """)
+        self.assertEqual('output:', tmpl.render(Context()).strip())
