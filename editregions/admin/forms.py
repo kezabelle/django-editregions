@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 
 class EditRegionInlineForm(object):
     """
-    Used by EditRegionInlineForm
+    Used by EditRegionInlineFormSet
     """
     media = Media()
 
@@ -81,12 +81,15 @@ class MovementForm(Form):
 
     def clean(self):
         cd = super(MovementForm, self).clean()
-        pk = cd.get('pk', 0)
+        pk = cd.get('pk', None)
         try:
+            if pk is None:
+                raise self.Meta.model.DoesNotExist("Don't even bother querying")
             cd['pk'] = self.Meta.model.polymorphs.get_subclass(pk=pk)
         except ObjectDoesNotExist as e:
             cd['pk'] = None
-            self._errors['pk'] = e.msg
+            self._errors['pk'] = '{0} does not exist'.format(
+                force_text(self.Meta.model._meta.verbose_name))
 
         # rather than raise an error for an invalid region, just set it
         # back to whatever the region says it should be. Trust no-one.
