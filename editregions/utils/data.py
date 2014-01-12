@@ -3,6 +3,7 @@ from contextlib import contextmanager
 import logging
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ImproperlyConfigured
+from django.template.context import BaseContext, Context
 from django.utils.functional import SimpleLazyObject
 from django.conf import settings
 try:
@@ -106,6 +107,8 @@ def healed_context(context):
     """
     .. testcase:: HealedContextTestCase
     """
+    if not isinstance(context, BaseContext):
+        context = Context(context)
     original_context_length = len(context.dicts)
     yield context
     ctx_length = len(context.dicts)
