@@ -177,6 +177,15 @@ class AdminChunkWrapper(object):
             }
         return self.label
 
+    def __eq__(self, other):
+        return all([
+            self.content_type == other.content_type,
+            self.content_id == other.content_id,
+            self.region == other.region,
+            self.opts == other.opts,
+            self.admin_namespace == other.admin_namespace,
+        ])
+
     def summary(self):
         if self.exists:
             context = {
