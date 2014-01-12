@@ -88,7 +88,7 @@ def attach_configuration(obj, config_class):
         def _generate_config():
             return config_class(obj)
 
-        config = SimpleLazyObject(_generate_config)   
+        config = SimpleLazyObject(_generate_config)
         setattr(obj, '__editregion_config', config)
         created = True
     return obj, created
