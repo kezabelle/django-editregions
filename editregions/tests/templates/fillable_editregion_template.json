@@ -1,0 +1,8 @@
+{
+    "test": {
+        "name": "whee!",
+        "models": {
+            "embeds.Iframe": null
+        }
+    }
+}

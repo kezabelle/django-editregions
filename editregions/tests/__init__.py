@@ -1,11 +1,10 @@
 # -*- coding: utf-8 -*-
 #
-# from .constants import *
+from .constants import *
 from .models import *
 # from .querying import *
-# from .text import *
 #
-# from .admin.changelist import *
+#  from .admin.changelist import *
 # from .admin.forms import *
 # from .admin.inlines import *
 # from .admin.modeladmins import *
@@ -19,7 +18,7 @@ from .utils.versioning import *
 #
 #
 # from .templatetags.adminlinks_editregion import *
-# from .templatetags.editregion import *
+from .templatetags.editregion import *
 #
 # from .contrib.embeds.admin import *
 # from .contrib.embeds.forms import *

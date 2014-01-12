@@ -27,7 +27,7 @@ ttag_no_obj = _('no object provided to the "%(tagname)s" template tag for'
 ttag_not_model = _('"%(tagname)s" expected a Django model, got %(type)s'
                    'instead')
 
-ttag_no_ancestors = _('%(obj)s must have `%(attr)s` to continue using'
+ttag_no_ancestors = _('%(obj)s must have `%(attr)s` to continue using '
                       '`%(thing)s`')
 
 admin_chunktype_label = _('type')
