@@ -1,0 +1,14 @@
+{
+    "test": {
+        "name": "whee!",
+        "models": {
+            "embeds.Iframe": null
+        }
+    },
+    "test2": {
+        "name": "oh my goodness, another test region",
+        "models": {
+            "embeds.Iframe": 1
+        }
+    }
+}

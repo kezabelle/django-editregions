@@ -62,12 +62,12 @@ class EditRegionChunkTestCase(DjangoTestCase):
         user_ct = get_content_type(self.model_dependencies['user'])
         expected = ('<editregions.models.EditRegionChunk pk=1, region=test, '
                     'parent_type={USER.pk}, parent_id=1, '
-                    'position=0>'.format(USER=user_ct))
+                    'position=1>'.format(USER=user_ct))
         received = repr(self.chunks['base'])
         self.assertEqual(expected, received)
 
     def test_str(self):
-        expected = 'pk=1, region=test, position=0'
+        expected = 'pk=1, region=test, position=1'
         received = force_text(self.chunks['base'])
         self.assertEqual(expected, received)
 

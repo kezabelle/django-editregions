@@ -4,9 +4,9 @@ from .constants import *
 from .models import *
 # from .querying import *
 #
-# from .admin.forms import *
 # from .admin.modeladmins import *
 from .admin.changelist import *
+from .admin.forms import *
 from .admin.inlines import *
 from .admin.utils import *
 #

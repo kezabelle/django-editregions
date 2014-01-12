@@ -71,8 +71,8 @@ class EditRegionChunk(ChangeTracking, Generic):
     move.alters_data = True
 
     def clean(self):
-        if self.position is None:
-            self.position = 0
+        if self.position is None or self.position == 0:
+            self.position = 1
         if self.content_id is None:
             raise ValidationError("{0.__class__ requires `content_id` to be "
                                   "the parent object's primary key")

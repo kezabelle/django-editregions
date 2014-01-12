@@ -111,6 +111,11 @@ class MovementForm(Form):
         old_region = obj.region
         new_region = self.cleaned_data.get('region', obj.region)
 
+        if old_region == new_region and old_position == obj.position:
+            logger.debug("Invalid movement, possibly trying to move to an "
+                         "invalid region")
+            return obj
+
         next_chunks = get_next_chunks(EditRegionChunk, obj=obj,
                                       position=obj.position, region=new_region)
 

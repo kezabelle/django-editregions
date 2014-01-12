@@ -46,7 +46,7 @@ class SetNewPositionTestCase(DjangoTestCase):
         set_new_position(EditRegionChunk, last, 0)
         existing = list(EditRegionChunk.objects.all().order_by('position')
                         .values_list('pk', flat=True))
-        self.assertEqual(existing, [1, 10, 2, 3, 4, 5, 6, 7, 8, 9])
+        self.assertEqual(existing, [10, 1, 2, 3, 4, 5, 6, 7, 8, 9])
 
 
 class GetChunksInRegionCountTestCase(DjangoTestCase):
