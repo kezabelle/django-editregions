@@ -123,7 +123,7 @@ class EditRegionAdmin(ModelAdmin):
         :rtype: string
         """
         erc = EditRegionConfiguration(obj.content_object)
-        region_name = erc.config[obj.region]
+        region_name = erc.config[obj.region]['name']
         return self.get_changelist_link_html(obj, data=region_name)
     get_region_name.allow_tags = True
     get_region_name.short_description = region_v
@@ -292,8 +292,8 @@ class EditRegionAdmin(ModelAdmin):
         form = MovementForm(data=request.GET, files=None, initial=None)
         if form.is_valid() and self.has_change_permission(request, form.cleaned_data['pk']):
             form.save()
-            html = self.render_changelists_for_object(request=request,
-                                                      obj=form.cleaned_data['pk'].content_object)
+            html = self.render_changelists_for_object(
+                request=request, obj=form.cleaned_data['pk'].content_object)
             json_data = {
                 'action': 'move', 'html': html,
                 'primary_key': form.cleaned_data['pk'].pk,
@@ -301,9 +301,9 @@ class EditRegionAdmin(ModelAdmin):
             self.log_change(request, *form.change_message())
             self.log_change(request, *form.parent_change_message())
             return HttpResponse(json.dumps(json_data),
-                                mimetype='application/json')
+                                content_type='application/json')
         return HttpResponseBadRequest(json.dumps(form.errors),
-                                      mimetype='application/json')
+                                      content_type='application/json')
 
     def queryset(self, *args, **kwargs):
         """

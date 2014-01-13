@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import json
 import warnings
 from django.contrib import admin
 from django.contrib.admin import ModelAdmin
@@ -8,15 +9,21 @@ from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth.models import User
 from django.core.exceptions import SuspiciousOperation
 from django.core.urlresolvers import reverse
-from django.forms import ModelForm
+from django.forms import ModelForm, Media
 from django.http import HttpResponse, HttpResponseRedirect, HttpResponsePermanentRedirect
+from django.template.response import TemplateResponse
 from django.test import RequestFactory
+from django.utils.datastructures import MultiValueDictKeyError
 from django.utils.unittest.case import TestCase
 from django.test import TestCase as DjangoTestCase
+from editregions.admin.changelist import EditRegionChangeList
 from editregions.admin.modeladmins import ChunkAdmin
+from editregions.admin.utils import AdminChunkWrapper
 from editregions.constants import REQUEST_VAR_CT, REQUEST_VAR_ID, REQUEST_VAR_REGION
 from editregions.contrib.embeds.models import Iframe
-from editregions.utils.data import get_content_type
+from editregions.models import EditRegionChunk
+from editregions.utils.data import get_content_type, get_modeladmin
+
 try:
     from django.utils.encoding import force_text
 except ImportError:
@@ -408,3 +415,274 @@ class MaybeFixRedirectionTestCase(DjangoTestCase):
         self.assertEqual(301, new_response.status_code)
         self.assertEqual('/admin_mountpoint/auth/user/2/?_data_changed=1',
                          new_response['Location'])
+
+
+class EditRegionAdminTestCase(DjangoTestCase):
+    def setUp(self):
+        self.admin = get_modeladmin(EditRegionChunk)
+
+    def test_get_list_display_links(self):
+        request = RequestFactory().get('/')
+        expected = (None,)
+        received = self.admin.get_list_display_links(request=request,
+                                                     list_display=())
+        self.assertEqual(expected, received)
+
+    def test_get_list_display_links(self):
+        request = RequestFactory().get('/')
+        expected = [u'get_position', u'get_subclass_type',
+                    u'get_subclass_summary', u'get_last_modified',
+                    u'get_object_tools']
+        received = self.admin.get_list_display(request=request)
+        self.assertEqual(expected, received)
+
+    def _test_changelist_display_methods(self, func, expected, extra):
+        ct = get_content_type(User)
+        user = User(username='test', is_staff=True, is_superuser=True,
+                    is_active=True)
+        user.set_password('test')
+        user.full_clean()
+        user.save()
+        iframe = Iframe(position=2, region='test', content_type=ct,
+                        content_id=user.pk, url='https://news.bbc.co.uk/')
+        iframe.full_clean()
+        iframe.save()
+        render_html = getattr(self.admin, func)
+        received = render_html(obj=iframe, **extra)
+        self.assertEqual(expected, received)
+
+    def test_get_changelist_link_html_directly(self):
+        kwargs = {
+            'func': 'get_changelist_link_html',
+            'expected': ('<a href="/admin_mountpoint/embeds/iframe/1/?region='
+                         'test&content_id=1&content_type=4" data-adminlinks='
+                         '"autoclose" data-no-turbolink>x</a>'),
+            'extra': {
+                'data': 'x',
+            }
+        }
+        self._test_changelist_display_methods(**kwargs)
+
+    def test_get_region_name(self):
+        kwargs = {
+            'func': 'get_region_name',
+            'expected': ('<a href="/admin_mountpoint/embeds/iframe/1/?region='
+                         'test&content_id=1&content_type=4" data-adminlinks='
+                         '"autoclose" data-no-turbolink>whee!</a>'),
+            'extra': {}
+        }
+        self._test_changelist_display_methods(**kwargs)
+
+    def test_get_subclass_type(self):
+        kwargs = {
+            'func': 'get_subclass_type',
+            'expected': ('<a href="/admin_mountpoint/embeds/iframe/1/?region='
+                         'test&content_id=1&content_type=4" data-adminlinks='
+                         '"autoclose" data-no-turbolink>iframe</a>'),
+            'extra': {}
+        }
+        self._test_changelist_display_methods(**kwargs)
+
+    def test_get_subclass_summary(self):
+        kwargs = {
+            'func': 'get_subclass_summary',
+            'expected': ('<a href="/admin_mountpoint/embeds/iframe/1/?region='
+                         'test&content_id=1&content_type=4" data-adminlinks='
+                         '"autoclose" data-no-turbolink>https://news.bbc.co'
+                         '.uk/</a>'),
+            'extra': {}
+        }
+        self._test_changelist_display_methods(**kwargs)
+
+    def test_get_position(self):
+        kwargs = {
+            'func': 'get_position',
+            'expected': ('<a href="/admin_mountpoint/embeds/iframe/1/?region='
+                         'test&content_id=1&content_type=4" data-adminlinks='
+                         '"autoclose" data-no-turbolink>2</a>'),
+            'extra': {}
+        }
+        self._test_changelist_display_methods(**kwargs)
+
+    def test_get_last_modified(self):
+        pass
+
+    def test_get_object_tools(self):
+        kwargs = {
+            'func': 'get_object_tools',
+            'expected': ('<div class="drag_handle" data-pk="1" data-href="'
+                         '/admin_mountpoint/editregions/editregionchunk/move/'
+                         '"></div>&nbsp;<a class="delete_handle" href="'
+                         '/admin_mountpoint/embeds/iframe/1/delete/?region='
+                         'test&content_id=1&content_type=4" data-adminlinks='
+                         '"autoclose" data-no-turbolink>Delete</a>'),
+            'extra': {}
+        }
+        self._test_changelist_display_methods(**kwargs)
+
+    def test_get_model_perms(self):
+        request = RequestFactory().get('/')
+        self.assertEqual(self.admin.get_model_perms(request=request), {})
+
+    def test_cover_urls(self):
+        self.assertEqual(len(self.admin.urls), 3)
+
+    def test_move_view_bad_request(self):
+        request = RequestFactory().get('/')
+        response = self.admin.move_view(request=request)
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response['Content-type'], 'application/json')
+        self.assertEqual(json.loads(response.content), {
+            u'pk': u'content block does not exist',
+            u'position': [u'This field is required.']
+        })
+
+    def test_move_view(self):
+        ct = get_content_type(User)
+        user = User(username='test', is_staff=True, is_superuser=True,
+                    is_active=True)
+        user.set_password('test')
+        user.full_clean()
+        user.save()
+
+        for x in range(1, 10):
+            obj = EditRegionChunk(position=x, region='test', content_id=user.pk,
+                                  content_type=ct)
+            obj.full_clean()
+            obj.save()
+
+        first_obj = EditRegionChunk.objects.all()[0]
+        request = RequestFactory().get('/', {'position': 3,
+                                             'pk': first_obj.pk})
+        request.user = user
+        self.assertEqual(1, 2)
+        # response = self.admin.move_view(request=request)
+        # self.assertEqual(response.status_code, 400)
+        # self.assertEqual(response['Content-type'], 'application/json')
+        # self.assertEqual(json.loads(response.content), {
+        #     u'pk': u'content block does not exist',
+        #     u'position': [u'This field is required.']
+        # })
+
+    def test_queryset(self):
+        ct = get_content_type(User)
+        user = User(username='test', is_staff=True, is_superuser=True,
+                    is_active=True)
+        user.set_password('test')
+        user.full_clean()
+        user.save()
+        data = []
+        for x in range(1, 10):
+            iframe = Iframe(position=x, region='test', content_type=ct,
+                            content_id=user.pk, url='https://news.bbc.co.uk/')
+            iframe.full_clean()
+            iframe.save()
+            data.append(iframe)
+
+        self.assertEqual(data, list(self.admin.queryset('pk')))
+
+    def test_get_object(self):
+        self.test_queryset()
+        request = RequestFactory().get('/')
+        obj = Iframe.objects.all()[0]
+        self.assertEqual(obj, self.admin.get_object(request=request,
+                                                    object_id=obj.pk))
+
+    def test_get_changelist(self):
+        self.assertEqual(self.admin.get_changelist(), EditRegionChangeList)
+
+    def test_get_admin_wrapper_class(self):
+        self.assertEqual(self.admin.get_admin_wrapper_class(),
+                         AdminChunkWrapper)
+
+    def test_changelist_view(self):
+        request = RequestFactory().get('/')
+        with self.assertRaises(MultiValueDictKeyError):
+            self.admin.changelist_view(request=request)
+        user = User(username='test', is_staff=True, is_superuser=True,
+                    is_active=True)
+        user.set_password('test')
+        user.full_clean()
+        user.save()
+        request = RequestFactory().get('/', {
+            REQUEST_VAR_CT: get_content_type(User).pk,
+            REQUEST_VAR_ID: user.pk,
+        })
+        template_response = self.admin.changelist_view(request=request)
+        self.assertIsInstance(template_response, TemplateResponse)
+
+    def test_get_changelists_for_object(self):
+        request = RequestFactory().get('/')
+        user = User(username='test', is_staff=True, is_superuser=True,
+                    is_active=True)
+        user.set_password('test')
+        user.full_clean()
+        user.save()
+        received = self.admin.get_changelists_for_object(request=request,
+                                                         obj=user)
+        self.assertEqual(2, len(received))
+        self.assertIsInstance(received[0], EditRegionChangeList)
+        self.assertIsInstance(received[1], EditRegionChangeList)
+
+    def test_get_changelists_for_object_no_obj(self):
+        request = RequestFactory().get('/')
+        received = self.admin.get_changelists_for_object(request=request,
+                                                         obj=None)
+        self.assertEqual(0, len(received))
+
+    def test_changelists_as_context_data(self):
+        request = RequestFactory().get('/')
+        ct = get_content_type(User)
+        user = User(username='test', is_staff=True, is_superuser=True,
+                    is_active=True)
+        user.set_password('test')
+        user.full_clean()
+        user.save()
+        iframe = Iframe(position=1, region='test', content_type=ct,
+                        content_id=user.pk, url='https://news.bbc.co.uk/')
+        iframe.full_clean()
+        iframe.save()
+        received = self.admin.changelists_as_context_data(request=request,
+                                                          obj=user)
+        self.assertTrue('inline_admin_formset' in received)
+        self.assertTrue('formset' in received['inline_admin_formset'])
+        self.assertTrue('region_changelists' in received['inline_admin_formset']['formset'])  # noqa
+        self.assertEqual(
+            2, len(received['inline_admin_formset']['formset']['region_changelists']))  # noqa
+
+    def test_render_changelists_for_object(self):
+        request = RequestFactory().get('/')
+        ct = get_content_type(User)
+        user = User(username='test', is_staff=True, is_superuser=True,
+                    is_active=True)
+        user.set_password('test')
+        user.full_clean()
+        user.save()
+        iframe = Iframe(position=1, region='test', content_type=ct,
+                        content_id=user.pk, url='https://news.bbc.co.uk/')
+        iframe.full_clean()
+        iframe.save()
+        received = self.admin.render_changelists_for_object(request=request,
+                                                            obj=user)
+        self.assertIn('<div class="region-inline-wrapper">', received)
+        self.assertIn('<h3>Embeds</h3>', received)
+        self.assertIn('class="column-get_subclass_summary"', received)
+        self.assertIn('<div class="region-inline-progress-wrapper">', received)
+
+    def test_media_property(self):
+        self.assertEqual(self.admin.media._css, {
+            u'screen': [
+                u'adminlinks/css/fancyiframe-custom.css',
+                u'editregions/css/inlines.css',
+                u'editregions/css/changelist-extras.css'
+            ]
+        })
+        self.assertEqual(self.admin.media._js, [
+            'admin/js/core.js',
+            'admin/js/admin/RelatedObjectLookups.js',
+            'admin/js/jquery.min.js',
+            'admin/js/jquery.init.js',
+            u'admin/js/jquery.rebind.js',
+            u'adminlinks/js/jquery.fancyiframe.js',
+            u'editregions/js/jquery.ui.1-10-3.custom.js',
+            u'editregions/js/dragging.js'])
