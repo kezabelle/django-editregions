@@ -2,3 +2,4 @@
 *.orig
 *.egg
 *.egg-info
+htmlcov

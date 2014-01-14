@@ -36,6 +36,11 @@ TEMPLATE_DIRS = (
     os.path.realpath(os.path.join(BASE_DIR, 'editregions', 'tests', 'templates')),
 )
 
+STATICFILES_DIRS = (
+    os.path.realpath(os.path.join(BASE_DIR, 'editregions', 'tests', 'static')),
+
+)
+
 # Use a fast hasher to speed up tests.
 PASSWORD_HASHERS = (
     'django.contrib.auth.hashers.MD5PasswordHasher',

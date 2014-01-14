@@ -2,8 +2,8 @@
 #
 from .constants import *
 from .models import *
-# from .querying import *
-#
+from .querying import *
+from .views import *
 from .admin.changelist import *
 from .admin.forms import *
 from .admin.inlines import *

@@ -63,9 +63,21 @@ class ChangeListTestCase(DjangoTestCase):
                                   date_hierarchy=None, search_fields=None,
                                   list_select_related=None, list_per_page=100,
                                   list_max_show_all=100, list_editable=None,
-                                  model_admin=admin.site._registry[EditRegionChunk],
+                                  model_admin=admin.site._registry[EditRegionChunk],  # noqa
                                   parent_obj=user, parent_conf=config)
         self.changelist = cl
+
+        badconfig = EditRegionConfiguration()
+        cl2 = EditRegionChangeList(request=request, model=EditRegionChunk,
+                                   list_display=our_list_display,
+                                   list_display_links=our_list_links,
+                                   list_filter=EditRegionAdmin.list_filter,
+                                   date_hierarchy=None, search_fields=None,
+                                   list_select_related=None, list_per_page=100,
+                                   list_max_show_all=100, list_editable=None,
+                                   model_admin=admin.site._registry[EditRegionChunk],  # noqa
+                                   parent_obj=user, parent_conf=badconfig)
+        self.changelist2 = cl2
 
     def test_attrs(self):
         self.assertEqual('test', self.changelist.region)
@@ -96,3 +108,6 @@ class ChangeListTestCase(DjangoTestCase):
 
     def test_pretty_region_name(self):
         self.assertEqual('whee!', self.changelist.get_region_display)
+
+    def test_empty_filters(self):
+        self.assertEqual(self.changelist2.available_chunks, ())

@@ -17,7 +17,7 @@ from django.utils.datastructures import MultiValueDictKeyError
 from django.utils.unittest.case import TestCase
 from django.test import TestCase as DjangoTestCase
 from editregions.admin.changelist import EditRegionChangeList
-from editregions.admin.modeladmins import ChunkAdmin
+from editregions.admin.modeladmins import ChunkAdmin, EditRegionAdmin
 from editregions.admin.utils import AdminChunkWrapper
 from editregions.constants import REQUEST_VAR_CT, REQUEST_VAR_ID, REQUEST_VAR_REGION
 from editregions.contrib.embeds.models import Iframe
@@ -421,6 +421,10 @@ class EditRegionAdminTestCase(DjangoTestCase):
     def setUp(self):
         self.admin = get_modeladmin(EditRegionChunk)
 
+    def test_cover_init(self):
+        our_admin = EditRegionAdmin(EditRegionChunk, admin.site)
+        self.assertEqual(our_admin.list_display_links, (None,))
+
     def test_get_list_display_links(self):
         request = RequestFactory().get('/')
         expected = (None,)
@@ -546,8 +550,8 @@ class EditRegionAdminTestCase(DjangoTestCase):
         user.save()
 
         for x in range(1, 10):
-            obj = EditRegionChunk(position=x, region='test', content_id=user.pk,
-                                  content_type=ct)
+            obj = Iframe(position=x, region='test', content_id=user.pk,
+                         content_type=ct, url='http://example.com/')
             obj.full_clean()
             obj.save()
 
@@ -555,14 +559,15 @@ class EditRegionAdminTestCase(DjangoTestCase):
         request = RequestFactory().get('/', {'position': 3,
                                              'pk': first_obj.pk})
         request.user = user
-        self.assertEqual(1, 2)
-        # response = self.admin.move_view(request=request)
-        # self.assertEqual(response.status_code, 400)
-        # self.assertEqual(response['Content-type'], 'application/json')
-        # self.assertEqual(json.loads(response.content), {
-        #     u'pk': u'content block does not exist',
-        #     u'position': [u'This field is required.']
-        # })
+        response = self.admin.move_view(request=request)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response['Content-type'], 'application/json')
+        json_data = json.loads(response.content)
+        self.assertIn('action', json_data)
+        self.assertIn('html', json_data)
+        self.assertEqual('move', json_data['action'])
+        self.assertIn('<div class="region-inline-wrapper">',
+                      json_data['html'])
 
     def test_queryset(self):
         ct = get_content_type(User)
@@ -587,6 +592,12 @@ class EditRegionAdminTestCase(DjangoTestCase):
         obj = Iframe.objects.all()[0]
         self.assertEqual(obj, self.admin.get_object(request=request,
                                                     object_id=obj.pk))
+
+    def test_get_object_invalid_pk(self):
+        self.test_queryset()
+        request = RequestFactory().get('/')
+        self.assertEqual(None, self.admin.get_object(request=request,
+                                                     object_id=999999))
 
     def test_get_changelist(self):
         self.assertEqual(self.admin.get_changelist(), EditRegionChangeList)

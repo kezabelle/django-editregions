@@ -135,3 +135,16 @@ class HealedContextTestCase(TestCase):
         self.assertIn('True', context)
         self.assertIn('False', context)
         self.assertIn('None', context)
+
+    def test_healing_via_dict(self):
+        context = {'1': 2}
+        with healed_context(context) as ctx:
+            ctx.update({'3': 4})
+            self.assertEqual(len(ctx.dicts), 3)
+            self.assertEqual(ctx.dicts, [
+                {'True': True, 'False': False, 'None': None},
+                {'1': 2},
+                {'3': 4},
+            ])
+        self.assertEqual(len(context), 1)
+        self.assertEqual(context, {'1': 2})

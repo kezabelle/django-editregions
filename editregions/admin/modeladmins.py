@@ -84,7 +84,7 @@ class EditRegionAdmin(ModelAdmin):
         'region',
     ]
 
-    def __init(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs):
         super(EditRegionAdmin, self).__init__(*args, **kwargs)
         # disables the built in link building using
         # EditRegionChangeList.url_for_result so that we can have useful

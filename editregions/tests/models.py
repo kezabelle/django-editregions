@@ -78,10 +78,7 @@ class EditRegionChunkTestCase(DjangoTestCase):
         # do the move
         received = self.chunks['base'].move(requested_position=2)
         self.assertEqual(expected, received)
-        expected = (
-            self.chunks['other'],
-            self.chunks['base'],
-        )
+        expected = (self.chunks['other'], self.chunks['base'])
         received = tuple(EditRegionChunk.objects.all())
         self.assertEqual(expected, received)
 

@@ -8,7 +8,7 @@ from django.utils.functional import SimpleLazyObject
 from django.conf import settings
 try:
     from django.utils.six import string_types
-except ImportError:
+except ImportError:  # pragma: no cover
     string_types = basestring,
 from adminlinks.templatetags.utils import get_admin_site
 

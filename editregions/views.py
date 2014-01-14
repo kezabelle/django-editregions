@@ -10,7 +10,17 @@ class FormSuccess(Exception):
     def __init__(self, location, msg=None, permanent=False):
         self.location = location
         self.msg = msg
+        self.message = msg
         self.permanent = permanent
+
+    def has_message(self):
+        return self.msg is not None
+
+    def get_message(self):
+        return self.msg
+
+    def get_redirect(self):
+        return redirect(self.location, permanent=self.permanent)
 
 
 class EditRegionResponseMixin(object):
@@ -30,11 +40,12 @@ class EditRegionResponseMixin(object):
             return super(EditRegionResponseMixin, self).render_to_response(
                 context, **response_kwargs)
         except FormSuccess as e:
-            if e.msg is not None:
-                messages.success(self.request, e.msg, fail_silently=True)
+            if e.has_message():
+                messages.success(self.request, e.get_message(),
+                                 fail_silently=True)
             logger.debug('%(path)s raised `FormSuccess`, redirecting to '
                          'new endpoint %(new_path)s' % {
                              'path': self.request.path,
                              'new_path': e.location,
                          })
-            return redirect(e.location, permanent=e.permanent)
+            return e.get_redirect()

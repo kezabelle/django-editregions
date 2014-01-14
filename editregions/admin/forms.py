@@ -7,7 +7,7 @@ from django.forms.util import ErrorList
 from django.forms.fields import IntegerField, CharField
 try:
     from django.utils.encoding import force_text
-except ImportError:  # < Django 1.5
+except ImportError:  # pragma: no cover ... < Django 1.5
     from django.utils.encoding import force_unicode as force_text
 from editregions.utils.db import get_maximum_pk, get_next_chunks, set_new_position
 from editregions.utils.data import attach_configuration, get_configuration

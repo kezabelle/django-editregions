@@ -15,7 +15,7 @@ from django.utils.functional import cached_property
 
 try:
     from django.utils.six import string_types
-except ImportError:  # Python 2, Django < 1.5
+except ImportError:  # pragma: no cover ... Python 2, Django < 1.5
     string_types = basestring,
 
 try:
@@ -23,7 +23,7 @@ try:
 except ImportError:  # Haven't got an ultrajson package
     try:
         import json
-    except ImportError:  # Haven't got json, Python < 2.6, probably Django < 1.6
+    except ImportError:  # pragma: no cover ... Python < 2.6, Django < 1.6?
         from django.utils import simplejson as json
 
 from django.utils.datastructures import SortedDict
@@ -87,9 +87,15 @@ class EditRegionChunk(ChangeTracking, Generic):
 
 class EditRegionConfiguration(object):
     fallback_region_name_re = re.compile(r'[_\W]+')
+    config = {}
+    has_configuration = False
+    possible_templates = ()
+    template = None
+    obj = None
+    modeladmin = None
 
     def __init__(self, obj=None):
-        if obj is not None and not hasattr(self, 'obj'):
+        if obj is not None and getattr(self, 'obj', None) is None:
             self.configure(obj=obj)
 
     def __get__(self, instance, owner):

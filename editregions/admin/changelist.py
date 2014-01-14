@@ -33,7 +33,8 @@ class EditRegionChangeList(ChangeList):
             request_querydict=request.GET, obj=parent_obj, conf=parent_erc)
         self.formset = None
         self.template = parent_erc.template
-        self.get_region_display = parent_erc.config[self.region]['name']
+        configured_region = parent_erc.config.get(self.region, {})
+        self.get_region_display = configured_region.get('name', 'ERROR')
 
     def get_changelist_filters(self, request_querydict, obj, conf):
         """
@@ -42,10 +43,11 @@ class EditRegionChangeList(ChangeList):
 
         :return: list of available chunk types
         """
-        assert str(obj.pk) == str(self.parent_content_id), "Hmmm"
-
         AdminChunkWrapper = self.model_admin.get_admin_wrapper_class()
-        if 'models' in conf.config[self.region]:
+        filters = ()
+        can_get_models = (self.region in conf.config,
+                          conf.config.get(self.region, False))
+        if all(can_get_models):
             filters = list(AdminChunkWrapper(**{
                 'opts': x._meta,
                 'namespace': self.model_admin.admin_site.app_name,
@@ -53,8 +55,6 @@ class EditRegionChangeList(ChangeList):
                 'content_type': self.parent_content_type,
                 'content_id': obj.pk,
             }) for x in conf.config[self.region]['models'])
-        else:
-            filters = ()
         if len(filters) == 0:
             msg = "region '{region}' has zero chunk types configured".format(
                 region=self.region)
