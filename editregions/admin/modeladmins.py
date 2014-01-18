@@ -24,11 +24,11 @@ from editregions.utils.db import get_chunks_in_region_count
 
 try:
     import json
-except ImportError:
+except ImportError:  # pragma: no cover ... some older Python2 version.
     from django.utils import simplejson as json
 try:
     from django.utils.encoding import force_text
-except ImportError:  # < Django 1.5
+except ImportError:  # pragma: no cover ... < Django 1.5
     from django.utils.encoding import force_unicode as force_text
 from django.utils.translation import ugettext_lazy as _
 from adminlinks.templatetags.utils import _add_link_to_context
@@ -51,7 +51,7 @@ try:
     from django.utils.text import Truncator
     def truncate_words(s, num):
         return Truncator(s).words(num, truncate='...')
-except ImportError as e:
+except ImportError as e:  # pragma: no cover
     from django.utils.text import truncate_words
 
 logger = logging.getLogger(__name__)

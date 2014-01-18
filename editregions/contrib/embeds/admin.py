@@ -34,7 +34,7 @@ class IframeAdmin(ChunkAdmin, ModelAdmin):
                                 context_instance=context)
 
     def render_into_summary(self, obj, context):
-        summary = str(obj)
+        summary = force_text(obj)
         if len(summary) > 50:
             return '{uri.netloc}'.format(uri=urlparse(summary))
         return summary

@@ -110,3 +110,60 @@ class AdminChunkWrapperTestCase(DjangoTestCase):
         hist_url = ('/admin_mountpoint/embeds/iframe/2/history/?'
                     'region=test&content_id=1&content_type=4')
         self.assertEqual(wrapped.get_history_url(), hist_url)
+
+    def test_getattr_badstartswith(self):
+        wrapped = AdminChunkWrapper(opts=self.obj._meta, obj=self.obj,
+                                    namespace=admin.site.name,
+                                    content_id=self.obj.content_id,
+                                    content_type=self.obj.content_type,
+                                    region=self.obj.region)
+        self.assertTrue(wrapped.exists)
+        with self.assertRaises(AttributeError):
+            wrapped._xyz
+
+    def test_getattr(self):
+        wrapped = AdminChunkWrapper(opts=self.obj._meta, obj=self.obj,
+                                    namespace=admin.site.name,
+                                    content_id=self.obj.content_id,
+                                    content_type=self.obj.content_type,
+                                    region=self.obj.region)
+        self.assertTrue(wrapped.exists)
+        self.assertEqual(wrapped.position, self.obj.position)
+
+    def test_contains(self):
+        wrapped = AdminChunkWrapper(opts=self.obj._meta, obj=self.obj,
+                                    namespace=admin.site.name,
+                                    content_id=self.obj.content_id,
+                                    content_type=self.obj.content_type,
+                                    region=self.obj.region)
+        self.assertIn(self.obj, wrapped)
+        self.assertNotIn(self.base_obj, wrapped)
+
+    def test_bool(self):
+        wrapped = AdminChunkWrapper(opts=self.obj._meta,
+                                    namespace=admin.site.name,
+                                    content_id=self.obj.content_id,
+                                    content_type=self.obj.content_type)
+        self.assertTrue(wrapped)
+        wrapped = AdminChunkWrapper(opts=self.obj._meta,
+                                    namespace=admin.site.name)
+        self.assertFalse(wrapped)
+
+    def test_contextmanager(self):
+        wrapped = AdminChunkWrapper(opts=self.obj._meta, obj=self.obj,
+                                    namespace=admin.site.name,
+                                    content_id=self.obj.content_id,
+                                    content_type=self.obj.content_type,
+                                    region=self.obj.region)
+        with wrapped as under_test:
+            self.assertEqual(wrapped.content_type, under_test.content_type)
+            self.assertEqual(wrapped.opts, under_test.opts)
+            self.assertEqual(wrapped.content_id, under_test.content_id)
+            self.assertIn(self.obj, under_test)
+            self.assertIn(self.obj, wrapped)
+            under_test.exists = False
+            under_test.region = 'test2'
+        self.assertNotEqual(wrapped.region, 'test2')
+        self.assertTrue(wrapped.exists)
+        self.assertFalse(under_test.exists)
+        self.assertNotEqual(wrapped.region, under_test.region)

@@ -33,6 +33,34 @@ class FormSuccessTestCase(TestCase):
             raise FormSuccess('http://example.com/', permanent=False)
         self.assertRaises(FormSuccess, callableObj=_raiser)
 
+    def test_equality(self):
+        one = FormSuccess('http://example.com/', permanent=False)
+        two = FormSuccess('http://example.com/', permanent=False)
+        self.assertEqual(one, two)
+
+    def test_inequality(self):
+        one = FormSuccess('http://example.com/', permanent=False)
+        two = FormSuccess('http://example.com/', permanent=True)
+        self.assertNotEqual(one, 'x')
+        self.assertNotEqual(one, {})
+        self.assertNotEqual(one, PermanentRedirect())
+        self.assertNotEqual(one, two)
+
+    def test_contains(self):
+        exc = FormSuccess('http://example.com/', permanent=True)
+        self.assertIn('http://example.com/', exc)
+        self.assertNotIn('http://example2.com/', exc)
+
+    def test_richcomparisons(self):
+        one = FormSuccess('http://example.com/', permanent=False)
+        two = FormSuccess('http://example.com/', permanent=True)
+        self.assertLess(two, one)
+        self.assertLessEqual(two, one)
+
+        three = FormSuccess('http://example.com/', permanent=False)
+        self.assertLessEqual(one, three)
+        self.assertGreaterEqual(one, three)
+
 
 class EditRegionResponseMixinTestCase(TestCase):
     def test_redirection(self):

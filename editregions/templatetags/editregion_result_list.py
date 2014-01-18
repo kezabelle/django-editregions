@@ -13,7 +13,7 @@ def editregion_result_list(cl):
     """
     headers = list(result_headers(cl))
     num_sorted_fields = 0
-    for h in headers:
+    for h in headers:  # pragma: no cover .. this was just copypasted from Django
         if h['sortable'] and h['sorted']:
             num_sorted_fields += 1
     return {'cl': cl,

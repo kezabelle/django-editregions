@@ -7,6 +7,8 @@ logger = logging.getLogger(__name__)
 
 
 class FormSuccess(Exception):
+    __slots__ = ['location', 'msg', 'message', 'permanent']
+
     def __init__(self, location, msg=None, permanent=False):
         self.location = location
         self.msg = msg
@@ -21,6 +23,34 @@ class FormSuccess(Exception):
 
     def get_redirect(self):
         return redirect(self.location, permanent=self.permanent)
+
+    def __eq__(self, other):
+        return isinstance(other, FormSuccess) and all([
+            self.location == other.location,
+            self.permanent == other.permanent,
+        ])
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
+    def __lt__(self, other):
+        # 301 < 302
+        return self.permanent and not other.permanent
+
+    def __gt__(self, other):
+        # 302 > 301
+        return not self.permanent and other.permanent
+
+    def __le__(self, other):
+        # 301 == 301 OR 302 == 302 OR 301 < 302
+        return any([self.permanent == other.permanent, self.__lt__(other)])
+
+    def __ge__(self, other):
+        # 301 == 301 OR 302 == 302 OR 302 > 301
+        return any([self.permanent == other.permanent, self.__gt__(other)])
+
+    def __contains__(self, item):
+        return item == self.location
 
 
 class EditRegionResponseMixin(object):

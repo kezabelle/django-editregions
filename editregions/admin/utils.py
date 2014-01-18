@@ -112,6 +112,10 @@ class AdminChunkWrapper(object):
         values over any others passed in. The absence of `obj` means you really
         need to provide `content_id`, `content_type` and `region`.
     """
+    __slots__ = ['opts', 'admin_namespace', 'label', 'exists', 'chunk',
+                 'content_type', 'content_id', 'region', 'module', 'url_parts',
+                 'querydict']
+
     def __init__(self, opts, namespace, content_id=None, content_type=None,
                  region=None, obj=None):
         """
@@ -131,6 +135,9 @@ class AdminChunkWrapper(object):
         self.label = opts.verbose_name
         self.exists = obj is not None
         self.chunk = obj
+        self.content_id = content_id
+        self.region = region
+        self.module = opts.app_label
 
         # if the object already exists in the database, we're probably safe
         # to assume it's data is the most trustworthy.
@@ -147,9 +154,6 @@ class AdminChunkWrapper(object):
             except AttributeError as e:
                 # Not an object, instead should be an integer
                 self.content_type = content_type
-            self.content_id = content_id
-            self.region = region
-            self.module = opts.app_label
 
         if self.region is not None:
             validate_region_name(self.region)
@@ -185,6 +189,28 @@ class AdminChunkWrapper(object):
             self.opts == other.opts,
             self.admin_namespace == other.admin_namespace,
         ])
+
+    def __nonzero__(self):
+        return all([
+            self.content_type is not None,
+            self.content_id is not None,
+        ])
+
+    def __contains__(self, item):
+        """
+        Check a specific obj instance is "in" this.
+        """
+        return self.exists and item == self.chunk
+
+    def __enter__(self):
+        return AdminChunkWrapper(opts=self.opts, namespace=self.admin_namespace,
+                                 content_id=self.content_id,
+                                 content_type=self.content_type,
+                                 region=self.region, obj=self.chunk)
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        import pdb; pdb.set_trace()
+        return self
 
     def summary(self):
         if self.exists:

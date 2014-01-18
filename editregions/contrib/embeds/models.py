@@ -7,6 +7,7 @@ from django.core.exceptions import ValidationError
 from django.db.models.base import Model
 from django.db.models.fields import (URLField, PositiveIntegerField, CharField,
                                      TextField)
+from django.template.defaultfilters import slugify
 from django.utils.encoding import python_2_unicode_compatible
 from feedparser import parse
 from model_utils import Choices
@@ -57,6 +58,9 @@ class Iframe(EditRegionChunk, IframeBase):
 
     def get_name(self):
         return self.name or u'chunk-iframe-%d' % self.pk
+
+    def get_safe_name(self):
+        return slugify(self.get_name())
 
     def __str__(self):
         return self.url
@@ -125,12 +129,13 @@ class AssetBase(Model):
     external = CharField(max_length=2048, null=False, blank=True)
 
     def clean(self):
+        super(AssetBase, self).clean()
         if self.local and self.external:
             raise ValidationError("Please choose either a local file or an "
                                   "external URL")
         if not self.local and not self.external:
             raise ValidationError("Please provide a local file or an "
-                                  "external URL.")
+                                  "external URL")
 
     def external_scheme_relative(self):
         requirements = (
@@ -138,7 +143,7 @@ class AssetBase(Model):
             '://' in self.external,
         )
         if self.external and all(requirements):
-            self.external = self.external.split('://')[1]
+            self.external = '//{0}'.format(self.external.split('://')[1])
         return self.external
 
     class Meta:
