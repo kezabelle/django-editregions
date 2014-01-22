@@ -20,6 +20,9 @@ INSTALLED_APPS = (
     # main app in test
     'editregions',
     'editregions.contrib.embeds',
+    'editregions.contrib.search',
+    'editregions.contrib.text',
+    'editregions.contrib.uploads',
 )
 
 SOUTH_TESTS_MIGRATE = False # To disable migrations and use syncdb instead
@@ -45,3 +48,11 @@ STATICFILES_DIRS = (
 PASSWORD_HASHERS = (
     'django.contrib.auth.hashers.MD5PasswordHasher',
 )
+
+HAYSTACK_CONNECTIONS={
+    'default': {
+        'ENGINE': 'haystack.backends.whoosh_backend.WhooshEngine',
+        'PATH': os.path.join(BASE_DIR, 'whoosh_index'),
+        'TITLE': 'testing',
+    },
+}

@@ -209,7 +209,6 @@ class AdminChunkWrapper(object):
                                  region=self.region, obj=self.chunk)
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        import pdb; pdb.set_trace()
         return self
 
     def summary(self):

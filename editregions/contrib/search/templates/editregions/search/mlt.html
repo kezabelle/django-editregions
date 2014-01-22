@@ -7,5 +7,5 @@
     {% endfor %}
 </ol>
 {% else %}
-    <!-- no more like this via {{ chunkloop.object.connection }} -->
+    <!-- no more like this{% if chunkloop.object %} via "{{ chunkloop.object.connection }}"{% endif %} -->
 {% endif %}

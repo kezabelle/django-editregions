@@ -4,10 +4,10 @@ omit =
     editregions/tests/*
     editregions/migrations/*
     editregions/contrib/*/migrations/*
-    editregions/*__init__
+    *__init__*
 branch = True
 data_file = .coverage
-timid = True
+timid = False
 
 [report]
 exclude_lines =
@@ -15,6 +15,11 @@ exclude_lines =
 
 precision = 1
 show_missing = True
+omit =
+    editregions/tests/*
+    editregions/migrations/*
+    editregions/contrib/*/migrations/*
+    *__init__*
 
 [xml]
 output = coverage.xml
