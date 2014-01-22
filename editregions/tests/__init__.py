@@ -30,7 +30,7 @@ from .contrib.embeds.utils import *
 
 
 from .contrib.search.admin import *
-# from .contrib.search.forms import *
+from .contrib.search.forms import *
 from .contrib.search.models import *
 
 
