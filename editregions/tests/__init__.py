@@ -29,9 +29,9 @@ from .contrib.embeds.models import *
 from .contrib.embeds.utils import *
 
 
-# from .contrib.search.admin import *
+from .contrib.search.admin import *
 # from .contrib.search.forms import *
-# from .contrib.search.models import *
+from .contrib.search.models import *
 
 
 # from .contrib.text.admin import *

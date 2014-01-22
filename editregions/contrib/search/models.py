@@ -80,10 +80,12 @@ class SearchResultsBase(SearchConfigBase):
             self.boost = '{0},'.format(self.boost)
 
     def get_boosts(self):
+        if not self.boost:
+            return ()
         possible_boosts = self.boost.split(',')
-        return tuple((word.strip(), self.boost_amount)
-                     for word in possible_boosts
-                     if word.strip())
+        return frozenset((word.strip(), self.boost_amount)
+                         for word in possible_boosts
+                         if word.strip())
 
     class Meta:
         abstract = True
