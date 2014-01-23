@@ -235,3 +235,72 @@ class EditRegionTemplateTagTestCase(DjangoTestCase):
         {% editregion "test" None %}
         """)
         self.assertEqual('output:', tmpl.render(Context()).strip())
+
+    def test_inheritance_without_get_ancestors(self):
+        user = User(username='test', is_staff=True, is_active=True,
+                    is_superuser=True)
+        user.set_password('test')
+        user.full_clean()
+        user.save()
+
+        try:
+            admin.site.unregister(User)
+        except NotRegistered:
+            pass
+        admin.site.register(User, TestUserAdmin)
+
+        request = RequestFactory().get('/')
+        request.user = user
+        ctx = RequestContext(request)
+        ctx.update({'obj': user})
+        tmpl = Template("""
+        output:
+        {% load editregion %}
+        {% editregion "test" obj inherit %}
+        """)
+        with self.settings(DEBUG=True):
+            with self.assertRaises(ImproperlyConfigured):
+                tmpl.render(ctx).strip()
+        with self.settings(DEBUG=False):
+            rendered = tmpl.render(ctx).strip()
+            self.assertEqual('output:', rendered)
+
+    def test_inheritance_with_get_ancestors(self):
+        user = User(username='test', is_staff=True, is_active=True,
+                    is_superuser=True)
+        user.set_password('test')
+        user.full_clean()
+        user.save()
+        parent_user = User(username='test2', is_staff=True, is_active=True,
+                           is_superuser=True)
+        parent_user.set_password('test')
+        parent_user.full_clean()
+        parent_user.save()
+
+        for x in range(0, 10):
+            iframe = Iframe(region='test', content_id=parent_user.pk,
+                            content_type=get_content_type(User),
+                            url='https://news.bbc.co.uk/{0!s}'.format(x),
+                            position=x)
+            iframe.full_clean()
+            iframe.save()
+
+        user.get_ancestors = lambda: [parent_user]
+
+        try:
+            admin.site.unregister(User)
+        except NotRegistered:
+            pass
+        admin.site.register(User, TestUserAdmin)
+
+        request = RequestFactory().get('/')
+        request.user = user
+        ctx = RequestContext(request)
+        ctx.update({'obj': user})
+        tmpl = Template("""
+        output:
+        {% load editregion %}
+        {% editregion "test" obj inherit %}
+        """)
+        rendered = tmpl.render(ctx).strip()
+        self.assertEqual(2216, len(rendered))

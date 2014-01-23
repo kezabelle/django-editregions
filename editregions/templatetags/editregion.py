@@ -136,6 +136,7 @@ class EditRegionTag(AsTag):
                     raise ImproperlyConfigured(error)
                 else:
                     logger.error(error)
+                    return ()
 
             # if there are parents, see if we can get values from them.
             for distance, parent in enumerate(parents, start=1):
