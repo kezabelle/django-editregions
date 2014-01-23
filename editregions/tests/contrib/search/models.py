@@ -56,9 +56,19 @@ class SearchResultsTestCase(TestCase):
         user_ct = get_content_type(sample_user)
         sr = SearchResults(position=1, content_type=user_ct,
                            content_id=sample_user.pk, region='test',
-                           connection='default', query="goose fat")
+                           connection='default', max_num=3, query="goose fat")
         sr.full_clean()
         self.assertEqual('Up to 3 best matches for "goose fat"', force_text(sr))
+
+    @override_settings(HAYSTACK_CONNECTIONS={'a': 1, 'b': 2})
+    def test_str_alt_branch(self):
+        sample_user, created = User.objects.get_or_create()
+        user_ct = get_content_type(sample_user)
+        sr = SearchResults(position=1, content_type=user_ct,
+                           content_id=sample_user.pk, region='test',
+                           connection='a', max_num=0, query="goose fat")
+        sr.full_clean()
+        self.assertEqual('', force_text(sr))
 
     def test_get_boosts(self):
         sample_user, created = User.objects.get_or_create()

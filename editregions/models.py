@@ -99,9 +99,26 @@ class EditRegionConfiguration(object):
         if obj is not None and getattr(self, 'obj', None) is None:
             self.configure(obj=obj)
 
-    def __get__(self, instance, owner):
-        if not hasattr(self, 'obj'):
-            self.configure(instance)
+    def __eq__(self, other):
+        return all([
+            self.has_configuration == other.has_configuration,
+            self.config == other.config,
+        ])
+
+    def __lt__(self, other):
+        return len(self.config) < len(other.config)
+
+    def __le__(self, other):
+        return len(self.config) <= len(other.config)
+
+    def __gt__(self, other):
+        return len(self.config) > len(other.config)
+
+    def __ge__(self, other):
+        return len(self.config) >= len(other.config)
+
+    def __nonzero__(self):
+        return self.has_configuration and len(self.config) > 0
 
     def configure(self, obj):
         self.obj = obj

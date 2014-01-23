@@ -8,7 +8,7 @@ from django.utils.translation import ugettext_lazy as _
 from django.db.models import Model, FileField, CharField
 try:
     from django.utils.image import Image
-except ImportError:  # 1.4?
+except ImportError:  # pragma: no cover ... 1.4?
     try:
         from PIL import Image
     except ImportError:

@@ -21,7 +21,7 @@ class WYMAdmin(ChunkAdmin, ModelAdmin):
                                 context_instance=context)
 
     def render_into_summary(self, obj, context):
-        return striptags(obj.content)
+        return striptags(obj.content).strip()
 admin.site.register(WYM, WYMAdmin)
 
 
@@ -37,7 +37,7 @@ class MCEAdmin(ChunkAdmin, ModelAdmin):
                                 context_instance=context)
 
     def render_into_summary(self, obj, context):
-        return striptags(obj.content)
+        return striptags(obj.content).strip()
 
     @property
     def media(self):

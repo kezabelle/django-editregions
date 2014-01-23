@@ -250,6 +250,71 @@ class EditRegionConfigurationTestCase(TestCase):
         self.assertEqual(0, result)
         result = self.blank_conf.get_limits_for(region='x', chunk=Permission)
         self.assertEqual(None, result)
+
+
+class EditRegionConfigurationOperatorsTestCase(TestCase):
+    def test_equality(self):
+        blank_conf = EditRegionConfiguration()
+        blank_conf.has_configuration = True
+        blank_conf.config = {'x': 1, 'y': 2}
+        blank_conf2 = EditRegionConfiguration()
+        blank_conf2.has_configuration = True
+        blank_conf2.config = {'x': 1, 'y': 2}
+        self.assertEqual(blank_conf, blank_conf2)
+
+    def test_inequality(self):
+        blank_conf = EditRegionConfiguration()
+        blank_conf.has_configuration = True
+        blank_conf.config = {'x': 1, 'y': 2}
+        blank_conf2 = EditRegionConfiguration()
+        blank_conf2.has_configuration = True
+        blank_conf2.config = {'x': 1}
+        self.assertNotEqual(blank_conf, blank_conf2)
+
+    def test_lessthan(self):
+        blank_conf = EditRegionConfiguration()
+        blank_conf.has_configuration = True
+        blank_conf.config = {'x': 1, 'y': 2}
+        blank_conf2 = EditRegionConfiguration()
+        blank_conf2.has_configuration = True
+        blank_conf2.config = {'x': 1}
+        self.assertLess(blank_conf2, blank_conf)
+
+    def test_lessthanequal(self):
+        blank_conf = EditRegionConfiguration()
+        blank_conf.has_configuration = True
+        blank_conf.config = {'x': 1, 'y': 2}
+        blank_conf2 = EditRegionConfiguration()
+        blank_conf2.has_configuration = True
+        blank_conf2.config = {'x': 1}
+        self.assertLessEqual(blank_conf2, blank_conf)
+
+    def test_greaterthan(self):
+        blank_conf = EditRegionConfiguration()
+        blank_conf.has_configuration = True
+        blank_conf.config = {'x': 1, 'y': 2}
+        blank_conf2 = EditRegionConfiguration()
+        blank_conf2.has_configuration = True
+        blank_conf2.config = {'x': 1}
+        self.assertGreater(blank_conf, blank_conf2)
+
+    def test_greaterthanequal(self):
+        blank_conf = EditRegionConfiguration()
+        blank_conf.has_configuration = True
+        blank_conf.config = {'x': 1, 'y': 2}
+        blank_conf2 = EditRegionConfiguration()
+        blank_conf2.has_configuration = True
+        blank_conf2.config = {'x': 1}
+        self.assertGreaterEqual(blank_conf, blank_conf2)
+
+    def test_bool(self):
+        blank_conf = EditRegionConfiguration()
+        blank_conf.has_configuration = True
+        blank_conf.config = {'x': 1}
+        self.assertTrue(blank_conf)
+
+        blank_conf2 = EditRegionConfiguration()
+        self.assertFalse(blank_conf2)
 #
 #     def test_fetch_chunks(self):
 #         self.assertEqual(1, 2)

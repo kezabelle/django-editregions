@@ -5,7 +5,7 @@ from django.template.loader import render_to_string
 from editregions.contrib.uploads.models import File
 try:
     from django.utils.encoding import force_text
-except ImportError:
+except ImportError:  # pragma: no cover ... < 1.4?
     from django.utils.encoding import force_unicode as force_text
 from editregions.admin.modeladmins import ChunkAdmin
 

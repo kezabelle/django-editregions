@@ -21,6 +21,8 @@ class AssetSourceForm(ModelForm):
     only_patterns = ()
 
     def __init__(self, *args, **kwargs):
+        if 'only_patterns' in kwargs:
+            self.only_patterns = kwargs.pop('only_patterns')
         super(AssetSourceForm, self).__init__(*args, **kwargs)
         found_assets = tuple(static_asset_choices(
             only_patterns=self.only_patterns))
