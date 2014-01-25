@@ -274,7 +274,14 @@ class EditRegionConfiguration(object):
             kws.update(region__in=final_results.keys())
 
         # populate the resultset
-        chunks = EditRegionChunk.polymorphs.filter(**kws).select_subclasses(*models)  # noqa
+        model_count = len(models)
+        if model_count == 1:
+            chunks = models[0].objects.filter(**kws)
+        elif model_count > 1:
+            chunks = EditRegionChunk.polymorphs.filter(**kws).select_subclasses(*models)  # noqa
+        else:
+            chunks = EditRegionChunk.objects.none()
+        
         index = 0
         for index, chunk in enumerate(chunks.iterator(), start=1):
             final_results[chunk.region].append(chunk)

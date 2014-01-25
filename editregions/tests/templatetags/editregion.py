@@ -86,8 +86,6 @@ class EditRegionTemplateTagTestCase(DjangoTestCase):
                                                        found_chunks=chunks))
         self.assertEqual(len(chunks2), len(chunks) - 1)
 
-
-
     def test_chunk_iteration_context(self):
         """
         Sample context:
