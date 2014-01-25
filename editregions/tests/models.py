@@ -236,6 +236,7 @@ class EditRegionConfigurationTestCase(DjangoTestCase):
         })
         self.assertEqual(expected, received)
 
+    @override_settings(DEBUG=False)
     def test_get_enabled_chunks_for_region_bad_models_silent_fail(self):
         self.blank_conf = EditRegionConfiguration()
         expected = {User: 1, Group: None}
@@ -249,11 +250,19 @@ class EditRegionConfigurationTestCase(DjangoTestCase):
     @override_settings(DEBUG=True)
     def test_get_enabled_chunks_for_region_bad_models_loud_fail(self):
         self.blank_conf = EditRegionConfiguration()
-        with self.assertRaises(ImproperlyConfigured):
+        with self.assertRaisesRegexp(ImproperlyConfigured,
+                                     r'App with label x could not be found'):
             self.blank_conf.get_enabled_chunks_for_region({
-                'auth.User': 1,
-                'auth.Group': None,
                 'x.Y': 1,
+            })
+
+    @override_settings(DEBUG=True)
+    def test_get_enabled_chunks_for_region_bad_models_loud_fail2(self):
+        self.blank_conf = EditRegionConfiguration()
+        with self.assertRaisesRegexp(ImproperlyConfigured,
+                                     r'Unable to load model "Y" from app "auth"'):  # noqa
+            self.blank_conf.get_enabled_chunks_for_region({
+                'auth.Y': 1,
             })
 
     def test_get_limits_for_no_models(self):
