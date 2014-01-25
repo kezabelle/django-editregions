@@ -18,14 +18,6 @@ try:
 except ImportError:  # pragma: no cover ... Python 2, Django < 1.5
     string_types = basestring,
 
-try:
-    import ujson as json
-except ImportError:  # Haven't got an ultrajson package
-    try:
-        import json
-    except ImportError:  # pragma: no cover ... Python < 2.6, Django < 1.6?
-        from django.utils import simplejson as json
-
 from django.utils.datastructures import SortedDict
 from django.db.models.loading import get_model, get_app
 from model_utils.managers import PassThroughManager, InheritanceManager
@@ -36,6 +28,20 @@ from editregions.utils.regions import validate_region_name
 from helpfulfields.models import Generic, ChangeTracking
 
 logger = logging.getLogger(__name__)
+
+try:
+    import ujson as json
+except ImportError:  # Haven't got an ultrajson package
+    try:
+        import json
+    except ImportError:  # pragma: no cover ... Python < 2.6, Django < 1.6?
+        from django.utils import simplejson as json
+
+try:
+    import yaml
+    CAN_USE_YAML_DECODER = True
+except ImportError:
+    CAN_USE_YAML_DECODER = False
 
 
 @python_2_unicode_compatible
@@ -91,8 +97,18 @@ class EditRegionConfiguration(object):
     template = None
     obj = None
     modeladmin = None
+    decoder = 'json'
 
-    def __init__(self, obj=None):
+    def __init__(self, obj=None, decoder=None):
+        if decoder is not None:
+            self.decoder = decoder
+        if self.decoder == 'json':
+            self.decoder_func = json.loads
+        elif self.decoder == 'yaml' and CAN_USE_YAML_DECODER:
+            self.decoder_func = yaml.safe_load
+        else:
+            raise ImproperlyConfigured("Unable to use the requested "
+                                       "deserialization format")
         if obj is not None and getattr(self, 'obj', None) is None:
             self.configure(obj=obj)
 
@@ -137,20 +153,21 @@ class EditRegionConfiguration(object):
         else:
             template_names = self.possible_templates
 
-        json_template_names = ['%s.json' % os.path.splitext(x)[0]
-                               for x in template_names]
+        serializer_template_names = ['{filename}.{serializer}'.format(
+            filename=os.path.splitext(x)[0], serializer=self.decoder)
+            for x in template_names]
         try:
-            return select_template(json_template_names)
+            return select_template(serializer_template_names)
         except TemplateDoesNotExist:
             if settings.DEBUG:
                 raise
             logger.exception('None of the following exist: {not_found}'.format(
-                not_found=', '.join(json_template_names)
+                not_found=', '.join(serializer_template_names)
             ))
             return None
 
     def get_template_region_configuration(self):
-        # if in production (DEBUG=False) and no JSON template was found,
+        # if in production (DEBUG=False) and no template was found,
         # play nicely and don't error the whole request.
         if self.template is None:
             return {}
@@ -158,8 +175,8 @@ class EditRegionConfiguration(object):
         if len(rendered_template) == 0:
             logger.warning("Template was empty after being rendered")
             return {}
-        # Allow JSON decoding to bubble up an error.
-        parsed_template = json.loads(rendered_template)
+        # Allow decoding to bubble up an error.
+        parsed_template = self.decoder_func(rendered_template)
         for key, config in parsed_template.items():
             if 'models' in parsed_template[key]:
                 parsed_template[key]['models'] = self.get_enabled_chunks_for_region(parsed_template[key]['models'])
