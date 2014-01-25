@@ -387,10 +387,13 @@ class MaybeFixRedirectionTestCase(DjangoTestCase):
             request=request, response=response_301, obj=iframe)
         # was a redirect, to a chunkadmin instance
         self.assertEqual(301, new_response.status_code)
-        self.assertEqual('/admin_mountpoint/embeds/iframe/add/?region=test'
-                         '&_data_changed=1&_autoclose=1&content_type=4'
-                         '&content_id=1',
-                         new_response['Location'])
+        location, querystring = new_response['Location'].split('?')
+        self.assertEqual('/admin_mountpoint/embeds/iframe/add/', location)
+        self.assertIn('region=test', querystring)
+        self.assertIn('_data_changed=1', querystring)
+        self.assertIn('_autoclose=1', querystring)
+        self.assertIn('content_type=4', querystring)
+        self.assertIn('content_id=1', querystring)
 
     def test_continue_editing_parent_object(self):
         user = User(username='test', is_staff=True, is_superuser=True,
