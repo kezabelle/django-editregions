@@ -357,7 +357,7 @@ class MaybeFixRedirectionTestCase(DjangoTestCase):
             request=request, response=response_301, obj=iframe)
         # was a redirect, to a chunkadmin instance
         self.assertEqual(301, new_response.status_code)
-        self.assertEqual('/admin_mountpoint/auth/user/2/?_data_changed=1',
+        self.assertEqual('/admin_mountpoint/auth/user/1/?_data_changed=1',
                          new_response['Location'])
 
     def test_autoclose_chunkadmin(self):
@@ -386,7 +386,7 @@ class MaybeFixRedirectionTestCase(DjangoTestCase):
         self.assertEqual(301, new_response.status_code)
         self.assertEqual('/admin_mountpoint/embeds/iframe/add/?region=test'
                          '&_data_changed=1&_autoclose=1&content_type=4'
-                         '&content_id=2',
+                         '&content_id=1',
                          new_response['Location'])
 
     def test_continue_editing_parent_object(self):
@@ -413,7 +413,7 @@ class MaybeFixRedirectionTestCase(DjangoTestCase):
             request=request, response=response_301, obj=iframe)
         # was a redirect, to a chunkadmin instance
         self.assertEqual(301, new_response.status_code)
-        self.assertEqual('/admin_mountpoint/auth/user/2/?_data_changed=1',
+        self.assertEqual('/admin_mountpoint/auth/user/1/?_data_changed=1',
                          new_response['Location'])
 
 

@@ -226,15 +226,21 @@ class EditRegionConfiguration(object):
     def _fetch_chunks(self):
         logger.info("Requesting chunks")
         models = set()
-        regions = set()
         final_results = defaultdict(list)
 
         # figure out what models we need to ask for.
         for region, subconfig in self.config.items():
-            regions.add(region)
+            final_results[region]  # this actually does assign the keys.
             klasses = subconfig.get('models', {}).keys()
             models |= set(klasses)
         models = tuple(models)
+
+        if self.obj is None:
+            if settings.DEBUG:
+                raise ImproperlyConfigured("Tried to fetch chunks without "
+                                           "having a valid `obj` for this "
+                                           "EditRegionConfiguration instance")
+            return final_results
 
         kws = {
             'content_type': get_content_type(self.obj),
@@ -242,13 +248,13 @@ class EditRegionConfiguration(object):
         }
         # avoids doing an IN (?, ?) query if only one region exists
         # avoids doing *any* query if no regions exist.
-        region_count = len(regions)
+        region_count = len(final_results)
         if region_count < 1:
             return final_results
         elif region_count == 1:
-            kws.update(region=regions.pop())
-        elif region_count > 1:
-            kws.update(region__in=regions)
+            kws.update(region=final_results.keys().pop())
+        else:
+            kws.update(region__in=final_results.keys())
 
         # populate the resultset
         chunks = EditRegionChunk.polymorphs.filter(**kws).select_subclasses(*models)  # noqa

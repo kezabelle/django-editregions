@@ -19,7 +19,7 @@ class GetMaximumPKTestCase(DjangoTestCase):
             y.set_password(force_text(x))
             y.full_clean()
             y.save()
-        self.assertEqual(11, get_maximum_pk(User))
+        self.assertEqual(10, get_maximum_pk(User))
 
     def test_getting_max_pk_for_no_objects(self):
         self.assertEqual(1, get_maximum_pk(Group))
