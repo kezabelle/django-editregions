@@ -7,7 +7,7 @@ from editregions.utils.data import get_content_type
 
 class EditRegionChunkQuerySetTestCase(DjangoTestCase):
     def setUp(self):
-        user, created = User.objects.get_or_create()
+        user, created = User.objects.get_or_create(username='test')
         user_ct = get_content_type(User)
 
         for x in range(1, 10):

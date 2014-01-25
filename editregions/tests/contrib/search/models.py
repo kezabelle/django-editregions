@@ -41,7 +41,7 @@ class CsvValidatorTestCase(TestCase):
 
 class MoreLikeThisTestCase(TestCase):
     def test_str(self):
-        sample_user, created = User.objects.get_or_create()
+        sample_user, created = User.objects.get_or_create(username='test')
         user_ct = get_content_type(sample_user)
         mlt = MoreLikeThis(position=1, content_type=user_ct,
                            content_id=sample_user.pk, region='test',
@@ -52,7 +52,7 @@ class MoreLikeThisTestCase(TestCase):
 
 class SearchResultsTestCase(TestCase):
     def test_str(self):
-        sample_user, created = User.objects.get_or_create()
+        sample_user, created = User.objects.get_or_create(username='test')
         user_ct = get_content_type(sample_user)
         sr = SearchResults(position=1, content_type=user_ct,
                            content_id=sample_user.pk, region='test',
@@ -62,7 +62,7 @@ class SearchResultsTestCase(TestCase):
 
     @override_settings(HAYSTACK_CONNECTIONS={'a': 1, 'b': 2})
     def test_str_alt_branch(self):
-        sample_user, created = User.objects.get_or_create()
+        sample_user, created = User.objects.get_or_create(username='test')
         user_ct = get_content_type(sample_user)
         sr = SearchResults(position=1, content_type=user_ct,
                            content_id=sample_user.pk, region='test',
@@ -71,7 +71,7 @@ class SearchResultsTestCase(TestCase):
         self.assertEqual('', force_text(sr))
 
     def test_get_boosts(self):
-        sample_user, created = User.objects.get_or_create()
+        sample_user, created = User.objects.get_or_create(username='test')
         user_ct = get_content_type(sample_user)
         sr = SearchResults(position=1, content_type=user_ct,
                            content_id=sample_user.pk, region='test',
@@ -85,7 +85,7 @@ class SearchResultsTestCase(TestCase):
         ]))
 
     def test_get_boosts_none(self):
-        sample_user, created = User.objects.get_or_create()
+        sample_user, created = User.objects.get_or_create(username='test')
         user_ct = get_content_type(sample_user)
         sr = SearchResults(position=1, content_type=user_ct,
                            content_id=sample_user.pk, region='test',
@@ -95,7 +95,7 @@ class SearchResultsTestCase(TestCase):
         self.assertEqual(sr.get_boosts(), ())
 
     def test_get_boosts_blank(self):
-        sample_user, created = User.objects.get_or_create()
+        sample_user, created = User.objects.get_or_create(username='test')
         user_ct = get_content_type(sample_user)
         sr = SearchResults(position=1, content_type=user_ct,
                            content_id=sample_user.pk, region='test',
@@ -105,7 +105,7 @@ class SearchResultsTestCase(TestCase):
         self.assertEqual(sr.get_boosts(), ())
 
     def test_get_boosts_just_a_damn_comma(self):
-        sample_user, created = User.objects.get_or_create()
+        sample_user, created = User.objects.get_or_create(username='test')
         user_ct = get_content_type(sample_user)
         sr = SearchResults(position=1, content_type=user_ct,
                            content_id=sample_user.pk, region='test',
@@ -115,7 +115,7 @@ class SearchResultsTestCase(TestCase):
         self.assertEqual(sr.get_boosts(), frozenset([]))
 
     def test_clean_healing(self):
-        sample_user, created = User.objects.get_or_create()
+        sample_user, created = User.objects.get_or_create(username='test')
         user_ct = get_content_type(sample_user)
         sr = SearchResults(position=1, content_type=user_ct,
                            content_id=sample_user.pk, region='test',

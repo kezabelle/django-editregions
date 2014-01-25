@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import json
 import warnings
+import django
 from django.contrib import admin
 from django.contrib.admin import ModelAdmin
 from django.contrib.admin.models import LogEntry, ADDITION, CHANGE, DELETION
@@ -14,7 +15,7 @@ from django.http import HttpResponse, HttpResponseRedirect, HttpResponsePermanen
 from django.template.response import TemplateResponse
 from django.test import RequestFactory
 from django.utils.datastructures import MultiValueDictKeyError
-from django.utils.unittest.case import TestCase
+from django.utils.unittest.case import TestCase, skipUnless
 from django.test import TestCase as DjangoTestCase
 from editregions.admin.changelist import EditRegionChangeList
 from editregions.admin.modeladmins import ChunkAdmin, EditRegionAdmin
@@ -23,6 +24,7 @@ from editregions.constants import REQUEST_VAR_CT, REQUEST_VAR_ID, REQUEST_VAR_RE
 from editregions.contrib.embeds.models import Iframe
 from editregions.models import EditRegionChunk
 from editregions.utils.data import get_content_type, get_modeladmin
+from editregions.utils.versioning import is_django_16plus
 
 try:
     from django.utils.encoding import force_text
@@ -187,7 +189,8 @@ class ChunkAdminTestCase(DjangoTestCase):
         })
         admin_instance = self.realish_admin(model=Iframe, admin_site=admin.site)
 
-        with self.assertNumQueries(2):
+        expected_query_count = 2 if is_django_16plus() else 4
+        with self.assertNumQueries(expected_query_count):
             result = admin_instance.save_model(request=request, obj=iframe,
                                                form=ModelForm, change=True)
             self.assertIsNone(result)
@@ -677,10 +680,10 @@ class EditRegionAdminTestCase(DjangoTestCase):
                                                             obj=user)
         self.assertIn('<div class="region-inline-wrapper">', received)
         self.assertIn('<h3>Embeds</h3>', received)
-        self.assertIn('class="column-get_subclass_summary"', received)
         self.assertIn('<div class="region-inline-progress-wrapper">', received)
 
-    def test_media_property(self):
+    @skipUnless(django.VERSION >= (1, 6, 0), "test only applies to Django 1.6+")
+    def test_media_property_16(self):
         self.assertEqual(self.admin.media._css, {
             u'screen': [
                 u'adminlinks/css/fancyiframe-custom.css',
@@ -693,10 +696,29 @@ class EditRegionAdminTestCase(DjangoTestCase):
             'admin/js/admin/RelatedObjectLookups.js',
             'admin/js/jquery.min.js',
             'admin/js/jquery.init.js',
-            u'admin/js/jquery.rebind.js',
-            u'adminlinks/js/jquery.fancyiframe.js',
-            u'editregions/js/jquery.ui.1-10-3.custom.js',
-            u'editregions/js/dragging.js'])
+            'admin/js/jquery.rebind.js',
+            'adminlinks/js/jquery.fancyiframe.js',
+            'editregions/js/jquery.ui.1-10-3.custom.js',
+            'editregions/js/dragging.js'])
+
+    @skipUnless(django.VERSION < (1, 6, 0), "test only applies to Django 1.6+")
+    def test_media_property_15(self):
+        self.assertEqual(self.admin.media._css, {
+            u'screen': [
+                u'adminlinks/css/fancyiframe-custom.css',
+                u'editregions/css/inlines.css',
+                u'editregions/css/changelist-extras.css'
+            ]
+        })
+        self.assertEqual(self.admin.media._js, [
+            'admin/js/core.js',
+            'admin/js/admin/RelatedObjectLookups.js',
+            'admin/js/jquery.min.js',
+            'admin/js/jquery.init.js',
+            'admin/js/jquery.rebind.js',
+            'adminlinks/js/jquery.fancyiframe.js',
+            'editregions/js/jquery.ui.1-8-24.custom.js',
+            'editregions/js/dragging.js'])
 
     def test_render_into_region(self):
         result = self.admin.render_into_region(obj={}, context={})

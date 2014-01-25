@@ -12,7 +12,7 @@ from editregions.utils.data import get_content_type, get_modeladmin
 
 class MoreLikeThisAdminTestCase(TestCase):
     def setUp(self):
-        sample_user, created = User.objects.get_or_create()
+        sample_user, created = User.objects.get_or_create(username='test')
         user_ct = get_content_type(sample_user)
         mlt = MoreLikeThis(position=1, content_type=user_ct,
                            content_id=sample_user.pk, region='test',
@@ -54,7 +54,7 @@ class MoreLikeThisAdminTestCase(TestCase):
 
 class SearchResultsAdminTestCase(TestCase):
     def setUp(self):
-        sample_user, created = User.objects.get_or_create()
+        sample_user, created = User.objects.get_or_create(username='test')
         user_ct = get_content_type(sample_user)
         sr = SearchResults(position=1, content_type=user_ct,
                            content_id=sample_user.pk, region='test',

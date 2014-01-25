@@ -41,7 +41,7 @@ class EditRegionChunkTestCase(DjangoTestCase):
         admin.site.register(User, TestUserAdmin)
 
     def setUp(self):
-        sample_user, created = User.objects.get_or_create()
+        sample_user, created = User.objects.get_or_create(username='test')
         user_ct = get_content_type(sample_user)
         base = EditRegionChunk(region='test', position=0,
                                content_id=sample_user.pk, content_type=user_ct)
@@ -131,7 +131,7 @@ class EditRegionChunkTestCase(DjangoTestCase):
 
 class EditRegionConfigurationTestCase(DjangoTestCase):
     def setUp(self):
-        sample_user, created = User.objects.get_or_create()
+        sample_user, created = User.objects.get_or_create(username='test')
         self.model_dependencies = {
             'user': sample_user,
         }
@@ -323,7 +323,7 @@ class EditRegionConfigurationTestCase(DjangoTestCase):
                 self.blank_conf.fetch_chunks_for(region='x')
 
     def test_fetch_chunks_for_obj(self):
-        user, created = User.objects.get_or_create()
+        user, created = User.objects.get_or_create(username='test')
         self.blank_conf = EditRegionConfiguration(obj=user)
         self.blank_conf.template = Template('''{
             "x": {
@@ -335,7 +335,7 @@ class EditRegionConfigurationTestCase(DjangoTestCase):
         self.assertEqual([], results)
 
     def test_fetch_chunks_for_obj_noregions(self):
-        user, created = User.objects.get_or_create()
+        user, created = User.objects.get_or_create(username='test')
         self.blank_conf = EditRegionConfiguration(obj=user)
         self.blank_conf.template = Template('''{
         }''')
@@ -344,7 +344,7 @@ class EditRegionConfigurationTestCase(DjangoTestCase):
         self.assertEqual((), results)
 
     def test_fetch_chunks_for_obj_manyregions(self):
-        user, created = User.objects.get_or_create()
+        user, created = User.objects.get_or_create(username='test')
         self.blank_conf = EditRegionConfiguration(obj=user)
         self.blank_conf.template = Template('''{
             "x": {},
@@ -356,7 +356,7 @@ class EditRegionConfigurationTestCase(DjangoTestCase):
         self.assertEqual([], results)
 
     def test_fetch_chunks(self):
-        user, created = User.objects.get_or_create()
+        user, created = User.objects.get_or_create(username='test')
         self.blank_conf = EditRegionConfiguration(obj=user)
         self.blank_conf.template = Template('''{
             "x": {},
@@ -368,7 +368,11 @@ class EditRegionConfigurationTestCase(DjangoTestCase):
         self.assertEqual(dict(results), {u'y': [], u'x': [], u'z': []})
 
     def test_yaml_serializer(self):
-        user, created = User.objects.get_or_create()
+        try:
+            import yaml
+        except ImportError:
+            self.skipTest("YAML not available ...")
+        user, created = User.objects.get_or_create(username='test')
         self.blank_conf = EditRegionConfiguration(obj=user, decoder='yaml')
         self.blank_conf.template = Template('''---
           test:

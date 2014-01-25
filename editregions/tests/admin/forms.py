@@ -28,8 +28,8 @@ class EditRegionInlineFormSetTestCase(DjangoTestCase):
         formset = EditRegionInlineFormSet(queryset=User.objects.none())
         self.assertEqual(EditRegionInlineFormSet.get_default_prefix(),
                          'edit_region_chunk_formset')
-        self.assertQuerysetEqual(formset.get_queryset(),
-                                 User.objects.none())
+        self.assertEqual(list(formset.get_queryset()),
+                         list(User.objects.none()))
         with self.assertNumQueries(0):
             self.assertTrue(formset.save())
         self.assertEqual(formset.non_form_errors(), ErrorList())

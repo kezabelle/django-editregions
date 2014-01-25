@@ -12,7 +12,7 @@ from django.conf import settings
 class FileTestCase(TestCase):
     def setUp(self):
         fakefile = SimpleUploadedFile('x/y/z.gif', 'xyz')
-        sample_user, created = User.objects.get_or_create()
+        sample_user, created = User.objects.get_or_create(username='test')
         user_ct = get_content_type(sample_user)
         self.file = File(position=1, content_type=user_ct,
                          content_id=sample_user.pk, region='test',

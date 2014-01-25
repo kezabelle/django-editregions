@@ -27,8 +27,8 @@ class GetMaximumPKTestCase(DjangoTestCase):
 
 class SetNewPositionTestCase(DjangoTestCase):
     def test_setting_new_position(self):
+        sample_user, created = User.objects.get_or_create(username='test')
         for x in range(0, 10):
-            sample_user, created = User.objects.get_or_create()
             user_ct = get_content_type(User)
             base = EditRegionChunk(region='test', position=x,
                                    content_id=sample_user.pk,
@@ -51,7 +51,7 @@ class SetNewPositionTestCase(DjangoTestCase):
 
 class GetChunksInRegionCountTestCase(DjangoTestCase):
     def setUp(self):
-        sample_user, created = User.objects.get_or_create()
+        sample_user, created = User.objects.get_or_create(username='test')
         user_ct = get_content_type(sample_user)
         self.user = sample_user
         self.content_type = user_ct

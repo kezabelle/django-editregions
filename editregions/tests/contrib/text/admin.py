@@ -11,7 +11,7 @@ from editregions.utils.data import get_modeladmin, get_content_type
 
 class WYMAdminTestCase(TestCase):
     def setUp(self):
-        sample_user, created = User.objects.get_or_create()
+        sample_user, created = User.objects.get_or_create(username='test')
         user_ct = get_content_type(sample_user)
         self.obj = WYM(position=1, content_type=user_ct,
                        content_id=sample_user.pk, region='test',
@@ -39,7 +39,7 @@ class WYMAdminTestCase(TestCase):
 
 class MCEAdminTestCase(TestCase):
     def setUp(self):
-        sample_user, created = User.objects.get_or_create()
+        sample_user, created = User.objects.get_or_create(username='test')
         user_ct = get_content_type(sample_user)
         self.obj = MCE(position=1, content_type=user_ct,
                        content_id=sample_user.pk, region='test',
