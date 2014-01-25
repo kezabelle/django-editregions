@@ -12,6 +12,7 @@ from django.test import TestCase as DjangoTestCase
 from django.contrib.auth.models import User, Permission
 from editregions.models import EditRegionConfiguration
 from editregions.utils.data import get_content_type, get_model_class, get_modeladmin, attach_configuration, get_configuration, healed_context
+from editregions.utils.versioning import is_django_15plus
 
 
 class GetContentTypeTestCase(DjangoTestCase):
@@ -104,9 +105,11 @@ class HealedContextTestCase(TestCase):
             ctx.update({'c': 3})
         new_length = len(context.dicts)
         self.assertEqual(length, new_length)
-        self.assertIn('True', context)
-        self.assertIn('False', context)
-        self.assertIn('None', context)
+        # 1.4 didn't hardcode an initial dict for special values.
+        if is_django_15plus():
+            self.assertIn('True', context)
+            self.assertIn('False', context)
+            self.assertIn('None', context)
         self.assertNotIn('b', context)
         is_same = Context()
         # comparing Context() to Context() doesn't work ;|
@@ -119,9 +122,10 @@ class HealedContextTestCase(TestCase):
             ctx.update({'a': 1})
         new_length = len(context.dicts)
         self.assertEqual(length, new_length)
-        self.assertIn('True', context)
-        self.assertIn('False', context)
-        self.assertIn('None', context)
+        if is_django_15plus():
+            self.assertIn('True', context)
+            self.assertIn('False', context)
+            self.assertIn('None', context)
         self.assertIn('b', context)
         self.assertNotIn('a', context)
 
@@ -132,19 +136,21 @@ class HealedContextTestCase(TestCase):
             pass
         new_length = len(context.dicts)
         self.assertEqual(length, new_length)
-        self.assertIn('True', context)
-        self.assertIn('False', context)
-        self.assertIn('None', context)
+        if is_django_15plus():
+            self.assertIn('True', context)
+            self.assertIn('False', context)
+            self.assertIn('None', context)
 
     def test_healing_via_dict(self):
         context = {'1': 2}
         with healed_context(context) as ctx:
             ctx.update({'3': 4})
-            self.assertEqual(len(ctx.dicts), 3)
-            self.assertEqual(ctx.dicts, [
-                {'True': True, 'False': False, 'None': None},
-                {'1': 2},
-                {'3': 4},
-            ])
+            if is_django_15plus():
+                self.assertEqual(len(ctx.dicts), 3)
+                self.assertEqual(ctx.dicts, [
+                    {'True': True, 'False': False, 'None': None},
+                    {'1': 2},
+                    {'3': 4},
+                ])
         self.assertEqual(len(context), 1)
         self.assertEqual(context, {'1': 2})

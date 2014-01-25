@@ -61,9 +61,9 @@ class ChunkAdminTestCase(DjangoTestCase):
         request = RequestFactory().get('/')
         results = self.chunk_admin.response_max(request=request, limit=1,
                                                 found=1).content
-        self.assertInHTML('<h2>Limit reached</h2>', results)
+        self.assertIn('<h2>Limit reached</h2>', results)
         # this doesn't work. No idea why. Stupid Django.
-        # self.assertInHTML('Unable to add more than <b>1</b> to this region.',
+        # self.assertIn('Unable to add more than <b>1</b> to this region.',
         #                   results)
 
     def test_get_response_add_context(self):
@@ -87,11 +87,11 @@ class ChunkAdminTestCase(DjangoTestCase):
                                    'object': {'pk': 1,
                                               'id': 1}
                                    })
-        # self.assertInHTML('Please wait, saving changes', html)
-        # self.assertInHTML('Add new content', html)
-        # self.assertInHTML('Iframe', html)
-        self.assertInHTML('<h3>Embeds</h3>', html)
-        self.assertInHTML('<b>whee!:</b>', html)
+        # self.assertIn('Please wait, saving changes', html)
+        # self.assertIn('Add new content', html)
+        # self.assertIn('Iframe', html)
+        self.assertIn('<h3>Embeds</h3>', html)
+        self.assertIn('<b>whee!:</b>', html)
 
     def test_get_response_change_context(self):
         request = RequestFactory().get('/')
@@ -114,8 +114,8 @@ class ChunkAdminTestCase(DjangoTestCase):
                                    'object': {'pk': 1,
                                               'id': 1}
                                    })
-        self.assertInHTML('<h3>Embeds</h3>', html)
-        self.assertInHTML('<b>whee!:</b>', html)
+        self.assertIn('<h3>Embeds</h3>', html)
+        self.assertIn('<b>whee!:</b>', html)
 
     def test_get_response_delete_context_keyerror(self):
         request = RequestFactory().get('/')
@@ -145,8 +145,8 @@ class ChunkAdminTestCase(DjangoTestCase):
                                    'object': {'pk': 1,
                                               'id': 1}
                                    })
-        self.assertInHTML('<h3>Embeds</h3>', html)
-        self.assertInHTML('<b>whee!:</b>', html)
+        self.assertIn('<h3>Embeds</h3>', html)
+        self.assertIn('<b>whee!:</b>', html)
 
     def test_render_into_region(self):
         with warnings.catch_warnings(record=True) as w:

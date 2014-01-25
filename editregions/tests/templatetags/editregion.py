@@ -12,6 +12,7 @@ from editregions.contrib.embeds.models import Iframe
 from editregions.models import EditRegionChunk
 from editregions.templatetags.editregion import EditRegionTag
 from editregions.utils.data import get_content_type
+from editregions.utils.versioning import is_django_15plus
 
 
 class TestUserAdmin(UserAdmin):
@@ -233,10 +234,16 @@ class EditRegionTemplateTagTestCase(DjangoTestCase):
         {% load editregion %}
         {% editregion "test" None %}
         """)
-        with self.assertRaisesRegexp(ImproperlyConfigured,
-                                     'no object provided to the "editregion" '
-                                     'template tag forregion "test"'):
-            tmpl.render(Context()).strip()
+        if is_django_15plus():
+            with self.assertRaisesRegexp(ImproperlyConfigured,
+                                         'no object provided to the "editregion" '
+                                         'template tag forregion "test"'):
+                tmpl.render(Context()).strip()
+        else:
+            with self.assertRaisesRegexp(ValueError,
+                                         "content_object was probably '', "
+                                         "check the context provided"):
+                tmpl.render(Context()).strip()
 
     @override_settings(DEBUG=False)
     def test_none_content_object_production(self):

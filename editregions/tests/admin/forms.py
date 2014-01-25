@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import django
 from django.contrib import admin
 from django.contrib.admin.sites import NotRegistered
 from django.contrib.auth.admin import UserAdmin
@@ -10,6 +11,7 @@ from django.test import TestCase as DjangoTestCase, RequestFactory
 from editregions.admin.forms import EditRegionInlineForm, EditRegionInlineFormSet, MovementForm
 from editregions.models import EditRegionChunk
 from editregions.utils.data import get_content_type
+from editregions.utils.versioning import is_django_15plus
 
 
 class TestUserAdmin(UserAdmin):
@@ -59,9 +61,14 @@ class MovementFormTestCase(DjangoTestCase):
         form = MovementForm(data=request.POST)
         form.is_valid()
         self.assertEqual(form._errors, {'pk': 'content block does not exist'})
-        self.assertEqual(form.cleaned_data, {'pk': None,
-                                             'position': 3,
-                                             'region': u''})
+        # in 1.4, cleaned_data doesn't exist apparently. fun times.
+        if django.VERSION >= (1, 5, 0):
+            self.assertEqual(form.cleaned_data, {'pk': None,
+                                                 'position': 3,
+                                                 'region': u''})
+        else:
+            with self.assertRaises(AttributeError):
+                form.cleaned_data
 
     def test_cleaning_with_pk(self):
         obj = EditRegionChunk.objects.all()[0]
@@ -88,7 +95,8 @@ class MovementFormTestCase(DjangoTestCase):
             pass
         admin.site.register(User, TestUserAdmin)
         form.is_valid()
-        with self.assertNumQueries(4):
+        expected_query_count = 4 if is_django_15plus() else 5
+        with self.assertNumQueries(expected_query_count):
             result = form.save()
             self.assertEqual(result.pk, obj.pk)
             self.assertNotEqual(result.position, obj.position)
@@ -105,7 +113,8 @@ class MovementFormTestCase(DjangoTestCase):
             pass
         admin.site.register(User, TestUserAdmin)
         form.is_valid()
-        with self.assertNumQueries(6):
+        expected_query_count = 6 if is_django_15plus() else 7
+        with self.assertNumQueries(expected_query_count):
             result = form.save()
             self.assertEqual(result.pk, obj.pk)
             self.assertNotEqual(result.position, obj.position)
