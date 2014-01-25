@@ -138,7 +138,7 @@ class MovementForm(Form):
                                          region=old_region)
 
         kwargs = {}
-        if is_django_15plus():
+        if is_django_15plus():  # pragma: no cover ... tests cover this.
             kwargs.update(update_fields=['region', 'position'])
         obj.save(**kwargs)
 

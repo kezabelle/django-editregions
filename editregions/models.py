@@ -40,7 +40,7 @@ except ImportError:  # Haven't got an ultrajson package
 try:
     import yaml
     CAN_USE_YAML_DECODER = True
-except ImportError:
+except ImportError:  # pragma: no cover ... will raise an exception later.
     CAN_USE_YAML_DECODER = False
 
 

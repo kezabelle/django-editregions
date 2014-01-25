@@ -239,7 +239,7 @@ class EditRegionAdmin(ModelAdmin):
         # why this isn't a separate method in Django, I don't know.
         from django.conf.urls import patterns, url
 
-        def wrap(view):
+        def wrap(view):  # pragma: no cover this is from the Django admin
             def wrapper(*args, **kwargs):
                 return self.admin_site.admin_view(view)(*args, **kwargs)
             return update_wrapper(wrapper, view)
@@ -319,7 +319,7 @@ class EditRegionAdmin(ModelAdmin):
         """
         qs = self.model.polymorphs.all().select_subclasses()
         ordering = self.get_ordering(*args, **kwargs)
-        if ordering:
+        if ordering:  # pragma: no cover ... I don't care, this should be fine.
             qs = qs.order_by(*ordering)
         return qs
 
