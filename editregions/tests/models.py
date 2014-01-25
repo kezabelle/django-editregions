@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
+from uuid import uuid4
 from django.contrib import admin
 from django.contrib.admin.sites import NotRegistered
 from django.contrib.auth.admin import UserAdmin
 from django.core.exceptions import ImproperlyConfigured
-from django.template import Template
+from django.template import Template, TemplateDoesNotExist
 from django.test.utils import override_settings
 from django.utils.unittest.case import TestCase
 from django.test import TestCase as DjangoTestCase
@@ -58,6 +59,13 @@ class EditRegionChunkTestCase(DjangoTestCase):
             'other': other,
         }
 
+    def test_cleaning(self):
+        erc = EditRegionChunk(region='test', position=0,
+                              content_id=str(uuid4()),
+                              content_type=get_content_type(User))
+        erc.full_clean()
+        self.assertEqual(erc.position, 1)
+
     def test_repr(self):
         user_ct = get_content_type(self.model_dependencies['user'])
         expected = ('<editregions.models.EditRegionChunk pk=1, region=test, '
@@ -91,6 +99,14 @@ class EditRegionChunkTestCase(DjangoTestCase):
         received = tuple(EditRegionChunk.objects.all())
         self.assertEqual(expected, received)
 
+    def test_move_bad_position(self):
+        expected = self.chunks['base']
+        expected.position = 2
+        errors = self.chunks['base'].move(requested_position=-1)
+        self.assertEqual(errors, {
+            'position': [u'Ensure this value is greater than or equal to 1.']
+        })
+
     def test_has_managers(self):
         self.assertIsInstance(getattr(EditRegionChunk, 'objects', None),
                               PassThroughManager)
@@ -113,7 +129,7 @@ class EditRegionChunkTestCase(DjangoTestCase):
         self.assertEqual(expected, received)
 
 
-class EditRegionConfigurationTestCase(TestCase):
+class EditRegionConfigurationTestCase(DjangoTestCase):
     def setUp(self):
         sample_user, created = User.objects.get_or_create()
         self.model_dependencies = {
@@ -144,8 +160,13 @@ class EditRegionConfigurationTestCase(TestCase):
             pass
         admin.site.register(User, TestBadUserAdmin)
 
-        self.blank_conf.configure(obj=user)
-        self.assertEqual(self.blank_conf.template, None)
+        with self.settings(DEBUG=True):
+            with self.assertRaises(TemplateDoesNotExist):
+                self.blank_conf.configure(obj=user)
+
+        with self.settings(DEBUG=False):
+            self.blank_conf.configure(obj=user)
+            self.assertEqual(self.blank_conf.template, None)
 
     def test_configure_template_discovered(self):
         user = self.model_dependencies['user']
@@ -165,6 +186,12 @@ class EditRegionConfigurationTestCase(TestCase):
         received = self.blank_conf.get_first_valid_template()
         self.assertIsNone(received)
 
+    def test_get_first_valid_template_string_input(self):
+        self.blank_conf = EditRegionConfiguration()
+        self.blank_conf.possible_templates = 'sample_editregion_template.html'
+        received = self.blank_conf.get_first_valid_template()
+        self.assertIsInstance(received, Template)
+
     def test_get_template_region_configuration(self):
         self.blank_conf = EditRegionConfiguration()
         self.blank_conf.template = Template('''{
@@ -177,7 +204,17 @@ class EditRegionConfigurationTestCase(TestCase):
             'x': {'name': 'test'},
         })
 
-    def test_get_template_region_configuration_failed(self):
+    def test_get_template_region_configuration_no_names_fallback(self):
+        self.blank_conf = EditRegionConfiguration()
+        self.blank_conf.template = Template('''{
+            "x": {}
+        }''')
+        result = self.blank_conf.get_template_region_configuration()
+        self.assertEqual(result, {
+            'x': {'name': 'x'},
+        })
+
+    def test_get_template_region_configuration_failed_json_decoding(self):
         self.blank_conf = EditRegionConfiguration()
         self.blank_conf.template = Template("xyz")
         with self.assertRaisesRegexp(ValueError,
@@ -252,7 +289,7 @@ class EditRegionConfigurationTestCase(TestCase):
         self.assertEqual(None, result)
 
 
-class EditRegionConfigurationOperatorsTestCase(TestCase):
+class EditRegionConfigurationOperatorsTestCase(DjangoTestCase):
     def test_equality(self):
         blank_conf = EditRegionConfiguration()
         blank_conf.has_configuration = True
@@ -319,5 +356,72 @@ class EditRegionConfigurationOperatorsTestCase(TestCase):
 #     def test_fetch_chunks(self):
 #         self.assertEqual(1, 2)
 #
-#     def test_fetch_chunks_for(self):
-#         self.assertEqual(1, 2)
+    def test_fetch_chunks_for_no_obj_debug_false(self):
+        self.blank_conf = EditRegionConfiguration()
+        self.blank_conf.template = Template('''{
+            "x": {
+                "name": "test"
+            }
+        }''')
+        self.blank_conf.config = self.blank_conf.get_template_region_configuration()  # noqa
+        with self.settings(DEBUG=False):
+            result = self.blank_conf.fetch_chunks_for(region='x')
+            self.assertEqual([], result)
+
+    def test_fetch_chunks_for_no_obj_debug_true(self):
+        self.blank_conf = EditRegionConfiguration()
+        self.blank_conf.template = Template('''{
+            "x": {
+                "name": "test"
+            }
+        }''')
+        self.blank_conf.config = self.blank_conf.get_template_region_configuration()  # noqa
+
+        with self.settings(DEBUG=True):
+            with self.assertRaises(ImproperlyConfigured):
+                self.blank_conf.fetch_chunks_for(region='x')
+
+    def test_fetch_chunks_for_obj(self):
+        user, created = User.objects.get_or_create()
+        self.blank_conf = EditRegionConfiguration(obj=user)
+        self.blank_conf.template = Template('''{
+            "x": {
+                "name": "test"
+            }
+        }''')
+        self.blank_conf.config = self.blank_conf.get_template_region_configuration()  # noqa
+        results = self.blank_conf.fetch_chunks_for(region='x')
+        self.assertEqual([], results)
+
+    def test_fetch_chunks_for_obj_noregions(self):
+        user, created = User.objects.get_or_create()
+        self.blank_conf = EditRegionConfiguration(obj=user)
+        self.blank_conf.template = Template('''{
+        }''')
+        self.blank_conf.config = self.blank_conf.get_template_region_configuration()  # noqa
+        results = self.blank_conf.fetch_chunks_for(region='x')
+        self.assertEqual((), results)
+
+    def test_fetch_chunks_for_obj_manyregions(self):
+        user, created = User.objects.get_or_create()
+        self.blank_conf = EditRegionConfiguration(obj=user)
+        self.blank_conf.template = Template('''{
+            "x": {},
+            "y": {},
+            "z": {}
+        }''')
+        self.blank_conf.config = self.blank_conf.get_template_region_configuration()  # noqa
+        results = self.blank_conf.fetch_chunks_for(region='x')
+        self.assertEqual([], results)
+
+    def test_fetch_chunks(self):
+        user, created = User.objects.get_or_create()
+        self.blank_conf = EditRegionConfiguration(obj=user)
+        self.blank_conf.template = Template('''{
+            "x": {},
+            "y": {},
+            "z": {}
+        }''')
+        self.blank_conf.config = self.blank_conf.get_template_region_configuration()  # noqa
+        results = self.blank_conf.fetch_chunks()
+        self.assertEqual(dict(results), {u'y': [], u'x': [], u'z': []})
