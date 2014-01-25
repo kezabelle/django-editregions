@@ -158,7 +158,7 @@ class ChunkAdminTestCase(DjangoTestCase):
                              "<class 'editregions.admin.modeladmins."
                              "ChunkAdmin'>")
 
-    def test_render_into_region(self):
+    def test_render_into_summary(self):
         with warnings.catch_warnings(record=True) as w:
             self.chunk_admin.render_into_summary(obj={}, context={})
             self.assertEqual(len(w), 1)
@@ -432,7 +432,7 @@ class EditRegionAdminTestCase(DjangoTestCase):
                                                      list_display=())
         self.assertEqual(expected, received)
 
-    def test_get_list_display_links(self):
+    def test_get_list_display(self):
         request = RequestFactory().get('/')
         expected = [u'get_position', u'get_subclass_type',
                     u'get_subclass_summary', u'get_last_modified',
@@ -697,3 +697,11 @@ class EditRegionAdminTestCase(DjangoTestCase):
             u'adminlinks/js/jquery.fancyiframe.js',
             u'editregions/js/jquery.ui.1-10-3.custom.js',
             u'editregions/js/dragging.js'])
+
+    def test_render_into_region(self):
+        result = self.admin.render_into_region(obj={}, context={})
+        self.assertIsNone(result)
+
+    def test_render_into_summary(self):
+        result = self.admin.render_into_summary(obj={}, context={})
+        self.assertEqual('{}', result)

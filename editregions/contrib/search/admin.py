@@ -7,7 +7,7 @@ from haystack.exceptions import NotHandled, SearchBackendError
 
 try:
     from django.utils.encoding import force_text
-except ImportError:  # < Django 1.5
+except ImportError:  # pragma: no cover ... < Django 1.5
     from django.utils.encoding import force_unicode as force_text
 from haystack.query import SearchQuerySet
 from editregions.admin.modeladmins import ChunkAdmin
