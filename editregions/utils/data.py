@@ -115,6 +115,6 @@ def healed_context(context):
     while ctx_length > 1 and ctx_length > original_context_length:
         logger.debug('Removing excess context dicts (target size {0},'
                      'working size {1})'.format(original_context_length,
-                                               ctx_length))
+                                                ctx_length))
         context.pop()
         ctx_length = len(context.dicts)
