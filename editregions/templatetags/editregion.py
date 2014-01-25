@@ -230,7 +230,7 @@ class EditRegionTag(AsTag):
             'first': index == 0,
             'last': index == (plugin_count - 1),
             'total': plugin_count,
-            'region': value.region,
+            'region': getattr(value, 'region', None),
             'remaining': iterable[index_plus:],
             'used': iterable[:index],
             'object': value,

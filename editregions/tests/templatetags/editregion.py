@@ -9,6 +9,7 @@ from django.template import Template, RequestContext, Context
 from django.test import TestCase as DjangoTestCase, RequestFactory
 from django.test.utils import override_settings
 from editregions.contrib.embeds.models import Iframe
+from editregions.models import EditRegionChunk
 from editregions.templatetags.editregion import EditRegionTag
 from editregions.utils.data import get_content_type
 
@@ -72,7 +73,20 @@ class EditRegionTemplateTagTestCase(DjangoTestCase):
                                        'name="" data-pk="None" '
                                        'data-position="{1}" data-region="test" '
                                        'data-modified="" ></iframe>'.format(
-                                           num, pos))  # noqa
+                                           num, pos))
+
+    def test_render_all_chunks_yielding_nones(self):
+        context = Context()
+        chunks = [Iframe(pk=1, region='x'),
+                  Iframe(pk=2, region='x'),
+                  Iframe(pk=3, region='x'),
+                  EditRegionChunk(pk=4, region='x'),
+                  Iframe(pk=5, region='x')]
+        chunks2 = list(EditRegionTag.render_all_chunks(context=context,
+                                                       found_chunks=chunks))
+        self.assertEqual(len(chunks2), len(chunks) - 1)
+
+
 
     def test_chunk_iteration_context(self):
         """
