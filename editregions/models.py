@@ -43,6 +43,12 @@ try:
 except ImportError:  # pragma: no cover ... will raise an exception later.
     CAN_USE_YAML_DECODER = False
 
+try:
+    import toml
+    CAN_USE_TOML_DECODER = True
+except ImportError:  # pragma: no cover ... will raise an exception later.
+    CAN_USE_TOML_DECODER = False
+
 
 @python_2_unicode_compatible
 class EditRegionChunk(ChangeTracking, Generic):
@@ -106,6 +112,8 @@ class EditRegionConfiguration(object):
             self.decoder_func = json.loads
         elif self.decoder == 'yaml' and CAN_USE_YAML_DECODER:
             self.decoder_func = yaml.safe_load
+        elif self.decoder == 'toml' and CAN_USE_TOML_DECODER:
+            self.decoder_func = toml.loads
         else:
             raise ImproperlyConfigured("Unable to use the requested "
                                        "deserialization format")
@@ -206,9 +214,11 @@ class EditRegionConfiguration(object):
             # Once we have a model and there's no stupid limit set,
             # add it to our new data structure.
             # Note that while None > 0 appears correct,
-            # it isn't because None is a special value for infinite.
-            if model is not None and (count is None or int(count) > 0):
-                resolved.update({model: count})
+            # it isn't because None/False is a special value for infinite.
+            infinity_or_valid_limit = (count is None or count is False or
+                                       int(count) > 0)
+            if model is not None and infinity_or_valid_limit:
+                resolved.update({model: None if count is False else count})
             if model is None:
                 msg = 'Unable to load model "{cls}" from app "{app}"'.format(
                     cls=modelname, app=app)
@@ -281,7 +291,7 @@ class EditRegionConfiguration(object):
             chunks = EditRegionChunk.polymorphs.filter(**kws).select_subclasses(*models)  # noqa
         else:
             chunks = EditRegionChunk.objects.none()
-        
+
         index = 0
         for index, chunk in enumerate(chunks.iterator(), start=1):
             final_results[chunk.region].append(chunk)

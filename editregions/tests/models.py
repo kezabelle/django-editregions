@@ -10,6 +10,7 @@ from django.utils.unittest.case import TestCase
 from django.test import TestCase as DjangoTestCase
 from model_utils.managers import (PassThroughManager, InheritanceManager,
                                   InheritanceQuerySet)
+from editregions.contrib.embeds.models import Iframe
 from editregions.models import EditRegionChunk, EditRegionConfiguration
 from editregions.querying import EditRegionChunkQuerySet
 from editregions.utils.data import get_content_type
@@ -367,6 +368,53 @@ class EditRegionConfigurationTestCase(DjangoTestCase):
         results = self.blank_conf.fetch_chunks()
         self.assertEqual(dict(results), {u'y': [], u'x': [], u'z': []})
 
+    def test_json_serializer(self):
+        user, created = User.objects.get_or_create(username='test')
+        self.blank_conf = EditRegionConfiguration(obj=user, decoder='json')
+        self.blank_conf.template = Template('''{
+            "test": {
+                "name": "whee!",
+                "models": {
+                    "embeds.Iframe": 2
+                }
+            },
+            "test2": {
+                "name": "oh my goodness, another test region",
+                "models": {
+                    "embeds.Iframe": 1
+                }
+            },
+            "test3": {
+                "name": "oh my goodness, yet another test region",
+                "models": {
+                    "embeds.Iframe": null
+                }
+            }
+        }''')
+        self.blank_conf.config = self.blank_conf.get_template_region_configuration()  # noqa
+        self.assertEqual(dict(self.blank_conf.config), {
+            'test': {
+                'models': {
+                    Iframe: 2
+                },
+                'name': 'whee!'
+            },
+            'test2': {
+                'models': {
+                    Iframe: 1
+                },
+                'name': 'oh my goodness, another test region'
+            },
+            'test3': {
+                'models': {
+                    Iframe: None,
+                },
+                'name': 'oh my goodness, yet another test region'
+            }
+        })
+        results = self.blank_conf.fetch_chunks()
+        self.assertEqual(dict(results), {'test': [], 'test3': [], 'test2': []})
+
     def test_yaml_serializer(self):
         try:
             import yaml
@@ -389,6 +437,73 @@ class EditRegionConfigurationTestCase(DjangoTestCase):
               embeds.Iframe: null
         ''')
         self.blank_conf.config = self.blank_conf.get_template_region_configuration()  # noqa
+        self.assertEqual(dict(self.blank_conf.config), {
+            'test': {
+                'models': {
+                    Iframe: 2
+                },
+                'name': 'whee!'
+            },
+            'test2': {
+                'models': {
+                    Iframe: 1
+                },
+                'name': 'oh my goodness, another test region'
+            },
+            'test3': {
+                'models': {
+                    Iframe: None,
+                },
+                'name': 'oh my goodness, yet another test region'
+            }
+        })
+        results = self.blank_conf.fetch_chunks()
+        self.assertEqual(dict(results), {'test': [], 'test3': [], 'test2': []})
+
+    def test_toml_serializer(self):
+        try:
+            import toml
+        except ImportError:
+            self.skipTest("toml not available ...")
+        user, created = User.objects.get_or_create(username='test')
+        self.blank_conf = EditRegionConfiguration(obj=user, decoder='toml')
+        self.blank_conf.template = Template('''
+        [test]
+        name = "whee!"
+        [test.models]
+        embeds.Iframe = 2
+
+        [test2]
+        name = "oh my goodness, another test region"
+        [test2.models]
+        embeds.Iframe = 1
+
+        [test3]
+        name = "oh my goodness, yet another test region"
+        [test3.models]
+        embeds.Iframe = false
+        ''')
+        self.blank_conf.config = self.blank_conf.get_template_region_configuration()  # noqa
+        self.assertEqual(dict(self.blank_conf.config), {
+            'test': {
+                'models': {
+                    Iframe: 2
+                },
+                'name': 'whee!'
+            },
+            'test2': {
+                'models': {
+                    Iframe: 1
+                },
+                'name': 'oh my goodness, another test region'
+            },
+            'test3': {
+                'models': {
+                    Iframe: None,
+                },
+                'name': 'oh my goodness, yet another test region'
+            }
+        })
         results = self.blank_conf.fetch_chunks()
         self.assertEqual(dict(results), {'test': [], 'test3': [], 'test2': []})
 
