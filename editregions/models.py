@@ -141,6 +141,8 @@ class EditRegionConfiguration(object):
     def __nonzero__(self):
         return self.has_configuration and len(self.config) > 0
 
+    __bool__ = __nonzero__
+
     def configure(self, obj):
         self.obj = obj
         self.modeladmin = get_modeladmin(self.obj)
@@ -279,7 +281,7 @@ class EditRegionConfiguration(object):
         if region_count < 1:
             return final_results
         elif region_count == 1:
-            kws.update(region=final_results.keys().pop())
+            kws.update(region=list(final_results.keys())[0])
         else:
             kws.update(region__in=final_results.keys())
 

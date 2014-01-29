@@ -4,7 +4,10 @@ from django.contrib import admin
 from django.contrib.admin.sites import NotRegistered
 from django.contrib.auth.models import User
 from django.core.urlresolvers import NoReverseMatch
-from django.utils.unittest.case import TestCase, skipUnless
+try:
+    from unittest.case import TestCase, skipUnless
+except ImportError:
+    from django.utils.unittest.case import TestCase, skipUnless
 from django.test import TestCase as DjangoTestCase
 from editregions.admin.utils import django_jqueryui_version, AdminChunkWrapper
 from editregions.contrib.embeds.admin import IframeAdmin
@@ -79,13 +82,22 @@ class AdminChunkWrapperTestCase(DjangoTestCase):
                                     content_type=self.base_obj.content_type,
                                     region=self.base_obj.region)
 
-        abs_url = ('/admin_mountpoint/editregions/editregionchunk/1/?'
-                   'region=test&content_id=1&content_type=4')
-        self.assertEqual(wrapped.get_absolute_url(), abs_url)
+        self.assertIn('/admin_mountpoint/editregions/editregionchunk/1/?',
+                      wrapped.get_absolute_url())
+        self.assertIn('region=test', wrapped.get_absolute_url())
+        self.assertIn('content_id={0}'.format(self.base_obj.content_id),
+                      wrapped.get_absolute_url())
+        self.assertIn('content_type={0}'.format(self.base_obj.content_type.pk),
+                      wrapped.get_absolute_url())
 
-        change_url = ('/admin_mountpoint/editregions/editregionchunk/1/?'
-                      'region=test&content_id=1&content_type=4')
-        self.assertEqual(wrapped.get_change_url(), change_url)
+        self.assertIn('/admin_mountpoint/editregions/editregionchunk/1/?',
+                      wrapped.get_change_url())
+        self.assertIn('region=test', wrapped.get_change_url())
+        self.assertIn('content_id={0}'.format(self.base_obj.content_id),
+                      wrapped.get_change_url())
+        self.assertIn('content_type={0}'.format(self.base_obj.content_type.pk),
+                      wrapped.get_change_url())
+
         # these just remind me that the default doesn't expose these methods
         with self.assertRaises(NoReverseMatch):
             self.assertEqual(wrapped.get_add_url(), '')
@@ -104,12 +116,20 @@ class AdminChunkWrapperTestCase(DjangoTestCase):
                                     content_id=self.obj.content_id,
                                     content_type=self.obj.content_type,
                                     region=self.obj.region)
-        del_url = ('/admin_mountpoint/embeds/iframe/2/delete/?'
-                   'region=test&content_id=1&content_type=4')
-        self.assertEqual(wrapped.get_delete_url(), del_url)
-        hist_url = ('/admin_mountpoint/embeds/iframe/2/history/?'
-                    'region=test&content_id=1&content_type=4')
-        self.assertEqual(wrapped.get_history_url(), hist_url)
+
+        self.assertIn('/admin_mountpoint/embeds/iframe/2/delete/?',
+                      wrapped.get_delete_url())
+        self.assertIn('region=test', wrapped.get_delete_url())
+        self.assertIn('content_id=1', wrapped.get_delete_url())
+        self.assertIn('content_type={0}'.format(self.obj.content_type.pk),
+                      wrapped.get_delete_url())
+
+        self.assertIn('/admin_mountpoint/embeds/iframe/2/history/?',
+                      wrapped.get_history_url())
+        self.assertIn('region=test', wrapped.get_history_url())
+        self.assertIn('content_id=1', wrapped.get_history_url())
+        self.assertIn('content_type={0}'.format(self.obj.content_type.pk),
+                      wrapped.get_history_url())
 
     def test_getattr_badstartswith(self):
         wrapped = AdminChunkWrapper(opts=self.obj._meta, obj=self.obj,

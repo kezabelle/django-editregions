@@ -56,3 +56,5 @@ HAYSTACK_CONNECTIONS={
         'TITLE': 'testing',
     },
 }
+
+SECRET_KEY = 'justrunmydamntests'

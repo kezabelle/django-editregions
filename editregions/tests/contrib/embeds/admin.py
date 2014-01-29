@@ -2,7 +2,10 @@
 from django.contrib import admin
 from django.forms import Form
 from django.template import Context
-from django.utils.unittest.case import TestCase
+try:
+    from unittest.case import TestCase
+except ImportError:
+    from django.utils.unittest.case import TestCase
 from django.test import TestCase as DjangoTestCase, RequestFactory
 from editregions.constants import REQUEST_VAR_CT, REQUEST_VAR_ID, REQUEST_VAR_REGION
 from editregions.contrib.embeds.admin import IframeAdmin, JavascriptAssetAdmin, StylesheetAssetAdmin, JavaScriptAdmin, FeedAdmin

@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
 import django
-from django.utils.unittest.case import TestCase, skipUnless
+try:
+    from unittest.case import TestCase, skipUnless
+except ImportError:
+    from django.utils.unittest.case import TestCase, skipUnless
 from editregions.utils.versioning import is_django_15plus, is_django_16plus
 
 

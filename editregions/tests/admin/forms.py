@@ -6,7 +6,10 @@ from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth.models import User
 from django.forms import Media
 from django.forms.util import ErrorList
-from django.utils.unittest.case import TestCase
+try:
+    from unittest.case import TestCase
+except ImportError:
+    from django.utils.unittest.case import TestCase
 from django.test import TestCase as DjangoTestCase, RequestFactory
 from editregions.admin.forms import EditRegionInlineForm, EditRegionInlineFormSet, MovementForm
 from editregions.models import EditRegionChunk

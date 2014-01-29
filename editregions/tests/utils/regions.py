@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
 from django.core.exceptions import ValidationError
-from django.utils.unittest.case import TestCase
+try:
+    from unittest.case import TestCase
+except ImportError:
+    from django.utils.unittest.case import TestCase
 from editregions.utils.regions import validate_region_name
 
 

@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
 from django.contrib.auth.models import User, Group
-from django.utils.unittest.case import TestCase
+try:
+    from unittest.case import TestCase
+except ImportError:
+    from django.utils.unittest.case import TestCase
 from django.test import TestCase as DjangoTestCase
 from editregions.models import EditRegionChunk
 from editregions.utils.data import get_content_type

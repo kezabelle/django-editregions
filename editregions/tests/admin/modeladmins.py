@@ -15,7 +15,10 @@ from django.http import HttpResponse, HttpResponseRedirect, HttpResponsePermanen
 from django.template.response import TemplateResponse
 from django.test import RequestFactory
 from django.utils.datastructures import MultiValueDictKeyError
-from django.utils.unittest.case import TestCase, skipUnless
+try:
+    from unittest.case import TestCase, skipUnless
+except ImportError:
+    from django.utils.unittest.case import TestCase, skipUnless
 from django.test import TestCase as DjangoTestCase
 from editregions.admin.changelist import EditRegionChangeList
 from editregions.admin.modeladmins import ChunkAdmin, EditRegionAdmin
@@ -61,7 +64,8 @@ class ChunkAdminTestCase(DjangoTestCase):
         request = RequestFactory().get('/')
         results = self.chunk_admin.response_max(request=request, limit=1,
                                                 found=1).content
-        self.assertIn('<h2>Limit reached</h2>', results)
+        self.assertIn(force_text('<h2>Limit reached</h2>'),
+                      force_text(results))
         # this doesn't work. No idea why. Stupid Django.
         # self.assertIn('Unable to add more than <b>1</b> to this region.',
         #                   results)
@@ -307,7 +311,7 @@ class MaybeFixRedirectionTestCase(DjangoTestCase):
         new_response = admin_instance.maybe_fix_redirection(
             request=request, response=response_200)
         # returned unchanged
-        self.assertEqual('ok', new_response.content)
+        self.assertEqual(force_text('ok'), force_text(new_response.content))
         self.assertEqual(200, new_response.status_code)
 
     def test_returned_data_changed(self):
@@ -392,8 +396,8 @@ class MaybeFixRedirectionTestCase(DjangoTestCase):
         self.assertIn('region=test', querystring)
         self.assertIn('_data_changed=1', querystring)
         self.assertIn('_autoclose=1', querystring)
-        self.assertIn('content_type=4', querystring)
-        self.assertIn('content_id=1', querystring)
+        self.assertIn('content_type={0}'.format(ct.pk), querystring)
+        self.assertIn('content_id={0}'.format(iframe.pk), querystring)
 
     def test_continue_editing_parent_object(self):
         user = User(username='test', is_staff=True, is_superuser=True,
@@ -459,14 +463,19 @@ class EditRegionAdminTestCase(DjangoTestCase):
         iframe.save()
         render_html = getattr(self.admin, func)
         received = render_html(obj=iframe, **extra)
-        self.assertEqual(expected, received)
+        for x in expected:
+            self.assertIn(x, received)
 
     def test_get_changelist_link_html_directly(self):
+
         kwargs = {
             'func': 'get_changelist_link_html',
-            'expected': ('<a href="/admin_mountpoint/embeds/iframe/1/?region='
-                         'test&content_id=1&content_type=4" data-adminlinks='
-                         '"autoclose" data-no-turbolink>x</a>'),
+            'expected': ('<a href="/admin_mountpoint/embeds/iframe/1/?',
+                         'region=test',
+                         'content_id=1',
+                         'content_type={0}'.format(get_content_type(User).pk),
+                         'data-adminlinks="autoclose"',
+                         '>x</a>'),
             'extra': {
                 'data': 'x',
             }
@@ -476,9 +485,12 @@ class EditRegionAdminTestCase(DjangoTestCase):
     def test_get_region_name(self):
         kwargs = {
             'func': 'get_region_name',
-            'expected': ('<a href="/admin_mountpoint/embeds/iframe/1/?region='
-                         'test&content_id=1&content_type=4" data-adminlinks='
-                         '"autoclose" data-no-turbolink>whee!</a>'),
+            'expected': ('<a href="/admin_mountpoint/embeds/iframe/1/?',
+                         'region=test',
+                         'content_id=1',
+                         'content_type={0}'.format(get_content_type(User).pk),
+                         'data-adminlinks="autoclose"',
+                         '>whee!</a>'),
             'extra': {}
         }
         self._test_changelist_display_methods(**kwargs)
@@ -486,9 +498,12 @@ class EditRegionAdminTestCase(DjangoTestCase):
     def test_get_subclass_type(self):
         kwargs = {
             'func': 'get_subclass_type',
-            'expected': ('<a href="/admin_mountpoint/embeds/iframe/1/?region='
-                         'test&content_id=1&content_type=4" data-adminlinks='
-                         '"autoclose" data-no-turbolink>iframe</a>'),
+            'expected': ('<a href="/admin_mountpoint/embeds/iframe/1/?',
+                         'region=test',
+                         'content_id=1',
+                         'content_type={0}'.format(get_content_type(User).pk),
+                         'data-adminlinks="autoclose"',
+                         '>iframe</a>'),
             'extra': {}
         }
         self._test_changelist_display_methods(**kwargs)
@@ -496,10 +511,12 @@ class EditRegionAdminTestCase(DjangoTestCase):
     def test_get_subclass_summary(self):
         kwargs = {
             'func': 'get_subclass_summary',
-            'expected': ('<a href="/admin_mountpoint/embeds/iframe/1/?region='
-                         'test&content_id=1&content_type=4" data-adminlinks='
-                         '"autoclose" data-no-turbolink>https://news.bbc.co'
-                         '.uk/</a>'),
+            'expected': ('<a href="/admin_mountpoint/embeds/iframe/1/?',
+                         'region=test',
+                         'content_id=1',
+                         'content_type={0}'.format(get_content_type(User).pk),
+                         'data-adminlinks="autoclose"',
+                         '>https://news.bbc.co.uk/</a>'),
             'extra': {}
         }
         self._test_changelist_display_methods(**kwargs)
@@ -507,9 +524,12 @@ class EditRegionAdminTestCase(DjangoTestCase):
     def test_get_position(self):
         kwargs = {
             'func': 'get_position',
-            'expected': ('<a href="/admin_mountpoint/embeds/iframe/1/?region='
-                         'test&content_id=1&content_type=4" data-adminlinks='
-                         '"autoclose" data-no-turbolink>2</a>'),
+            'expected': ('<a href="/admin_mountpoint/embeds/iframe/1/?',
+                         'region=test',
+                         'content_id=1',
+                         'content_type={0}'.format(get_content_type(User).pk),
+                         'data-adminlinks="autoclose"',
+                         '>2</a>'),
             'extra': {}
         }
         self._test_changelist_display_methods(**kwargs)
@@ -520,12 +540,15 @@ class EditRegionAdminTestCase(DjangoTestCase):
     def test_get_object_tools(self):
         kwargs = {
             'func': 'get_object_tools',
-            'expected': ('<div class="drag_handle" data-pk="1" data-href="'
-                         '/admin_mountpoint/editregions/editregionchunk/move/'
-                         '"></div>&nbsp;<a class="delete_handle" href="'
-                         '/admin_mountpoint/embeds/iframe/1/delete/?region='
-                         'test&content_id=1&content_type=4" data-adminlinks='
-                         '"autoclose" data-no-turbolink>Delete</a>'),
+            'expected': ('class="drag_handle" data-pk="1"',
+                         '/admin_mountpoint/editregions/editregionchunk/move/',
+                         'href="/admin_mountpoint/embeds/iframe/1/delete/?',
+                         'region=test',
+                         'content_id=1',
+                         'content_type={0}'.format(get_content_type(User).pk),
+                         'class="delete_handle"',
+                         'data-adminlinks="autoclose"',
+                         '>Delete</a>'),
             'extra': {}
         }
         self._test_changelist_display_methods(**kwargs)
@@ -542,9 +565,9 @@ class EditRegionAdminTestCase(DjangoTestCase):
         response = self.admin.move_view(request=request)
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response['Content-type'], 'application/json')
-        self.assertEqual(json.loads(response.content), {
-            u'pk': u'content block does not exist',
-            u'position': [u'This field is required.']
+        self.assertEqual(json.loads(force_text(response.content)), {
+            'pk': 'content block does not exist',
+            'position': ['This field is required.']
         })
 
     def test_move_view(self):
@@ -568,7 +591,7 @@ class EditRegionAdminTestCase(DjangoTestCase):
         response = self.admin.move_view(request=request)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response['Content-type'], 'application/json')
-        json_data = json.loads(response.content)
+        json_data = json.loads(force_text(response.content))
         self.assertIn('action', json_data)
         self.assertIn('html', json_data)
         self.assertEqual('move', json_data['action'])

@@ -11,7 +11,7 @@ from django.conf import settings
 
 class FileTestCase(TestCase):
     def setUp(self):
-        fakefile = SimpleUploadedFile('x/y/z.gif', 'xyz')
+        fakefile = SimpleUploadedFile('x/y/z.gif', b'xyz')
         sample_user, created = User.objects.get_or_create(username='test')
         user_ct = get_content_type(sample_user)
         self.file = File(position=1, content_type=user_ct,
@@ -47,21 +47,21 @@ class FileTestCase(TestCase):
 
     def test_is_image(self):
         file_ = os.path.join(settings.STATICFILES_DIRS[0], "test.png")
-        with open(file_) as f:
+        with open(file_, mode='rb') as f:
             fakefile = SimpleUploadedFile('x/y/z.gif', f.read())
         self.file.data = fakefile
         self.assertTrue(self.file.is_image())
 
     def test_get_dimensions_image(self):
         file_ = os.path.join(settings.STATICFILES_DIRS[0], "test.png")
-        with open(file_) as f:
+        with open(file_, mode='rb') as f:
             fakefile = SimpleUploadedFile('x/y/z.gif', f.read())
         self.file.data = fakefile
         self.assertEqual((16, 16), self.file.dimensions)
 
     def test_get_dimensionsstr_image(self):
         file_ = os.path.join(settings.STATICFILES_DIRS[0], "test.png")
-        with open(file_) as f:
+        with open(file_, mode='rb') as f:
             fakefile = SimpleUploadedFile('x/y/z.gif', f.read())
         self.file.data = fakefile
         self.assertEqual('16x16', self.file.dimensions_as_str())

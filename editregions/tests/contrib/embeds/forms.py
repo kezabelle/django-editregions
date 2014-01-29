@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
 from django.forms.models import modelform_factory
-from django.utils.unittest.case import TestCase, expectedFailure
+try:
+    from unittest.case import TestCase, expectedFailure
+except ImportError:
+    from django.utils.unittest.case import TestCase, expectedFailure
 from django_ace import AceWidget
 from editregions.contrib.embeds.forms import JavaScriptEditorForm, StylesheetAssetForm, JavascriptAssetForm
 from editregions.contrib.embeds.models import JavaScript, JavascriptAsset, StylesheetAsset

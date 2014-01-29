@@ -21,5 +21,7 @@ class ConnectionForm(ModelForm):
                                   coerce=str)
 
 
-MoreLikeThisForm = modelform_factory(model=MoreLikeThis, form=ConnectionForm)
-SearchResultsForm = modelform_factory(model=SearchResults, form=ConnectionForm)
+MoreLikeThisForm = modelform_factory(model=MoreLikeThis, form=ConnectionForm,
+                                     fields=('connection',))
+SearchResultsForm = modelform_factory(model=SearchResults, form=ConnectionForm,
+                                      fields=('connection',))

@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
-from django.utils.unittest.case import TestCase
+try:
+    from unittest.case import TestCase
+except ImportError:
+    from django.utils.unittest.case import TestCase
 from tinymce.widgets import TinyMCE
 from wymeditor.widgets import WYMEditorArea
 from editregions.contrib.text.forms import WYMEditorForm, MCEEditorForm

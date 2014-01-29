@@ -7,7 +7,10 @@ from django.core.exceptions import ImproperlyConfigured
 from django.template import Context
 from django.test.utils import override_settings
 from django.utils.functional import SimpleLazyObject
-from django.utils.unittest import TestCase
+try:
+    from unittest.case import TestCase
+except ImportError:
+    from django.utils.unittest.case import TestCase
 from django.test import TestCase as DjangoTestCase
 from django.contrib.auth.models import User, Permission
 from editregions.models import EditRegionConfiguration

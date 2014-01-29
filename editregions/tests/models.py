@@ -6,7 +6,10 @@ from django.contrib.auth.admin import UserAdmin
 from django.core.exceptions import ImproperlyConfigured
 from django.template import Template, TemplateDoesNotExist
 from django.test.utils import override_settings
-from django.utils.unittest.case import TestCase
+try:
+    from unittest.case import TestCase
+except ImportError:
+    from django.utils.unittest.case import TestCase
 from django.test import TestCase as DjangoTestCase
 from model_utils.managers import (PassThroughManager, InheritanceManager,
                                   InheritanceQuerySet)

@@ -16,11 +16,11 @@ class HaystackConnectionsFormChoicesTestCase(TestCase):
             }
         }
         with self.settings(**settings):
-            titled = tuple(get_haystack_connections())
-            self.assertEqual(titled, (
+            titled = frozenset(get_haystack_connections())
+            self.assertEqual(titled, frozenset([
                 ('default', 'OHMYGLOB'),
                 ('neato', 'xyz')
-            ))
+            ]))
 
     def test_configured_connections_without_titles(self):
         settings = {
@@ -30,8 +30,8 @@ class HaystackConnectionsFormChoicesTestCase(TestCase):
             }
         }
         with self.settings(**settings):
-            titled = tuple(get_haystack_connections())
-            self.assertEqual(titled, (
+            titled = frozenset(get_haystack_connections())
+            self.assertEqual(titled, frozenset([
                 ('default', 'Default'),
                 ('neato', 'Neato')
-            ))
+            ]))

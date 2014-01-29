@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
-from urlparse import urlparse
+try:
+    from django.utils.six.moves.urllib.parse import urlparse
+except (ImportError, AttributeError) as e:  # Python 2, < Django 1.5
+    from urlparse import urlparse
 from django.contrib import admin
 from django.contrib.admin.options import ModelAdmin
 from django.forms import Media

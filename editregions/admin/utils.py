@@ -8,6 +8,7 @@ from django.forms import Media
 from django.http import QueryDict
 from django.template.defaultfilters import truncatewords
 from django.utils.decorators import method_decorator, available_attrs
+from django.utils.encoding import python_2_unicode_compatible
 from editregions.constants import (REQUEST_VAR_REGION, REQUEST_VAR_ID,
                                    REQUEST_VAR_CT)
 from editregions.templatetags.editregion import EditRegionTag
@@ -101,7 +102,7 @@ def guard_querystring(function):
 
 guard_querystring_m = method_decorator(guard_querystring)
 
-
+@python_2_unicode_compatible
 class AdminChunkWrapper(object):
     """
     Used through-out our admin customisations to wrap either the *idea* of
@@ -158,10 +159,15 @@ class AdminChunkWrapper(object):
         if self.region is not None:
             validate_region_name(self.region)
 
+        if hasattr(self.opts, 'model_name'):
+            model_name = self.opts.model_name
+        else:
+            model_name = self.opts.module_name
+
         self.url_parts = {
             'namespace': self.admin_namespace,
             'app': self.opts.app_label,
-            'module': self.opts.module_name,
+            'module': model_name,
             'view': '__error__',
         }
         self.querydict = QueryDict('', mutable=True)
@@ -173,7 +179,7 @@ class AdminChunkWrapper(object):
             if field not in self.querydict:
                 self.querydict.update({field: getattr(self, field) or 0})
 
-    def __unicode__(self):
+    def __str__(self):
         if self.exists:
             return '%(label)s: %(object)s' % {
                 'label': self.label,
@@ -195,6 +201,8 @@ class AdminChunkWrapper(object):
             self.content_type is not None,
             self.content_id is not None,
         ])
+
+    __bool__ = __nonzero__
 
     def __contains__(self, item):
         """
