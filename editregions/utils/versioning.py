@@ -19,3 +19,12 @@ def is_django_16plus():
     .. testcase:: VersionsTestCase
     """
     return LooseVersion(django_version()) >= LooseVersion('1.6')
+
+
+def is_django_17plus():
+    """
+    allows us to apply functionality only in recent versions of Django.
+
+    .. testcase:: VersionsTestCase
+    """
+    return LooseVersion(django_version()) >= LooseVersion('1.7')
