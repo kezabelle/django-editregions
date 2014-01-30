@@ -1,4 +1,7 @@
 # -*- coding: utf-8 -*-
+import logging
+
+logging.disable(logging.CRITICAL)
 
 from .constants import *
 from .models import *
