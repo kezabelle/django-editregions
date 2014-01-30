@@ -12,6 +12,7 @@ class WYMEditorForm(ModelForm):
 
     class Meta:
         model = WYM
+        fields = ['content']
 
 
 class MCEEditorForm(ModelForm):
@@ -21,3 +22,4 @@ class MCEEditorForm(ModelForm):
 
     class Meta:
         model = MCE
+        fields = ['content']

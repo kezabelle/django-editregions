@@ -158,7 +158,7 @@ class MovementForm(Form):
             if _obj.position != new_position:
                 logger.debug('{obj!r} out of position, moving from'
                              '{obj.position} to {new_position}'.format(
-                             obj=_obj, new_position=new_position))
+                                 obj=_obj, new_position=new_position))
                 set_new_position(EditRegionChunk, pk=_obj.pk,
                                  position=new_position)
         return obj

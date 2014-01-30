@@ -21,11 +21,14 @@ class TestUserAdmin(UserAdmin):
 
 
 class EditRegionTemplateTagTestCase(DjangoTestCase):
+    def setUp(self):
+        self.ct = get_content_type(User)
 
     def test_render_one_chunk(self):
-        iframe = Iframe(region='test', content_id=1, content_type_id=1,
+        iframe = Iframe(region='test', content_id=1, content_type=self.ct,
                         url='https://news.bbc.co.uk/', position=1)
         iframe.full_clean()
+        iframe.pk = 1
 
         request = RequestFactory().get('/')
         ctx = RequestContext(request)
@@ -33,14 +36,15 @@ class EditRegionTemplateTagTestCase(DjangoTestCase):
             index=0, value=iframe, iterable=[iframe]))
         output = EditRegionTag.render_one_chunk(context=ctx, chunk=iframe,
                                                 renderer=None).strip()
-        self.assertEqual(output, '<iframe frameborder="0" marginheight="0" '
-                                 'marginwidth="0" src="https://news.bbc.co.uk/" '  # noqa
-                                 'name="" data-pk="None" data-position="1" '
-                                 'data-region="test" data-modified="" '
-                                 '></iframe>')
+        self.assertIn('<iframe ', output)
+        self.assertIn('src="https://news.bbc.co.uk/"', output)
+        self.assertIn('data-position="1"', output)
+        self.assertIn('data-pk="1"', output)
+        self.assertIn('data-region="test"', output)
+        self.assertIn('</iframe>', output)
 
     def test_render_one_summary(self):
-        iframe = Iframe(region='test', content_id=1, content_type_id=1,
+        iframe = Iframe(region='test', content_id=1, content_type=self.ct,
                         url='https://news.bbc.co.uk/', position=1)
         iframe.full_clean()
 
@@ -55,10 +59,11 @@ class EditRegionTemplateTagTestCase(DjangoTestCase):
     def test_render_all_chunks(self):
         objs = []
         for x in range(0, 10):
-            iframe = Iframe(region='test', content_id=1, content_type_id=1,
+            iframe = Iframe(region='test', content_id=1, content_type=self.ct,
                             url='https://news.bbc.co.uk/{0!s}'.format(x),
                             position=x)
             iframe.full_clean()
+            iframe.pk = x
             objs.append(iframe)
         ctx = Context()
         chunks = EditRegionTag.render_all_chunks(context=ctx, found_chunks=objs)
@@ -68,13 +73,10 @@ class EditRegionTemplateTagTestCase(DjangoTestCase):
         for num, obj in enumerate(converted_chunks):
             testable = obj.strip()
             pos = num + 1
-            self.assertEqual(testable, '<iframe frameborder="0" '
-                                       'marginheight="0" marginwidth="0" '
-                                       'src="https://news.bbc.co.uk/{0}" '
-                                       'name="" data-pk="None" '
-                                       'data-position="{1}" data-region="test" '
-                                       'data-modified="" ></iframe>'.format(
-                                           num, pos))
+            self.assertIn('src="https://news.bbc.co.uk/{0}"'.format(num),
+                          testable)
+            self.assertIn('data-position="{0}"'.format(pos), testable)
+            self.assertIn('data-region="test"', testable)
 
     def test_render_all_chunks_yielding_nones(self):
         context = Context()

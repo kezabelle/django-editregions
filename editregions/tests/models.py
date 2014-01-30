@@ -6,6 +6,8 @@ from django.contrib.auth.admin import UserAdmin
 from django.core.exceptions import ImproperlyConfigured
 from django.template import Template, TemplateDoesNotExist
 from django.test.utils import override_settings
+from editregions.utils.versioning import is_django_17plus
+
 try:
     from unittest.case import TestCase
 except ImportError:
@@ -254,8 +256,10 @@ class EditRegionConfigurationTestCase(DjangoTestCase):
     @override_settings(DEBUG=True)
     def test_get_enabled_chunks_for_region_bad_models_loud_fail(self):
         self.blank_conf = EditRegionConfiguration()
-        with self.assertRaisesRegexp(ImproperlyConfigured,
-                                     r'App with label x could not be found'):
+        error = ImproperlyConfigured
+        if is_django_17plus():
+            error = LookupError
+        with self.assertRaises(error):
             self.blank_conf.get_enabled_chunks_for_region({
                 'x.Y': 1,
             })

@@ -153,28 +153,20 @@ class ChunkAdminTestCase(DjangoTestCase):
         self.assertIn('<b>whee!:</b>', html)
 
     def test_render_into_region(self):
-        with warnings.catch_warnings(record=True) as w:
-            self.chunk_admin.render_into_region(obj={}, context={})
-            self.assertEqual(len(w), 1)
-            self.assertEqual(len(w), 1)
-            warning = w[0]
-            self.assertIsInstance(warning.message, RuntimeWarning)
-            self.assertEqual(force_text(warning.message),
-                             "`render_into_region` not implemented on "
-                             "<class 'editregions.admin.modeladmins."
-                             "ChunkAdmin'>")
+        with self.settings(DEBUG=True):
+            with self.assertRaises(NotImplementedError):
+                self.chunk_admin.render_into_region(obj={}, context={})
+        with self.settings(DEBUG=False):
+            data = self.chunk_admin.render_into_region(obj={}, context={})
+            self.assertIsNone(data)
 
     def test_render_into_summary(self):
-        with warnings.catch_warnings(record=True) as w:
-            self.chunk_admin.render_into_summary(obj={}, context={})
-            self.assertEqual(len(w), 1)
-            self.assertEqual(len(w), 1)
-            warning = w[0]
-            self.assertIsInstance(warning.message, RuntimeWarning)
-            self.assertEqual(force_text(warning.message),
-                             "`render_into_summary` not implemented on "
-                             "<class 'editregions.admin.modeladmins."
-                             "ChunkAdmin'>")
+        with self.settings(DEBUG=True):
+            with self.assertRaises(NotImplementedError):
+                self.chunk_admin.render_into_summary(obj={}, context={})
+        with self.settings(DEBUG=False):
+            data = self.chunk_admin.render_into_summary(obj={}, context={})
+            self.assertIsNone(data)
 
     def test_save_model(self):
         user = User(username='test')
@@ -613,7 +605,10 @@ class EditRegionAdminTestCase(DjangoTestCase):
             iframe.save()
             data.append(iframe)
 
-        self.assertEqual(data, list(self.admin.queryset('pk')))
+        try:
+            self.assertEqual(data, list(self.admin.get_queryset('pk')))
+        except AttributeError:
+            self.assertEqual(data, list(self.admin.queryset('pk')))
 
     def test_get_object(self):
         self.test_queryset()
@@ -747,9 +742,17 @@ class EditRegionAdminTestCase(DjangoTestCase):
             'editregions/js/dragging.js'])
 
     def test_render_into_region(self):
-        result = self.admin.render_into_region(obj={}, context={})
-        self.assertIsNone(result)
+        with self.settings(DEBUG=True):
+            with self.assertRaises(NotImplementedError):
+                self.admin.render_into_region(obj={}, context={})
+        with self.settings(DEBUG=False):
+            data = self.admin.render_into_region(obj={}, context={})
+            self.assertIsNone(data)
 
     def test_render_into_summary(self):
-        result = self.admin.render_into_summary(obj={}, context={})
-        self.assertEqual('{}', result)
+        with self.settings(DEBUG=True):
+            with self.assertRaises(NotImplementedError):
+                self.admin.render_into_summary(obj={}, context={})
+        with self.settings(DEBUG=False):
+            data = self.admin.render_into_summary(obj={}, context={})
+            self.assertEqual('{}', data)

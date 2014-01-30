@@ -2,6 +2,8 @@
 from __future__ import unicode_literals
 from functools import update_wrapper
 import logging
+from django.conf import settings
+
 try:
     from django.utils.six.moves import urllib_parse
     urlsplit = urllib_parse.urlsplit
@@ -314,7 +316,7 @@ class EditRegionAdmin(ModelAdmin):
         return HttpResponseBadRequest(json.dumps(form.errors),
                                       content_type='application/json')
 
-    def queryset(self, *args, **kwargs):
+    def get_queryset(self, *args, **kwargs):
         """
         Don't use the default queryset/manager, as it won't be our interface
         to polymorphic (downcast) EditRegionChunk subclasses.
@@ -332,7 +334,7 @@ class EditRegionAdmin(ModelAdmin):
             qs = qs.order_by(*ordering)
         return qs
 
-    # queryset = get_queryset
+    queryset = get_queryset
 
     def get_object(self, request, object_id):
         """
@@ -446,15 +448,21 @@ class EditRegionAdmin(ModelAdmin):
         return base_media + shared_media
 
     def render_into_region(self, obj, context):
-        logger.warning("`render_into_region` called because the requested "
-                       "chunk wasn't cast down - likely the model is no longer "
-                       "enabled in the configuration.")
+        msg = ("`render_into_region` called because the requested "
+               "chunk wasn't cast down - likely the model is no longer "
+               "enabled in the configuration.")
+        if settings.DEBUG:
+            raise NotImplementedError(msg)
+        logger.warning(msg)
         return None
 
     def render_into_summary(self, obj, context):
-        logger.warning("`render_into_summary` called because the requested "
-                       "chunk wasn't cast down - likely the model is no longer "
-                       "enabled in the configuration.")
+        msg = ("`render_into_summary` called because the requested "
+               "chunk wasn't cast down - likely the model is no longer "
+               "enabled in the configuration.")
+        if settings.DEBUG:
+            raise NotImplementedError(msg)
+        logger.warning(msg)
         return force_text(obj)
 
 
@@ -597,7 +605,7 @@ class ChunkAdmin(AdminlinksMixin):
         return_early = (
             not resp.has_header('location'),
             not hasattr(resp, 'redirect_parts'),
-            hasattr(resp, 'canonical'), # something wants to be *final*
+            hasattr(resp, 'canonical'),  # something wants to be *final*
             obj is None,
         )
         if any(return_early):
@@ -661,8 +669,13 @@ class ChunkAdmin(AdminlinksMixin):
         """
         obj = self.get_object(request, unquote(object_id))
         needed_data = extra_context or {}
+        # Django has deprecated request.REQUEST. Sigh
+        found_popup_in_request = (
+            "_popup" in request.GET,
+            "_popup" in request.POST,
+        )
         # emulate the behaviour of add/change_view
-        needed_data.update(is_popup="_popup" in request.REQUEST)
+        needed_data.update(is_popup=any(found_popup_in_request))
         if obj is not None:
             needed_data.update(gfk={'content_id': obj.content_id,
                                     'content_type': obj.content_type,
@@ -724,8 +737,12 @@ class ChunkAdmin(AdminlinksMixin):
         :param context: The overall template context.
         :return: Some output. Usually HTML for output on a page.
         """
-        warnings.warn('`render_into_region` not implemented on %r' % self.__class__,
-                      RuntimeWarning)
+        msg = ('`render_into_region` not implemented on {0!r}'.format(
+            self.__class__))
+        if settings.DEBUG:
+            raise NotImplementedError(msg)
+        logger.warning(msg)
+        return None
 
     def render_into_summary(self, obj, context):
         """
@@ -738,8 +755,12 @@ class ChunkAdmin(AdminlinksMixin):
         :return: Some output. Usually a text representation of the
                  :meth: `~editregions.admin.modeladmins.ChunkAdmin.render_into_region`
         """
-        warnings.warn('`render_into_summary` not implemented on %r' % self.__class__,
-                      RuntimeWarning)
+        msg = ('`render_into_summary` not implemented on {0!r}'.format(
+            self.__class__))
+        if settings.DEBUG:
+            raise NotImplementedError(msg)
+        logger.warning(msg)
+        return None
 
     @property
     def media(self):

@@ -38,6 +38,7 @@ class StylesheetAssetForm(AssetSourceForm):
 
     class Meta:
         model = StylesheetAsset
+        fields = ['local', 'external']
 
 
 class JavascriptAssetForm(AssetSourceForm):
@@ -45,3 +46,4 @@ class JavascriptAssetForm(AssetSourceForm):
 
     class Meta:
         model = JavascriptAsset
+        fields = ['local', 'external']

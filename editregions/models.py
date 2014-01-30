@@ -18,8 +18,16 @@ try:
 except ImportError:  # pragma: no cover ... Python 2, Django < 1.5
     string_types = basestring,
 
-from django.utils.datastructures import SortedDict
-from django.db.models.loading import get_model, get_app
+try:
+    from collections import OrderedDict as SortedDict
+except ImportError:
+    from django.utils.datastructures import SortedDict
+try:
+    from django.apps import apps
+    get_model = apps.get_model
+    get_app = apps.get_app_config
+except ImportError:
+    from django.db.models.loading import get_model, get_app
 from model_utils.managers import PassThroughManager, InheritanceManager
 from editregions.querying import EditRegionChunkQuerySet
 from editregions.text import chunk_v, chunk_vplural
@@ -212,7 +220,11 @@ class EditRegionConfiguration(object):
         # Replace the dotted app_label/model_name combo with the actual model.
         for chunk, count in model_mapping.items():
             app, modelname = chunk.split('.')[0:2]
-            model = get_model(app_label=app, model_name=modelname)
+            try:
+                model = get_model(app_label=app, model_name=modelname)
+            except LookupError as e:
+                logger.exception("Unable to find requested model")
+                model = None
             # Once we have a model and there's no stupid limit set,
             # add it to our new data structure.
             # Note that while None > 0 appears correct,

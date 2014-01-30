@@ -11,7 +11,8 @@ from editregions.contrib.embeds.models import JavaScript, JavascriptAsset, Style
 
 class JavaScriptEditorFormTestCase(TestCase):
     def test_init(self):
-        form = modelform_factory(model=JavaScript, form=JavaScriptEditorForm)()
+        form = modelform_factory(model=JavaScript, form=JavaScriptEditorForm,
+                                 fields=['content'])()
         self.assertIsInstance(form.fields['content'].widget, AceWidget)
         self.assertEqual(form.fields['content'].widget.mode, 'javascript')
         self.assertEqual(form.fields['content'].widget.theme, 'chrome')
