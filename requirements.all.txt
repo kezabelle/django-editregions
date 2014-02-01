@@ -10,6 +10,6 @@ django-classy-tags>=0.4
 django-model-utils>=2.0
 PyYAML>=3.10
 toml>=0.8.1
-django-setuptest>=0.1.4
+-e git+git@github.com:kezabelle/django-setuptest.git@feature/django17_support#egg=django-setuptest
 -e git+https://github.com/kezabelle/django-helpfulfields.git#egg=django-helpfulfields
 -e git+https://github.com/kezabelle/django-adminlinks.git#egg=django-adminlinks
