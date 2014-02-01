@@ -13,8 +13,9 @@ DATABASES = {
 INSTALLED_APPS = (
     # dependencies
     'django.contrib.contenttypes',
-    'django.contrib.admin',
+    'django.contrib.sites',
     'django.contrib.auth',
+    'django.contrib.admin',
     'adminlinks',
     'helpfulfields',
     # main app in test
