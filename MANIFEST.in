@@ -1,0 +1,18 @@
+exclude .gitignore .bumpversion.cfg .tox
+recursive-exclude .tox *
+include LICENSE README .coveragerc tox.ini requirements.all.txt requirements.txt
+recursive-include editregions *.css
+recursive-include editregions *.eot
+recursive-include editregions *.gif
+recursive-include editregions *.html
+recursive-include editregions *.js
+recursive-include editregions *.json
+recursive-include editregions *.png
+recursive-include editregions *.svg
+recursive-include editregions *.ttf
+recursive-include editregions *.txt
+recursive-include editregions *.woff
+recursive-include docs *.py
+recursive-include docs *.rst
+recursive-include docs *.gif
+recursive-include docs Makefile

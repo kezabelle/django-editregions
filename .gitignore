@@ -4,3 +4,7 @@
 *.egg-info
 htmlcov
 .tox
+.coverage
+coverage.xml
+pep8.txt
+README.html
