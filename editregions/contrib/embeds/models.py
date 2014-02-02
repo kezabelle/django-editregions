@@ -8,8 +8,7 @@ from django.db.models.base import Model
 from django.db.models.fields import (URLField, PositiveIntegerField, CharField,
                                      TextField)
 from django.template.defaultfilters import slugify
-from django.utils.encoding import (python_2_unicode_compatible, force_text,
-                                   force_bytes)
+from django.utils.encoding import python_2_unicode_compatible, smart_bytes
 from feedparser import parse
 from model_utils import Choices
 from editregions.models import EditRegionChunk
@@ -97,7 +96,7 @@ class Feed(EditRegionChunk, FeedBase):
         return self.url
 
     def get_from_cache(self):
-        feed_key = 'feed_{0}'.format(sha1(force_bytes(self.url)).hexdigest())
+        feed_key = 'feed_{0}'.format(sha1(smart_bytes(self.url)).hexdigest())
         feed = cache.get(feed_key, None)
         if feed is None:
             logger.debug('Feed not in cache, fetching... {0}'.format(self.url))
