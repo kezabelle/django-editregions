@@ -15,7 +15,10 @@ from django.forms import Media
 from django.template.response import TemplateResponse
 from adminlinks.admin import AdminlinksMixin
 from django.contrib.admin.options import ModelAdmin
-from django.contrib.admin.util import display_for_field, unquote
+try:
+    from django.contrib.admin.utils import display_for_field, unquote
+except ImportError:
+    from django.contrib.admin.util import display_for_field, unquote
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.urlresolvers import reverse, resolve
 from django.http import HttpResponse, HttpResponseBadRequest, QueryDict

@@ -3,7 +3,10 @@ import logging
 from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import F
 from django.forms import Form, Media
-from django.forms.util import ErrorList
+try:
+    from django.forms.utils import ErrorList
+except ImportError:  # < Django 1.7 ... pragma: no cover
+    from django.forms.util import ErrorList
 from django.forms.fields import IntegerField, CharField
 try:
     from django.utils.encoding import force_text

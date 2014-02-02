@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
 import logging
-from django.contrib.contenttypes.generic import GenericInlineModelAdmin
+try:
+    from django.contrib.contenttypes.admin import GenericInlineModelAdmin
+except ImportError:  # < 1.7 ... pragma: no cover
+    from django.contrib.contenttypes.generic import GenericInlineModelAdmin
 from editregions.admin.forms import EditRegionInlineFormSet
 from editregions.constants import REQUEST_VAR_CT, REQUEST_VAR_ID
 from editregions.models import EditRegionChunk, EditRegionConfiguration
