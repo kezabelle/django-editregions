@@ -16,11 +16,11 @@ class WYMAdmin(ChunkAdmin, ModelAdmin):
         'content',
     ]
 
-    def render_into_region(self, obj, context):
+    def render_into_region(self, obj, context, **kwargs):
         return render_to_string('editregions/text/html.html',
                                 context_instance=context)
 
-    def render_into_summary(self, obj, context):
+    def render_into_summary(self, obj, context, **kwargs):
         return striptags(obj.content).strip()
 admin.site.register(WYM, WYMAdmin)
 
@@ -32,11 +32,11 @@ class MCEAdmin(ChunkAdmin, ModelAdmin):
         'content',
     ]
 
-    def render_into_region(self, obj, context):
+    def render_into_region(self, obj, context, **kwargs):
         return render_to_string('editregions/text/html.html',
                                 context_instance=context)
 
-    def render_into_summary(self, obj, context):
+    def render_into_summary(self, obj, context, **kwargs):
         return striptags(obj.content).strip()
 
     @property

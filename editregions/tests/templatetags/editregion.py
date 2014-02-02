@@ -32,9 +32,11 @@ class EditRegionTemplateTagTestCase(DjangoTestCase):
 
         request = RequestFactory().get('/')
         ctx = RequestContext(request)
-        ctx.update(EditRegionTag.chunk_iteration_context(
-            index=0, value=iframe, iterable=[iframe]))
+        iterdata = EditRegionTag.chunk_iteration_context(
+            index=0, value=iframe, iterable=[iframe])
+        ctx.update(iterdata)
         output = EditRegionTag.render_one_chunk(context=ctx, chunk=iframe,
+                                                extra=iterdata['chunkloop'],
                                                 renderer=None).strip()
         self.assertIn('<iframe ', output)
         self.assertIn('src="https://news.bbc.co.uk/"', output)
@@ -50,9 +52,11 @@ class EditRegionTemplateTagTestCase(DjangoTestCase):
 
         request = RequestFactory().get('/')
         ctx = RequestContext(request)
-        ctx.update(EditRegionTag.chunk_iteration_context(
-            index=0, value=iframe, iterable=[iframe]))
+        iterdata = EditRegionTag.chunk_iteration_context(
+            index=0, value=iframe, iterable=[iframe])
+        ctx.update(iterdata)
         output = EditRegionTag.render_one_summary(context=ctx, chunk=iframe,
+                                                  extra=iterdata['chunkloop'],
                                                   renderer=None).strip()
         self.assertEqual(output, 'https://news.bbc.co.uk/')
 

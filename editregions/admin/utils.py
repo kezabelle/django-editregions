@@ -224,8 +224,11 @@ class AdminChunkWrapper(object):
             context = {
                 'admin_summary': True,
             }
+            iterdata = EditRegionTag.chunk_iteration_context(
+                index=0, value=self.chunk, iterable=(self.chunk,))['chunkloop']
             return truncatewords(
-                EditRegionTag.render_one_summary(context, self.chunk), 20)
+                EditRegionTag.render_one_summary(context, self.chunk,
+                                                 extra=iterdata), 20)
         return ''
 
     def _get_admin_url(self, view='add'):

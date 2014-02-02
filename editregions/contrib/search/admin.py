@@ -31,7 +31,7 @@ class MoreLikeThisAdmin(ChunkAdmin, admin.ModelAdmin):
         }),
     ]
 
-    def render_into_region(self, obj, context):
+    def render_into_region(self, obj, context, **kwargs):
         sqs = SearchQuerySet().using(obj.connection)
         if obj.request_objects:
             sqs = sqs.load_all()
@@ -51,7 +51,7 @@ class MoreLikeThisAdmin(ChunkAdmin, admin.ModelAdmin):
         return render_to_string('editregions/search/mlt.html',
                                 context_instance=context)
 
-    def render_into_summary(self, obj, context):
+    def render_into_summary(self, obj, context, **kwargs):
         if obj.max_num < 1:
             return None
         bits = ['Up to']
@@ -77,7 +77,7 @@ class SearchResultsAdmin(ChunkAdmin, admin.ModelAdmin):
         }),
     ]
 
-    def render_into_region(self, obj, context):
+    def render_into_region(self, obj, context, **kwargs):
         sqs = SearchQuerySet().using(obj.connection)
         # and now, in advanced usage, we allow for boosting words in the results
         actual_boosts = obj.get_boosts()
@@ -100,6 +100,6 @@ class SearchResultsAdmin(ChunkAdmin, admin.ModelAdmin):
         return render_to_string('editregions/search/query_results.html',
                                 context_instance=context)
 
-    def render_into_summary(self, obj, context):
+    def render_into_summary(self, obj, context, **kwargs):
         return force_text(obj)
 admin.site.register(SearchResults, SearchResultsAdmin)

@@ -32,11 +32,11 @@ class IframeAdmin(ChunkAdmin, ModelAdmin):
         }),
     ]
 
-    def render_into_region(self, obj, context):
+    def render_into_region(self, obj, context, **kwargs):
         return render_to_string('editregions/embeds/iframe.html',
                                 context_instance=context)
 
-    def render_into_summary(self, obj, context):
+    def render_into_summary(self, obj, context, **kwargs):
         summary = force_text(obj)
         if len(summary) > 50:
             return '{uri.netloc}'.format(uri=urlparse(summary))
@@ -63,12 +63,12 @@ class FeedAdmin(ChunkAdmin, ModelAdmin):
         super(FeedAdmin, self).save_model(request, obj, *args, **kwargs)
         obj.get_from_cache()
 
-    def render_into_region(self, obj, context):
+    def render_into_region(self, obj, context, **kwargs):
         context.update({'feed': obj.get_from_cache()})
         return render_to_string('editregions/embeds/feed.html',
                                 context_instance=context)
 
-    def render_into_summary(self, obj, context):
+    def render_into_summary(self, obj, context, **kwargs):
         feed = obj.get_from_cache()
         return feed.feed.title
 admin.site.register(Feed, FeedAdmin)
@@ -81,11 +81,11 @@ class JavaScriptAdmin(ChunkAdmin, ModelAdmin):
         'content',
     ]
 
-    def render_into_region(self, obj, context):
+    def render_into_region(self, obj, context, **kwargs):
         return render_to_string('editregions/embeds/javascript.html',
                                 context_instance=context)
 
-    def render_into_summary(self, obj, context):
+    def render_into_summary(self, obj, context, **kwargs):
         return obj.content
 
     @property
@@ -104,14 +104,14 @@ class JavascriptAssetAdmin(ChunkAdmin, ModelAdmin):
     list_display = ['local', 'external', 'created', 'modified']
     fields = ['local', 'external']
 
-    def render_into_region(self, obj, context):
+    def render_into_region(self, obj, context, **kwargs):
         return None
 
     def render_into_mediagroup(self, obj, context):
         return render_to_string('editregions/embeds/javascript_src.html',
                                 context_instance=context)
 
-    def render_into_summary(self, obj, context):
+    def render_into_summary(self, obj, context, **kwargs):
         return force_text(obj)
 admin.site.register(JavascriptAsset, JavascriptAssetAdmin)
 
@@ -121,13 +121,13 @@ class StylesheetAssetAdmin(ChunkAdmin, ModelAdmin):
     list_display = ['local', 'external', 'created', 'modified']
     fields = ['local', 'external']
 
-    def render_into_region(self, obj, context):
+    def render_into_region(self, obj, context, **kwargs):
         return None
 
     def render_into_mediagroup(self, obj, context):
         return render_to_string('editregions/embeds/stylesheet_src.html',
                                 context_instance=context)
 
-    def render_into_summary(self, obj, context):
+    def render_into_summary(self, obj, context, **kwargs):
         return force_text(obj)
 admin.site.register(StylesheetAsset, StylesheetAssetAdmin)

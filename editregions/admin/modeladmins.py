@@ -157,8 +157,11 @@ class EditRegionAdmin(ModelAdmin):
         :rtype: string
         """
         context = {'admin_summary': True}
-        content = EditRegionTag.render_one_summary(context, obj)
-        return self.get_changelist_link_html(obj, data=truncate_words(content, 20))
+        iterdata = EditRegionTag.chunk_iteration_context(
+            index=0, value=obj, iterable=(obj,))['chunkloop']
+        content = EditRegionTag.render_one_summary(context, obj, extra=iterdata)
+        return self.get_changelist_link_html(obj, data=truncate_words(content,
+                                                                      20))
     get_subclass_summary.allow_tags = True
     get_subclass_summary.short_description = admin_summary_label
 
@@ -447,7 +450,7 @@ class EditRegionAdmin(ModelAdmin):
         base_media = super(EditRegionAdmin, self).media
         return base_media + shared_media
 
-    def render_into_region(self, obj, context):
+    def render_into_region(self, obj, context, **kwargs):
         msg = ("`render_into_region` called because the requested "
                "chunk wasn't cast down - likely the model is no longer "
                "enabled in the configuration.")
@@ -456,7 +459,7 @@ class EditRegionAdmin(ModelAdmin):
         logger.warning(msg)
         return None
 
-    def render_into_summary(self, obj, context):
+    def render_into_summary(self, obj, context, **kwargs):
         msg = ("`render_into_summary` called because the requested "
                "chunk wasn't cast down - likely the model is no longer "
                "enabled in the configuration.")
@@ -727,7 +730,7 @@ class ChunkAdmin(AdminlinksMixin):
             pass
         return context
 
-    def render_into_region(self, obj, context):
+    def render_into_region(self, obj, context, **kwargs):
         """
         These exist purely to avoid unexpected breakages if an admin subclass
         doesn't implement them.
@@ -735,6 +738,8 @@ class ChunkAdmin(AdminlinksMixin):
         :param obj: The :class:`~editregions.models.EditRegionChunk` subclass
                     currently expecting to be rendered.
         :param context: The overall template context.
+        :param extra: Additional data available when rendering this object,
+                      mostly related to the current iteration state.
         :return: Some output. Usually HTML for output on a page.
         """
         msg = ('`render_into_region` not implemented on {0!r}'.format(
@@ -744,7 +749,7 @@ class ChunkAdmin(AdminlinksMixin):
         logger.warning(msg)
         return None
 
-    def render_into_summary(self, obj, context):
+    def render_into_summary(self, obj, context, **kwargs):
         """
         These exist purely to avoid unexpected breakages if an admin subclass
         doesn't implement them.
@@ -752,6 +757,8 @@ class ChunkAdmin(AdminlinksMixin):
         :param obj: The :class:`~editregions.models.EditRegionChunk` subclass
                     currently expecting to be rendered.
         :param context: The overall template context.
+        :param extra: Additional data available when rendering this summary,
+                      mostly related to the current iteration state.
         :return: Some output. Usually a text representation of the
                  :meth: `~editregions.admin.modeladmins.ChunkAdmin.render_into_region`
         """

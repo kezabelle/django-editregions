@@ -168,7 +168,7 @@ class EditRegionTag(AsTag):
         return u'\n'.join(results)
 
     @staticmethod
-    def render_one_chunk(context, chunk, renderer=None):
+    def render_one_chunk(context, chunk, extra, renderer=None):
         # we could just let the errors bubble up, but instead we'll provide more
         # helpful error messages than one might otherwise get (AttributeError for
         # no render_into_region, TypeError for calling render_into_region because of
@@ -181,19 +181,25 @@ class EditRegionTag(AsTag):
             msg = ('{0.__class__!r} does not have a `render_into_region` '
                    'method'.format(renderer))
             raise ImproperlyConfigured(msg)
-        return renderer.render_into_region(context=context, obj=chunk)
+        return renderer.render_into_region(context=context, obj=chunk,
+                                           extra=extra)
 
     @staticmethod
-    def render_one_summary(context, chunk, renderer=None):
+    def render_one_summary(context, chunk, extra, renderer=None):
         if renderer is None:
             logger.debug('No renderer given as an argument, fetching the '
                          'ModelAdmin instance for the first time')
             renderer = get_modeladmin(chunk)
         if hasattr(renderer, 'render_into_summary'):
-            logger.debug('ModelAdmin instance has a `render_into_summary` method, '
-                         'using it in preference to the `render_one_chunk` fallback')
-            return renderer.render_into_summary(context=context, obj=chunk)
-        return strip_tags(EditRegionTag.render_one_chunk(context, chunk, renderer))
+            logger.debug('ModelAdmin instance has a `render_into_summary` '
+                         'method, using it in preference to the '
+                         '`render_one_chunk` fallback')
+            return renderer.render_into_summary(context=context, obj=chunk,
+                                                extra=extra)
+        return strip_tags(EditRegionTag.render_one_chunk(context=context,
+                                                         chunk=chunk,
+                                                         extra=extra,
+                                                         renderer=renderer))
 
     @staticmethod
     def render_all_chunks(context, found_chunks):
@@ -206,9 +212,11 @@ class EditRegionTag(AsTag):
         for index, chunk in enumerate(found_chunks):
             # new_context = convert_context_to_dict(context)
             with healed_context(context) as new_ctx:
-                new_ctx.update(EditRegionTag.chunk_iteration_context(
-                    index=index, value=chunk, iterable=found_chunks))
-                output = EditRegionTag.render_one_chunk(context, chunk)
+                iteration = EditRegionTag.chunk_iteration_context(
+                    index=index, value=chunk, iterable=found_chunks)
+                new_ctx.update(iteration)
+                output = EditRegionTag.render_one_chunk(
+                    context=new_ctx, chunk=chunk, extra=iteration)
             # a chunk may return None if the ModelAdmin responsible for
             # rendering it doesn't implement the correct methods (instead
             # raising a warning to stderr), so we screen it all here.

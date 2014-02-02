@@ -17,7 +17,7 @@ class FileAdmin(ChunkAdmin, ModelAdmin):
         'title',
     ]
 
-    def render_into_region(self, obj, context):
+    def render_into_region(self, obj, context, **kwargs):
         templates = []
         # try the extension specific one first ...
         if obj.data:
@@ -27,7 +27,7 @@ class FileAdmin(ChunkAdmin, ModelAdmin):
         templates.append('editregions/uploads/file.html')
         return render_to_string(templates, context_instance=context)
 
-    def render_into_summary(self, obj, context):
+    def render_into_summary(self, obj, context, **kwargs):
         if obj.title and obj.data:
             return force_text('{obj.title} ({filename})'.format(
                 obj=obj, filename=obj.get_filename()))
