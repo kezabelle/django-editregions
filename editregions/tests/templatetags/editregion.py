@@ -126,36 +126,36 @@ class EditRegionTemplateTagTestCase(DjangoTestCase):
         for offset, obj in enumerate(iterable):
             ctx = EditRegionTag.chunk_iteration_context(index=offset, value=obj,
                                                         iterable=iterable)
-            self.assertEqual(ctx['chunkloop']['counter'], offset+1)
-            self.assertEqual(ctx['chunkloop']['counter0'], offset)
+            self.assertEqual(ctx['chunkloop'].counter, offset+1)
+            self.assertEqual(ctx['chunkloop'].counter0, offset)
 
             if obj == last:
-                self.assertEqual(ctx['chunkloop']['next'], None)
-                self.assertEqual(ctx['chunkloop']['next0'], None)
+                self.assertEqual(ctx['chunkloop'].next, None)
+                self.assertEqual(ctx['chunkloop'].next0, None)
             else:
-                self.assertEqual(ctx['chunkloop']['next'], offset+1)
-                self.assertEqual(ctx['chunkloop']['next0'], offset)
+                self.assertEqual(ctx['chunkloop'].next, offset+1)
+                self.assertEqual(ctx['chunkloop'].next0, offset)
 
             if obj == first:
-                self.assertEqual(ctx['chunkloop']['previous'], None)
-                self.assertEqual(ctx['chunkloop']['previous0'], None)
+                self.assertEqual(ctx['chunkloop'].previous, None)
+                self.assertEqual(ctx['chunkloop'].previous0, None)
             else:
-                self.assertEqual(ctx['chunkloop']['previous'], offset)
-                self.assertEqual(ctx['chunkloop']['previous0'], offset - 1)
+                self.assertEqual(ctx['chunkloop'].previous, offset)
+                self.assertEqual(ctx['chunkloop'].previous0, offset - 1)
 
-            self.assertEqual(ctx['chunkloop']['region'], 'test')
-            self.assertEqual(ctx['chunkloop']['revcounter'],
+            self.assertEqual(ctx['chunkloop'].region, 'test')
+            self.assertEqual(ctx['chunkloop'].revcounter,
                              len(iterable) - offset)
-            self.assertEqual(ctx['chunkloop']['revcounter0'],
+            self.assertEqual(ctx['chunkloop'].revcounter0,
                              len(iterable) - (offset+1))
-            self.assertEqual(ctx['chunkloop']['total'], len(iterable))
+            self.assertEqual(ctx['chunkloop'].total, len(iterable))
 
             # check the keys which track the loop history and future
-            self.assertEqual(len(ctx['chunkloop']['used']), offset)
-            self.assertEqual(ctx['chunkloop']['used'], iterable[0:offset])
-            self.assertEqual(len(ctx['chunkloop']['remaining']),
+            self.assertEqual(len(ctx['chunkloop'].used), offset)
+            self.assertEqual(ctx['chunkloop'].used, iterable[0:offset])
+            self.assertEqual(len(ctx['chunkloop'].remaining),
                              len(iterable) - (offset+1))
-            self.assertEqual(ctx['chunkloop']['remaining'], iterable[offset+1:])
+            self.assertEqual(ctx['chunkloop'].remaining, iterable[offset+1:])
 
     def test_usage(self):
         tmpl = Template("""

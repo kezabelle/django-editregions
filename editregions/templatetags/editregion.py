@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from collections import namedtuple
 import logging
 from classytags.helpers import AsTag
 from django import template
@@ -18,6 +19,12 @@ from editregions.utils.data import (get_content_type, get_modeladmin,
 
 register = template.Library()
 logger = logging.getLogger(__name__)
+
+
+IterationData = namedtuple('IterationData', [
+    'counter0', 'counter', 'revcounter', 'revcounter0', 'first', 'last',
+    'total', 'region', 'remaining', 'used', 'object',  'previous_chunk',
+    'previous', 'previous0', 'next_chunk', 'next', 'next0'])
 
 
 class EditRegionTag(AsTag):
@@ -214,38 +221,37 @@ class EditRegionTag(AsTag):
         Each time we render a chunk, we should also inject an additional set of
         context items.
 
-        Returns a tuple of the key name to use, and the dictionary of values to
-        put into it.
-
-        .. testcase: ChunkContextTestCase
+        Returns a dictionary whose key gets put into context, and whose values
+        are a namedtuple available to render_into_<region|summary> methods,
+        as well as template instances.
         """
         index_plus = index + 1
         index_minus = index - 1
-        plugin_count = len(iterable)
-        plugin_context = {
+        count = len(iterable)
+        iterdata = {
             'counter0': index,
             'counter': index_plus,
-            'revcounter': plugin_count - index,
-            'revcounter0': (plugin_count - index) - 1,
+            'revcounter': count - index,
+            'revcounter0': (count - index) - 1,
             'first': index == 0,
-            'last': index == (plugin_count - 1),
-            'total': plugin_count,
+            'last': index == (count - 1),
+            'total': count,
             'region': getattr(value, 'region', None),
             'remaining': iterable[index_plus:],
             'used': iterable[:index],
             'object': value,
-            'previous_plugin': None,
+            'previous_chunk': None,
             'previous': None,
             'previous0': None,
-            'next_plugin': None,
+            'next_chunk': None,
             'next': None,
             'next0': None,
         }
 
         try:
             assert index_minus >= 0
-            plugin_context.update(
-                previous_plugin=iterable[index_minus],
+            iterdata.update(
+                previous_chunk=iterable[index_minus],
                 previous=index,
                 previous0=index_minus,
             )
@@ -257,8 +263,8 @@ class EditRegionTag(AsTag):
             pass
 
         try:
-            plugin_context.update(
-                next_plugin=iterable[index_plus],
+            iterdata.update(
+                next_chunk=iterable[index_plus],
                 next=index_plus,
                 next0=index
             )
@@ -267,7 +273,7 @@ class EditRegionTag(AsTag):
             # Should be the last iteration, so there can be no next.
             pass
 
-        return {'chunkloop': plugin_context}
+        return {'chunkloop': IterationData(**iterdata)}
 register.tag(EditRegionTag.name, EditRegionTag)
 
 
