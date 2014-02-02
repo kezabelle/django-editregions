@@ -194,7 +194,7 @@ class EditRegionTemplateTagTestCase(DjangoTestCase):
         ctx = RequestContext(request)
         ctx.update({'obj': user})
         rendered = tmpl.render(ctx).strip()
-        self.assertEqual(2216, len(rendered))
+        self.assertEqual(2206, len(rendered))
 
         tmpl = Template("""
         output:
@@ -203,7 +203,12 @@ class EditRegionTemplateTagTestCase(DjangoTestCase):
         {% for chunk in exposed %}xxx:{{ chunk }}{% endfor %}
         """)
         rendered = tmpl.render(ctx).strip()
-        self.assertEqual(2256, len(rendered))
+        self.assertIn('output:', rendered)
+        for x in range(0, 10):
+            self.assertIn('xxx:<iframe '.format(x), rendered)
+            self.assertIn('src="https://news.bbc.co.uk/{0}"'.format(x),
+                          rendered)
+            self.assertIn('name="chunk-iframe-{0}"'.format(x+1), rendered)
 
     @override_settings(DEBUG=True)
     def test_blank_content_object_debug(self):
@@ -324,4 +329,4 @@ class EditRegionTemplateTagTestCase(DjangoTestCase):
         {% editregion "test" obj inherit %}
         """)
         rendered = tmpl.render(ctx).strip()
-        self.assertEqual(2216, len(rendered))
+        self.assertEqual(2206, len(rendered))
