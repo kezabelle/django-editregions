@@ -776,3 +776,28 @@ class ChunkAdmin(AdminlinksMixin):
     def media(self):
         media_instance = super(ChunkAdmin, self).media
         return media_instance + Media(js=['editregions/js/childevents.js'])
+
+
+class SupportsEditRegions(object):
+    editregion_template_name_suffix = '_detail'
+
+    def get_inline_instances(self, request, *args, **kwargs):
+        klass = EditRegionInline
+        if klass not in self.inlines:
+            self.inlines.append(klass)
+        return super(SupportsEditRegions, self).get_inline_instances(
+            request, *args, **kwargs)
+
+    def get_editregions_templates(self, obj):
+        opts = obj._meta.opts
+        kwargs = {'app': opts.app_label, 'pk': obj.pk,
+                  'suffix': self.editregion_template_name_suffix}
+        if hasattr(opts, 'model_name'):
+            kwargs.update(model=opts.model_name)
+        else:
+            kwargs.update(model=opts.module_name)
+        return (
+            '{app}/{model}/{pk}{suffix}.html'.format(**kwargs),
+            '{app}/{model}{suffix}.html'.format(**kwargs),
+            '{app}{suffix}.html'.format(**kwargs),
+        )
