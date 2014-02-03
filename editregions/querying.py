@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
-from helpfulfields.querysets import ChangeTrackingQuerySet
+from django.db.models.query import QuerySet
 
 
-class EditRegionChunkQuerySet(ChangeTrackingQuerySet):
+class EditRegionChunkQuerySet(QuerySet):
     def move(self, target, position, region=''):
         from editregions.admin.forms import MovementForm
         form = MovementForm(data={'position': position, 'pk': target,

@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 from django.utils.translation import ugettext_lazy as _
-from helpfulfields.text import modified_label
 
 chunk_v = _('content block')
 chunk_vplural = _('content blocks')
@@ -33,7 +32,7 @@ ttag_no_ancestors = _('%(obj)s must have `%(attr)s` to continue using '
 admin_chunktype_label = _('type')
 admin_summary_label = _('summary')
 admin_position_label = _('#')
-admin_modified_label = modified_label
+admin_modified_label = _(u'last modified')
 
 validate_region_name_error = _('Enter a valid region name consisting of '
                                'letters, numbers, underscores and hyphens.')

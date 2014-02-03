@@ -17,7 +17,6 @@ INSTALLED_APPS = (
     'django.contrib.auth',
     'django.contrib.admin',
     'adminlinks',
-    'helpfulfields',
     # main app in test
     'editregions',
     'editregions.contrib.embeds',

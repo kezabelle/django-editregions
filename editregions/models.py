@@ -5,8 +5,14 @@ import logging
 import os
 import re
 from django.conf import settings
-from django.core.exceptions import ImproperlyConfigured, ValidationError
-from django.db.models.fields import CharField, PositiveIntegerField
+try:
+    from django.contrib.contenttypes.fields import GenericForeignKey
+except ImportError:
+    from django.contrib.contenttypes.generic import GenericForeignKey
+from django.contrib.contenttypes.models import ContentType
+from django.core.exceptions import ImproperlyConfigured
+from django.db.models import (ForeignKey, Model, CharField,
+                              PositiveIntegerField, DateTimeField)
 from django.template import TemplateDoesNotExist
 from django.template.loader import select_template
 from django.template.context import Context
@@ -33,7 +39,6 @@ from editregions.querying import EditRegionChunkQuerySet
 from editregions.text import chunk_v, chunk_vplural
 from editregions.utils.data import get_modeladmin, get_content_type
 from editregions.utils.regions import validate_region_name
-from helpfulfields.models import Generic, ChangeTracking
 
 logger = logging.getLogger(__name__)
 
@@ -59,7 +64,7 @@ except ImportError:  # pragma: no cover ... will raise an exception later.
 
 
 @python_2_unicode_compatible
-class EditRegionChunk(ChangeTracking, Generic):
+class EditRegionChunk(Model):
     """
     Every edit region is made up of these, which serve as pointers for other
     models to key off.
@@ -67,6 +72,14 @@ class EditRegionChunk(ChangeTracking, Generic):
     It may not be immeidiately obvious, because it uses abstract models, but
     this has *3* database indexes - the position, the content_id and the pk.
     """
+    created = DateTimeField(auto_now_add=True)
+    modified = DateTimeField(auto_now=True)
+
+    content_type = ForeignKey(ContentType, related_name='+')
+    content_id = CharField(max_length=255, db_index=True, blank=False,
+                           null=False)
+    content_object = GenericForeignKey('content_type', 'content_id')
+
     region = CharField(max_length=75, validators=[validate_region_name])
     position = PositiveIntegerField(default=None, db_index=True)
 

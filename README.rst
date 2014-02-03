@@ -9,7 +9,6 @@ goodness.
 
 Depends on allsorts of not-on-pypi things I've written:
 
-* django-helpfulfields
 * django-adminlinks
 
 More flexible with:
