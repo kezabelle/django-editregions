@@ -658,9 +658,9 @@ class ChunkAdmin(AdminlinksMixin):
         for x in (REQUEST_VAR_REGION, REQUEST_VAR_CT, REQUEST_VAR_ID):
             if x in querystring:
                 del querystring[x]
-        querystring.update(content_id=obj.content_id,
-                           content_type=obj.content_type_id,
-                           region=obj.region)
+        querystring.update({REQUEST_VAR_ID: obj.content_id,
+                            REQUEST_VAR_CT: obj.content_type_id,
+                            REQUEST_VAR_REGION: obj.region})
         resp.redirect_parts[3] = querystring.urlencode()
         resp['Location'] = urlunsplit(resp.redirect_parts)
         return resp
