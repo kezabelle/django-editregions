@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% load adminlinks_buttons %}
+{% block content %}
+<ul>
+    {% for user in users %}
+    <li><a href="{% url 'show_user' user.pk %}">{{ user }}</a> {% render_edit_button user %}
+        </li>
+    {% endfor %}
+</ul>
+{% render_add_button usermodel %}
+<hr>
+{% endblock content %}

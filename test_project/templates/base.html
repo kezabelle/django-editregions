@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+{% load adminlinks_buttons %}
+{% load adminlinks_assets %}
+<html class="no-js">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <title>Users</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        {% render_adminlinks_css %}
+    </head>
+    <body>
+    {% block content %}
+    {% endblock content %}
+
+    {% render_admin_button for anyone %}
+
+    {% render_adminlinks_js %}
+    </body>
+    </html>

@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% load adminlinks_buttons %}
+{% load editregion %}
+{% block content %}
+<b>Details for <a href="{% url 'show_user' user.pk %}">{{ user }}</a></b>
+{% render_edit_button user %}
+<hr>
+<ul>
+    <li>First name: {{ user.first_name }}</li>
+    <li>Last name: {{ user.last_name }}</li>
+    <li>Email: {{ user.email }}</li>
+</ul>
+<hr>
+<b>Regions</b>
+<br>
+<em>"test"</em>:
+{% editregion "test" user %}
+<br><br>
+<em>"test2"</em>:
+{% editregion "test2" user %}
+<br><br>
+<a href="{% url 'list_users' %}">back to users</a>
+<hr>
+{% endblock %}
+

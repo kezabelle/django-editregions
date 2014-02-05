@@ -1,0 +1,12 @@
+{
+    "test": {
+        "name": "Test Region One"
+    },
+    "test2": {
+        "name": "A second test region",
+        "models": {
+            "embeds.IFrame": 1,
+            "embeds.Javascript": null
+        }
+    }
+}
