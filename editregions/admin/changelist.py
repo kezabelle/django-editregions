@@ -45,8 +45,11 @@ class EditRegionChangeList(ChangeList):
         """
         AdminChunkWrapper = self.model_admin.get_admin_wrapper_class()
         filters = ()
+        # make sure the region exists, that it has values, and that it has
+        # a models key.
         can_get_models = (self.region in conf.config,
-                          conf.config.get(self.region, False))
+                          conf.config.get(self.region, False),
+                          conf.config.get(self.region, {}).get('models'))
         if all(can_get_models):
             filters = list(AdminChunkWrapper(**{
                 'opts': x._meta,
