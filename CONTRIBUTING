@@ -1,0 +1,17 @@
+Contributing
+------------
+
+Please do!
+
+The project is hosted on `GitHub`_ in the `kezabelle/django-editregions`_
+repository. The main branch is *master*.
+
+Bug reports and feature requests can be filed on the repository's `issue tracker`_.
+
+If something can be discussed in 140 character chunks, there's also `my Twitter account`_.
+
+.. _GitHub: https://github.com/
+.. _kezabelle/django-editregions: https://github.com/kezabelle/django-editregions
+.. _issue tracker: https://github.com/kezabelle/django-editregions/issues
+.. _my Twitter account: https://twitter.com/kezabelle/
+

@@ -1,22 +1,13 @@
-.. django-editregions documentation master file, created by
-   sphinx-quickstart on Fri Oct 12 15:24:11 2012.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
+.. include:: ../README.rst
 
-Welcome to django-editregions's documentation!
-==============================================
+.. image:: version.png
 
-Contents:
+Miscellany
+----------
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 5
 
-
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
-
+   contributing
+   changes
+   license

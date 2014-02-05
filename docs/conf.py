@@ -18,6 +18,21 @@ import sys, os
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #sys.path.insert(0, os.path.abspath('.'))
 
+import sys, os
+from django.conf import settings
+from django.conf import global_settings as django_conf
+settings.configure(default_settings=django_conf)
+# If extensions (or modules to document with autodoc) are in another directory,
+# add these directories to sys.path here. If the directory is relative to the
+# documentation root, use os.path.abspath to make it absolute, like shown here.
+packages = [
+    '..',
+]
+here = os.path.dirname(__file__)
+for pkg in packages:
+    new_pkg = os.path.abspath(os.path.join(here, pkg))
+    sys.path.insert(0, new_pkg)
+
 # -- General configuration -----------------------------------------------------
 
 # If your documentation needs a minimal Sphinx version, state it here.
@@ -243,4 +258,10 @@ texinfo_documents = [
 
 
 # Example configuration for intersphinx: refer to the Python standard library.
-intersphinx_mapping = {'http://docs.python.org/': None}
+intersphinx_mapping = {
+    'python': ('http://python.readthedocs.org/en/latest/', None),
+    'django': ('http://django.readthedocs.org/en/latest/', None),
+    'sphinx': ('http://sphinx.readthedocs.org/en/latest/', None),
+    'classytags': ('http://django-classy-tags.readthedocs.org/en/latest/',
+                   None),
+}

@@ -8,3 +8,5 @@ htmlcov
 coverage.xml
 pep8.txt
 README.html
+docs/_build
+LONGDESC.html

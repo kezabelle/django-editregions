@@ -1,0 +1,4 @@
+.. include:: ../CONTRIBUTING
+
+.. include:: ../CONTRIBUTORS
+

@@ -9,11 +9,16 @@ goodness.
 
 Depends on allsorts of not-on-pypi things I've written:
 
-* django-adminlinks
+* `django-adminlinks`_ - for admin popups, and misc utilities.
+* `django-moreloaders`_ - to allow flexible template caching
 
-More flexible with:
+.. _django-adminlinks: https://github.com/kezabelle/django-adminlinks
+.. _django-moreloaders: https://github.com/kezabelle/django-moreloaders
 
-* django-moreloaders
+Status
+------
+
+
 
 Bundled "chunks"
 ----------------
@@ -26,8 +31,10 @@ models capable of being embedded into editable regions:
 * External CSS & Javascript (both local & via remote URL)
 * iframes
 * external RSS feeds
-* Haystack "more like this"
-* Haystack search results for a given query
+* `Haystack`_ "more like this"
+* `Haystack`_ search results for a given query
+
+.. _Haystack: https://github.com/toastdriven/django-haystack
 
 Usage
 -----
