@@ -789,7 +789,7 @@ class SupportsEditRegions(object):
             request, *args, **kwargs)
 
     def get_editregions_templates(self, obj):
-        opts = obj._meta.opts
+        opts = obj._meta
         kwargs = {'app': opts.app_label, 'pk': obj.pk,
                   'suffix': self.editregion_template_name_suffix}
         if hasattr(opts, 'model_name'):
@@ -797,7 +797,7 @@ class SupportsEditRegions(object):
         else:
             kwargs.update(model=opts.module_name)
         return (
-            '{app}/{model}/{pk}{suffix}.html'.format(**kwargs),
+            '{app}/{model}{suffix}.{pk}.html'.format(**kwargs),
             '{app}/{model}{suffix}.html'.format(**kwargs),
             '{app}{suffix}.html'.format(**kwargs),
         )
