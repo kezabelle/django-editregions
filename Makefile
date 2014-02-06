@@ -29,9 +29,9 @@ clean-build:
 	rm -fr *.egg-info
 
 clean-pyc:
-	find . -name '*.pyc' -exec rm -f {}
-	find . -name '*.pyo' -exec rm -f {}
-	find . -name '*~' -exec rm -f {}
+	find . -name '*.pyc' -exec rm -f {} \;
+	find . -name '*.pyo' -exec rm -f {} \;
+	find . -name '*~' -exec rm -f {} \;
 
 test: requirements
 	python -B -tt -W once setup.py test
