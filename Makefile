@@ -10,6 +10,9 @@ help:
 	@echo "requirements - collect all subrequirements files"
 	@echo "test - run tests quickly with the current Python"
 	@echo "test-all - run tests on every Python version with tox"
+	@echo "test-project - launch the test project"
+	@echo "check - basic sanity checking of the package"
+	@echo "docs - build the sphinx documentation into HTML and JSON"
 	@echo "release - package a release"
 
 release: clean requirements
@@ -36,10 +39,14 @@ test: requirements
 test-all: requirements
 	tox
 
+test-project:
+	pip install -r test_project/requirements.txt
+	python test_project/run.py
+
 requirements:
 	rm -f 'requirements.all.txt'
 	touch 'requirements.all.txt'
-	find . -type f -name requirements.txt ! -path "./.tox/*" -exec cat {} \; | sort -f -d | uniq -u >> requirements.all.txt
+	find . -type f -name requirements.txt ! -path "./.tox/*" ! -path "./test_project/*" -exec cat {} \; | sort -f -d | uniq -u >> requirements.all.txt
 
 check:
 	rm -f LONGDESC.html
@@ -52,3 +59,4 @@ docs:
 	cd docs && sphinx-build -b json -d _build/doctrees . _build/json
 	@echo
 	@echo "Sphinx docs generated into HTML and JSON in the _build directory"
+

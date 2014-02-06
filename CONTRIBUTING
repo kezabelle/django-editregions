@@ -15,3 +15,21 @@ If something can be discussed in 140 character chunks, there's also `my Twitter 
 .. _issue tracker: https://github.com/kezabelle/django-editregions/issues
 .. _my Twitter account: https://twitter.com/kezabelle/
 
+Running stuff
+-------------
+
+Tests can be run against your default python using::
+
+    make test
+
+To run the tests against all the environments supported::
+
+    make test-all
+
+To run the example Django project::
+
+    make test-project
+
+To build the documentation::
+
+    make docs
