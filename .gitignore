@@ -10,3 +10,5 @@ pep8.txt
 README.html
 docs/_build
 LONGDESC.html
+db.sqlite
+CONTRIBUTING.html
