@@ -22,6 +22,7 @@ d(
         "django.contrib.staticfiles",
         "django.contrib.messages",
         "django.contrib.admin",
+        "debug_toolbar",
         "adminlinks",
         "editregions",
         "editregions.contrib.embeds",
@@ -37,10 +38,32 @@ d(
         "django.contrib.auth.middleware.AuthenticationMiddleware",
         "django.contrib.messages.middleware.MessageMiddleware",
         "django.middleware.clickjacking.XFrameOptionsMiddleware",
+        "debug_toolbar.middleware.DebugToolbarMiddleware",
     ],
     INTERNAL_IPS=[
         "127.0.0.1",
     ],
+    DEBUG_TOOLBAR_PATCH_SETTINGS=False,
+    DEBUG_TOOLBAR_PANELS=[
+        'debug_toolbar.panels.versions.VersionsPanel',
+        'debug_toolbar.panels.timer.TimerPanel',
+        'debug_toolbar.panels.settings.SettingsPanel',
+        'debug_toolbar.panels.headers.HeadersPanel',
+        'debug_toolbar.panels.request.RequestPanel',
+        'debug_toolbar.panels.sql.SQLPanel',
+        'debug_toolbar.panels.staticfiles.StaticFilesPanel',
+        'debug_toolbar.panels.templates.TemplatesPanel',
+        'debug_toolbar.panels.cache.CachePanel',
+        'debug_toolbar.panels.signals.SignalsPanel',
+        'debug_toolbar.panels.logging.LoggingPanel',
+        'debug_toolbar.panels.redirects.RedirectsPanel',
+    ],
+    DEBUG_TOOLBAR_CONFIG={
+        "INTERCEPT_REDIRECTS": False,
+        "ENABLE_STACKTRACES": True,
+        "SHOW_TEMPLATE_CONTEXT": True,
+        "SQL_WARNING_THRESHOLD": 300,
+    },
     TEMPLATE_CONTEXT_PROCESSORS=[
         "django.core.context_processors.media",
         "django.core.context_processors.static",
@@ -66,8 +89,12 @@ d(
 )
 
 from django.conf.urls.static import static
+from django.conf.urls import include
+import debug_toolbar
 d.urlpatterns += static(prefix='/m/', show_indexes=True,
                         document_root=d.dotslash('media'))
+d.urlpatterns += d.patterns('',
+        d.url(r'^debug_toolbar/', include(debug_toolbar.urls)))
 
 
 if __name__ == "__main__":
