@@ -9,7 +9,8 @@ from editregions.contrib.embeds.utils import static_asset_choices
 class StaticAssetChoicesTestCase(TestCase):
     def test_yielding_css(self):
         data = static_asset_choices(only_patterns=('test-*.css',))
-        self.assertEqual(list(data), [
+        expected = sorted(list(data))
+        self.assertEqual(expected, [
             (u'test-1.css', u'test-1.css'),
             (u'test-2.css', u'test-2.css')
         ])

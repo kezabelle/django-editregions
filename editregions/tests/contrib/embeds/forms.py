@@ -27,7 +27,8 @@ class StylesheetAssetFormTestCase(TestCase):
     def test_found_patterns(self):
         form = StylesheetAssetForm(only_patterns=('test-*.css',))
         self.assertEqual(form.only_patterns, ('test-*.css',))
-        self.assertEqual(form.fields['local'].choices, [
+        expected = sorted(list(form.fields['local'].choices))
+        self.assertEqual(expected, [
             ('test-1.css', 'test-1.css'), ('test-2.css', 'test-2.css')
         ])
 
@@ -49,7 +50,8 @@ class JavascriptAssetFormTestCase(TestCase):
     def test_found_patterns(self):
         form = JavascriptAssetForm(only_patterns=('test-*.js',))
         self.assertEqual(form.only_patterns, ('test-*.js',))
-        self.assertEqual(form.fields['local'].choices, [
+        expected = sorted(list(form.fields['local'].choices))
+        self.assertEqual(expected, [
             ('test-1.js', 'test-1.js')
         ])
 
