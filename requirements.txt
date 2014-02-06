@@ -1,2 +1,2 @@
--e git+git@github.com:kezabelle/django-setuptest.git@feature/django17_support#egg=django-setuptest
+-e git+https://github.com/kezabelle/django-setuptest.git@feature/django17_support#egg=django-setuptest
 -e git+https://github.com/kezabelle/django-adminlinks.git#egg=django-adminlinks
