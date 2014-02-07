@@ -62,8 +62,15 @@ class ChunkAdminTestCase(DjangoTestCase):
 
     def test_response_max(self):
         request = RequestFactory().get('/')
-        results = self.chunk_admin.response_max(request=request, limit=1,
-                                                found=1).content
+        context = {
+            'found': 3,
+            'limit': 1,
+            'region': 'test',
+            'me': '',
+            'parent': '',
+        }
+        results = self.chunk_admin.response_max(request=request,
+                                                context=context).content
         self.assertIn(force_text('<h2>Limit reached</h2>'),
                       force_text(results))
         # this doesn't work. No idea why. Stupid Django.

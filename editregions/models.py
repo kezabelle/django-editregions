@@ -15,8 +15,8 @@ from django.db.models import (ForeignKey, Model, CharField,
                               PositiveIntegerField, DateTimeField)
 from django.template import TemplateDoesNotExist
 from django.template.loader import select_template
-from django.template.context import Context
-from django.utils.encoding import python_2_unicode_compatible
+from django.template.context import Context, BaseContext
+from django.utils.encoding import python_2_unicode_compatible, force_text
 from django.utils.functional import cached_property
 
 try:
@@ -97,7 +97,8 @@ class EditRegionChunk(Model):
 
     def move(self, requested_position):
         from editregions.admin.forms import MovementForm
-        form = MovementForm(data={'position': requested_position, 'pk': self.pk})
+        form = MovementForm(data={'position': requested_position,
+                                  'pk': self.pk})
         if form.is_valid():
             return form.save()
         return form.errors
@@ -116,19 +117,22 @@ class EditRegionChunk(Model):
         verbose_name_plural = chunk_vplural
 
 
-class EditRegionConfiguration(object):
-    fallback_region_name_re = re.compile(r'[_\W]+')
-    config = {}
-    has_configuration = False
-    possible_templates = ()
-    template = None
-    obj = None
-    modeladmin = None
-    decoder = 'json'
+fallback_region_name_re = re.compile(r'[_\W]+')
 
-    def __init__(self, obj=None, decoder=None):
-        if decoder is not None:
-            self.decoder = decoder
+
+@python_2_unicode_compatible
+class EditRegionConfiguration(object):
+
+    __slots__ = ('config', 'has_configuration', '_previous_fetched_chunks',
+                 'obj', 'decoder',  'decoder_func')
+
+    def __init__(self, obj=None, decoder='json'):
+        self.config = {}
+        self.has_configuration = False
+        self._previous_fetched_chunks = None
+        self.obj = None
+        self.decoder = decoder
+
         if self.decoder == 'json':
             self.decoder_func = json.loads
         elif self.decoder == 'yaml' and CAN_USE_YAML_DECODER:
@@ -140,6 +144,20 @@ class EditRegionConfiguration(object):
                                        "deserialization format")
         if obj is not None and getattr(self, 'obj', None) is None:
             self.configure(obj=obj)
+
+    def __str__(self):
+        return '<{mod}.{cls} for "{obj}" using "{decoder}" decoder>'.format(
+            mod=self.__module__, cls=self.__class__.__name__,
+            obj=force_text(self.obj), decoder=self.decoder
+        )
+
+    def __repr__(self):
+        return ('<{mod}.{cls} for "{obj}" using "{decoder}" decoder to get '
+                'config: "{data!s}">'.format(
+                    mod=self.__module__, cls=self.__class__.__name__,
+                    obj=force_text(self.obj), decoder=self.decoder,
+                    data=self.config
+                ))
 
     def __eq__(self, other):
         return all([
@@ -166,27 +184,29 @@ class EditRegionConfiguration(object):
 
     def configure(self, obj):
         self.obj = obj
-        self.modeladmin = get_modeladmin(self.obj)
-        self.possible_templates = self.modeladmin.get_editregions_templates(
+        modeladmin = get_modeladmin(self.obj)
+        possible_templates = modeladmin.get_editregions_templates(
             obj=self.obj)
-        self.template = self.get_first_valid_template()
-        self.has_configuration = self.template is not None
-        self.config = self.get_template_region_configuration()
+        template = self.get_first_valid_template(
+            possible_templates=possible_templates)
+        self.has_configuration = template is not None
+        self.config = self.get_template_region_configuration(
+            template_instance=template)
 
-    def get_first_valid_template(self):
+    def get_first_valid_template(self, possible_templates):
         """
         Given a bunch of templates (tuple, list), find the first one in the
         settings dictionary. Assumes the incoming template list is ordered in
         discovery-preference order.
         """
-        if isinstance(self.possible_templates, string_types):
-            template_names = (self.possible_templates,)
+        if isinstance(possible_templates, string_types):
+            template_names = (possible_templates,)
         else:
-            template_names = self.possible_templates
+            template_names = possible_templates
 
         serializer_template_names = ['{filename}.{serializer}'.format(
             filename=os.path.splitext(x)[0], serializer=self.decoder)
-            for x in template_names]
+            for x in template_names if x.strip()]
         try:
             return select_template(serializer_template_names)
         except TemplateDoesNotExist:
@@ -197,12 +217,14 @@ class EditRegionConfiguration(object):
             ))
             return None
 
-    def get_template_region_configuration(self):
+    def get_template_region_configuration(self, template_instance):
         # if in production (DEBUG=False) and no template was found,
         # play nicely and don't error the whole request.
-        if self.template is None:
+        if template_instance is None:
             return {}
-        rendered_template = self.template.render(Context()).strip()
+        # avoid generating an empty Context instance by not calling .render()
+        rendered_template = template_instance._render(
+            context=BaseContext()).strip()
         if len(rendered_template) == 0:
             logger.warning("Template was empty after being rendered")
             return {}
@@ -217,7 +239,7 @@ class EditRegionConfiguration(object):
                 logger.debug('No declared name for "%(region)s" in configuration, '
                              'falling back to using a regular expression' % logbits)
                 parsed_template[key]['name'] = re.sub(
-                    pattern=self.fallback_region_name_re, string=key, repl=' ')
+                    pattern=fallback_region_name_re, string=key, repl=' ')
         return parsed_template
 
     def get_enabled_chunks_for_region(self, model_mapping):
@@ -276,15 +298,27 @@ class EditRegionConfiguration(object):
             # chunk limit was None
             return None
 
-    @cached_property
+    @property
     def _fetch_chunks(self):
+        if self._previous_fetched_chunks is not None:
+            # previously this was using a cached_property decorator, but that
+            # prevents me trying to be clever and use __slots__
+            logger.info("Requesting previously fetched chunks")
+            return self._previous_fetched_chunks
+
         logger.info("Requesting chunks")
         models = set()
-        final_results = defaultdict(list)
+        self._previous_fetched_chunks = defaultdict(list)
+        parsed_config = tuple(self.config.items())
 
-        # figure out what models we need to ask for.
-        for region, subconfig in self.config.items():
-            final_results[region]  # this actually does assign the keys.
+        # fail as early as possible if there's nothing to do.
+        if len(parsed_config) < 1:
+            return self._previous_fetched_chunks
+
+        # calculate the maximum number of a) dict keys, b) models required in
+        # the queryset.
+        for region, subconfig in parsed_config:
+            self._previous_fetched_chunks[region]  # this actually does assign the keys.
             klasses = subconfig.get('models', {}).keys()
             models |= set(klasses)
         models = tuple(models)
@@ -294,7 +328,7 @@ class EditRegionConfiguration(object):
                 raise ImproperlyConfigured("Tried to fetch chunks without "
                                            "having a valid `obj` for this "
                                            "EditRegionConfiguration instance")
-            return final_results
+            return self._previous_fetched_chunks
 
         kws = {
             'content_type': get_content_type(self.obj),
@@ -302,15 +336,17 @@ class EditRegionConfiguration(object):
         }
         # avoids doing an IN (?, ?) query if only one region exists
         # avoids doing *any* query if no regions exist.
-        region_count = len(final_results)
+        region_count = len(self._previous_fetched_chunks)
         if region_count < 1:
-            return final_results
+            return self._previous_fetched_chunks
         elif region_count == 1:
-            kws.update(region=list(final_results.keys())[0])
+            # cast to list because PY3 is lame.
+            kws.update(region=list(self._previous_fetched_chunks.keys())[0])
         else:
-            kws.update(region__in=final_results.keys())
+            kws.update(region__in=self._previous_fetched_chunks.keys())
 
-        # populate the resultset
+        # populate the resultset, in the most efficient way possible for the
+        # given models. Should always be either 0 or 1 query to the database.
         model_count = len(models)
         if model_count == 1:
             chunks = models[0].objects.filter(**kws)
@@ -321,9 +357,9 @@ class EditRegionConfiguration(object):
 
         index = 0
         for index, chunk in enumerate(chunks.iterator(), start=1):
-            final_results[chunk.region].append(chunk)
+            self._previous_fetched_chunks[chunk.region].append(chunk)
         logger.info("Requesting chunks resulted in {0} items".format(index))
-        return final_results
+        return self._previous_fetched_chunks
 
     def fetch_chunks(self):
         return self._fetch_chunks

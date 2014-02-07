@@ -32,7 +32,6 @@ class EditRegionChangeList(ChangeList):
         self.available_chunks = self.get_changelist_filters(
             request_querydict=request.GET, obj=parent_obj, conf=parent_erc)
         self.formset = None
-        self.template = parent_erc.template
         configured_region = parent_erc.config.get(self.region, {})
         self.get_region_display = configured_region.get('name', 'ERROR')
 
