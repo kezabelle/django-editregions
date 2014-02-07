@@ -18,14 +18,6 @@ def validate_region_name(name):
     also exists to ensure that at the point of usage in templates etc, the
     region name cannot violate the maximum length, and saves a trip to the database
     to lookup something horribly incorrect.
-
-    :used by:
-        :attr:`~editregions.models.EditRegionChunk.region`
-        :meth:`~editregions.modeladmins2.EditRegionInline.get_region_name`
-        :meth:`~editregions.templatetags.adminlinks_editregion.EditRegionToolbar.get_context`
-        :meth:`~editregions.templatetags.editregion.EditRegionTag.render_tag`
-
-    .. testcase:: ValidateRegionNameTestCase
     """
     if name.startswith('_'):
         raise ValidationError(region_name_startswith)
