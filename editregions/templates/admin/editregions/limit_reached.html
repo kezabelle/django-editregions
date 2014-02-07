@@ -1,5 +1,7 @@
 {% extends "admin/base_site.html" %}
-{% load i18n %}
+{% load i18n static %}
+
+{% block extrastyle %}{{ block.super }}<link rel="stylesheet" type="text/css" href="{% static "admin/css/forms.css" %}" />{% endblock %}
 
 {% block breadcrumbs %}
     <div class="breadcrumbs">
@@ -13,8 +15,13 @@
         <div class="module">
             <h2>{% trans 'Limit reached' %}</h2>
             <p>
+                {% blocktrans with chunk=me  region=region %}
+                    Unable to add another <b>{{ chunk }}</b> to <b>{{ region }}</b>.
+                {% endblocktrans %}
+            </p>
+            <p>
                 {% blocktrans with limit=limit %}
-                    Unable to add more than <b>{{ limit }}</b> to this region.
+                There is a maximum of <b>{{ limit }}</b> allowed.
                 {% endblocktrans %}
             </p>
             {% if limit != found %}
@@ -25,5 +32,11 @@
             </p>
             {% endif %}
         </div>
+
+        {% if request.GET.next %}
+        <div class="submit-row">
+            <a href="{{ request.GET.next }}" class="button default">Back</a>
+        </div>
+        {% endif %}
     </div>
 {% endblock %}

@@ -532,7 +532,7 @@ class ChunkAdmin(AdminlinksMixin):
         #     obj.position = found2 + 1
         super(ChunkAdmin, self).save_model(request, obj, form, change)
 
-    def response_max(self, request, limit, found):
+    def response_max(self, request, context):
         """
         If a chunk limit has been reached,
         adding a new one via `add_view` will instead return this view.
@@ -540,10 +540,6 @@ class ChunkAdmin(AdminlinksMixin):
         possible_templates = [
             'admin/editregions/limit_reached.html'
         ]
-        context = {
-            'found': found,
-            'limit': limit,
-        }
         return render_to_response(possible_templates, context,
                                   context_instance=RequestContext(request))
 
@@ -583,7 +579,14 @@ class ChunkAdmin(AdminlinksMixin):
                                 'limit': limit,
                                 'exists': already_created,
                             })
-                return self.response_max(request, limit, already_created)
+                context = {
+                    'found': already_created,
+                    'limit': limit,
+                    'region': erc.config[region]['name'],
+                    'me': self.model._meta.verbose_name,
+                    'parent': parent_class._meta.verbose_name,
+                }
+                return self.response_max(request, context=context)
         # we haven't got a limit for this chunk type, so carry on as normal.
         return super(ChunkAdmin, self).add_view(request, *args, **kwargs)
 
