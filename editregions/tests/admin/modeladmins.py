@@ -296,17 +296,21 @@ class ChunkAdminTestCase(DjangoTestCase):
 
 class MaybeFixRedirectionTestCase(DjangoTestCase):
     def setUp(self):
-        self.realish_admin = RealishAdmin
+        try:
+            admin.site.unregister(Iframe)
+        except NotRegistered:
+            pass
         try:
             admin.site.unregister(User)
         except NotRegistered:
             pass
         admin.site.register(User, TestUserAdmin)
+        admin.site.register(Iframe, RealishAdmin)
 
     def test_leave_unchanged(self):
         request = RequestFactory().get('/')
         response_200 = HttpResponse(content='ok')
-        admin_instance = self.realish_admin(model=Iframe, admin_site=admin.site)
+        admin_instance = get_modeladmin(Iframe)
         new_response = admin_instance.maybe_fix_redirection(
             request=request, response=response_200)
         # returned unchanged
@@ -315,7 +319,7 @@ class MaybeFixRedirectionTestCase(DjangoTestCase):
 
     def test_returned_data_changed(self):
         request = RequestFactory().get('/')
-        admin_instance = self.realish_admin(model=Iframe, admin_site=admin.site)
+        admin_instance = get_modeladmin(Iframe)
         response_302 = HttpResponseRedirect(redirect_to='/admin_mountpoint/')
         new_response = admin_instance.maybe_fix_redirection(
             request=request, response=response_302)
@@ -333,7 +337,7 @@ class MaybeFixRedirectionTestCase(DjangoTestCase):
         user.save()
         request = RequestFactory().get('/')
         response_302 = HttpResponseRedirect(redirect_to='/admin_mountpoint/')
-        admin_instance = self.realish_admin(model=Iframe, admin_site=admin.site)
+        admin_instance = get_modeladmin(Iframe)
         new_response = admin_instance.maybe_fix_redirection(
             request=request, response=response_302, obj=user)
         # was a redirect, but not to a chunkadmin instance.
@@ -347,7 +351,7 @@ class MaybeFixRedirectionTestCase(DjangoTestCase):
         user.set_password('test')
         user.full_clean()
         user.save()
-        admin_instance = self.realish_admin(model=Iframe, admin_site=admin.site)
+        admin_instance = get_modeladmin(Iframe)
         request = RequestFactory().get('/')
         request.user = user
         iframe_admin = reverse('admin:embeds_iframe_add')
@@ -372,7 +376,7 @@ class MaybeFixRedirectionTestCase(DjangoTestCase):
         user.set_password('test')
         user.full_clean()
         user.save()
-        admin_instance = self.realish_admin(model=Iframe, admin_site=admin.site)
+        admin_instance = get_modeladmin(Iframe)
         request = RequestFactory().get('/', {
             '_autoclose': 1,
         })
@@ -404,7 +408,7 @@ class MaybeFixRedirectionTestCase(DjangoTestCase):
         user.set_password('test')
         user.full_clean()
         user.save()
-        admin_instance = self.realish_admin(model=Iframe, admin_site=admin.site)
+        admin_instance = get_modeladmin(Iframe)
         request = RequestFactory().get('/', {
             '_continue': 1,
         })
