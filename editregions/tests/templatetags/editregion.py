@@ -8,6 +8,7 @@ from django.core.exceptions import ImproperlyConfigured
 from django.template import Template, RequestContext, Context
 from django.test import TestCase as DjangoTestCase, RequestFactory
 from django.test.utils import override_settings
+from editregions.contrib.embeds.admin import IframeAdmin
 from editregions.contrib.embeds.models import Iframe
 from editregions.models import EditRegionChunk
 from editregions.templatetags.editregion import EditRegionTag
@@ -23,6 +24,11 @@ class TestUserAdmin(UserAdmin):
 class EditRegionTemplateTagTestCase(DjangoTestCase):
     def setUp(self):
         self.ct = get_content_type(User)
+        try:
+            admin.site.unregister(Iframe)
+        except NotRegistered:
+            pass
+        admin.site.register(Iframe, IframeAdmin)
 
     def test_render_one_chunk(self):
         iframe = Iframe(region='test', content_id=1, content_type=self.ct,

@@ -15,6 +15,8 @@ from django.http import HttpResponse, HttpResponseRedirect, HttpResponsePermanen
 from django.template.response import TemplateResponse
 from django.test import RequestFactory
 from django.utils.datastructures import MultiValueDictKeyError
+from editregions.contrib.embeds.admin import IframeAdmin
+
 try:
     from unittest.case import TestCase, skipUnless
 except ImportError:
@@ -48,12 +50,17 @@ class ChunkAdminTestCase(DjangoTestCase):
     def setUp(self):
         self.chunk_admin = ChunkAdmin()
         self.chunk_admin.admin_site = admin.site
-        self.realish_admin = RealishAdmin
+        try:
+            admin.site.unregister(Iframe)
+        except NotRegistered:
+            pass
+
         try:
             admin.site.unregister(User)
         except NotRegistered:
             pass
         admin.site.register(User, TestUserAdmin)
+        admin.site.register(Iframe, RealishAdmin)
 
     def test_get_model_perms(self):
         request = RequestFactory().get('/')
@@ -190,7 +197,7 @@ class ChunkAdminTestCase(DjangoTestCase):
             'content_type': ct.pk,
             'content_id': user.pk,
         })
-        admin_instance = self.realish_admin(model=Iframe, admin_site=admin.site)
+        admin_instance = get_modeladmin(Iframe)
 
         expected_query_count = 2 if is_django_16plus() else 4
         with self.assertNumQueries(expected_query_count):
@@ -210,7 +217,7 @@ class ChunkAdminTestCase(DjangoTestCase):
         iframe.save()
         request = RequestFactory().get('/')
         request.user = user
-        admin_instance = self.realish_admin(model=Iframe, admin_site=admin.site)
+        admin_instance = get_modeladmin(Iframe)
 
         admin_instance.log_addition(request, iframe)
         admin_instance.log_change(request, iframe, "we changed a thing!")
@@ -260,7 +267,7 @@ class ChunkAdminTestCase(DjangoTestCase):
             REQUEST_VAR_REGION: 'test'
         })
         request.user = user
-        admin_instance = self.realish_admin(model=Iframe, admin_site=admin.site)
+        admin_instance = get_modeladmin(Iframe)
 
         for x in range(0, generate_chunks):
             iframe = Iframe(position=2, region='test', content_type=ct,
@@ -421,7 +428,6 @@ class MaybeFixRedirectionTestCase(DjangoTestCase):
                         content_id=user.pk, url='https://news.bbc.co.uk/')
         iframe.full_clean()
         iframe.save()
-
         new_response = admin_instance.maybe_fix_redirection(
             request=request, response=response_301, obj=iframe)
         # was a redirect, to a chunkadmin instance
@@ -433,6 +439,11 @@ class MaybeFixRedirectionTestCase(DjangoTestCase):
 class EditRegionAdminTestCase(DjangoTestCase):
     def setUp(self):
         self.admin = get_modeladmin(EditRegionChunk)
+        try:
+            admin.site.unregister(Iframe)
+        except NotRegistered:
+            pass
+        admin.site.register(Iframe, IframeAdmin)
 
     def test_cover_init(self):
         our_admin = EditRegionAdmin(EditRegionChunk, admin.site)
