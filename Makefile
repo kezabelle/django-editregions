@@ -34,7 +34,7 @@ clean-pyc:
 	find . -name '*~' -exec rm -f {} \;
 
 test: requirements
-	python -B -tt -W once setup.py test
+	python -B -tt -W once setup.py test --failfast
 
 test-all: requirements
 	tox

@@ -1,7 +1,24 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 import os
+import sys
 from setuptools import setup, find_packages
+try:
+    from setuptest import test
+    test_config = {
+        'cmdclass': {'test': test}
+    }
+except ImportError:
+    test_config = {
+    'tests_require': (
+        'django-setuptest',
+        ),
+    'test_suite': 'setuptest.setuptest.SetupTestSuite'
+    }
+    for argument in ('--failfast', '--autoreload', '--label'):
+        if argument in sys.argv:
+            sys.argv.remove(argument)
+
 
 HERE = os.path.abspath(os.path.dirname(__file__))
 
@@ -29,10 +46,6 @@ setup(
     name="django-editregions",
     version="0.1.0",
     packages=find_packages(),
-    tests_require=(
-        'django-setuptest',
-    ),
-    test_suite='setuptest.setuptest.SetupTestSuite',
     author="Keryn Knight",
     author_email='python-package@kerynknight.com',
     description="",
@@ -55,4 +68,5 @@ setup(
         'License :: OSI Approved :: BSD License',
     ],
     platforms=['OS Independent'],
+    **test_config
 )
