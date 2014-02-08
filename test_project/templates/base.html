@@ -5,15 +5,26 @@
     <head>
         <meta charset="utf-8">
         <meta http-equiv="X-UA-Compatible" content="IE=edge">
-        <title>Users</title>
+        <title>{% block title %}{% endblock %}</title>
         <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" type="text/css" href="//netdna.bootstrapcdn.com/bootstrap/3.1.0/css/bootstrap.min.css">
         {% render_adminlinks_css %}
     </head>
     <body>
+    <div class="container">
+    <div class="row">
+
+    <ol class="breadcrumb">
+    {% block breadcrumbs %}
+    {% endblock %}
+    </ol>
+
     {% block content %}
     {% endblock content %}
+    </div>
 
     {% render_admin_button for anyone %}
+    </div>
 
     {% render_adminlinks_js %}
     </body>

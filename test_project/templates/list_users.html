@@ -1,12 +1,40 @@
 {% extends "base.html" %}
+
+{% block title %}All users{% endblock %}
+
+{% block breadcrumbs %}
+<li><a href="{% url 'list_users' %}" class="active">All users</a></li>
+{% endblock %}
+
 {% load adminlinks_buttons %}
 {% block content %}
-<ul>
+<h1>All users</h1>
+<table class="table table-striped">
+    <thead>
+    <tr>
+    <th>&nbsp;</th>
+    <th>Email</th>
+    <th>Forenames</th>
+    <th>Surnames</th>
+    <th>Joined</th>
+    <th>&nbsp;</th>
+    </tr>
+    </thead>
+
+    <tbody>
     {% for user in users %}
-    <li><a href="{% url 'show_user' user.pk %}">{{ user }}</a> {% render_edit_button user %}
-        </li>
+    <tr>
+    <td><a class="btn btn-primary btn-xs" href="{% url 'show_user' user.pk %}">{{ user }} details</a></td>
+    <td>{{ user.email }}</td>
+    <td>{{ user.first_name }}</td>
+    <td>{{ user.last_name }}</td>
+    <td>{{ user.date_joined }}</td>
+    <td>{% render_edit_button user %}</td>
+    </tr>
     {% endfor %}
-</ul>
+    </tbody>
+
+</table>
 {% render_add_button usermodel %}
 <hr>
 {% endblock content %}

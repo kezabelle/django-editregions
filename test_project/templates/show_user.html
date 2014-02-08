@@ -1,25 +1,68 @@
-{% extends "base.html" %}
+{% extends "list_users.html" %}
+
+{% block title %}{{ user }} &laquo; {{ block.super }}{% endblock %}
+
+{% block breadcrumbs %}
+<li><a href="{% url 'list_users' %}">All users</a></li>
+<li><a href="{% url 'show_user' user.pk %}" class="active">This user</a></li>
+{% endblock %}
+
+
 {% load adminlinks_buttons %}
 {% load editregion %}
 {% block content %}
-<b>Details for <a href="{% url 'show_user' user.pk %}">{{ user }}</a></b>
+<h1>Details for <a href="{% url 'show_user' user.pk %}">{{ user }}</a></h1>
+<table class="table table-striped">
+    <tbody>
+    <tr>
+    <td>Email</td>
+    <td>{{ user.email }}</td>
+    </tr>
+    <tr>
+    <td>Forenames</td>
+    <td>{{ user.first_name }}</td>
+    </tr>
+    <tr>
+    <td>Surnames</td>
+    <td>{{ user.last_name }}</td>
+    </tr>
+    <tr>
+    <td>Joined</td>
+    <td>{{ user.date_joined }}</td>
+    </tr>
+    </tbody>
+</table>
 {% render_edit_button user %}
-<hr>
-<ul>
-    <li>First name: {{ user.first_name }}</li>
-    <li>Last name: {{ user.last_name }}</li>
-    <li>Email: {{ user.email }}</li>
-</ul>
-<hr>
-<b>Regions</b>
-<br>
-<em>"test"</em>:
+<h2>Regions</h2>
+<p class="lead">
+    The following output comes from the <code>{% verbatim %}{% editregion %}{% endverbatim %}</code> template tag, and should only do <b>one</b> database query, no matter
+    how often or how many times it is used on a given object.
+</p>
+
+<div class="alert alert-success">
+<h5>"test" region</h5>
 {% editregion "test" user %}
-<br><br>
-<em>"test2"</em>:
+</div>
+
+<div class="alert alert-info">
+<h5>"test2" region</h5>
 {% editregion "test2" user %}
-<br><br>
-<a href="{% url 'list_users' %}">back to users</a>
+</div>
 <hr>
+<h2>Regions re-called</h2>
+<p class="lead">If we now call the same <code>{% verbatim %}{% editregion %}{% endverbatim %}</code> again, it should avoid the database entirely.</p>
+
+<div class="alert alert-success">
+<h5>"test" region</h5>
+{% editregion "test" user %}
+</div>
+
+<div class="alert alert-info">
+<h5>"test2" region</h5>
+{% editregion "test2" user %}
+</div>
+<hr>
+<div class="alert alert-warning"><b>Note:</b> The first time the server is loaded, the number of queries required for rendering the editregions may be more than one. This is because Django needs to look up the <code>ContentType</code> instances from the database. These are cached in memory by Django until the process restarts, so will stop appearing in future requests.</div>
+<a class="btn btn-primary btn-xs" href="{% url 'list_users' %}">back to users</a>
 {% endblock %}
 
