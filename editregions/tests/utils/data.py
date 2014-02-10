@@ -14,7 +14,7 @@ except ImportError:
 from django.test import TestCase as DjangoTestCase
 from django.contrib.auth.models import User, Permission
 from editregions.models import EditRegionConfiguration
-from editregions.utils.data import get_content_type, get_model_class, get_modeladmin, attach_configuration, get_configuration, healed_context
+from editregions.utils.data import get_content_type, get_model_class, get_modeladmin, attach_configuration, get_configuration, healed_context, RegionMedia
 from editregions.utils.versioning import is_django_15plus
 
 
@@ -157,3 +157,117 @@ class HealedContextTestCase(TestCase):
                 ])
         self.assertEqual(len(context), 1)
         self.assertEqual(context, {'1': 2})
+
+
+class RegionMediaTestCase(TestCase):
+    def test_getitem(self):
+        media = RegionMedia()
+        media.add_to_top('<style></style>')
+        media.add_to_top('<style type="text/css"></style>')
+        media.add_to_top('   <style type="text/css"></style>       ')
+        only_top = media['top']
+        self.assertEqual(only_top.top, ['<style></style>',
+                                        '<style type="text/css"></style>'])
+
+        self.assertEqual(only_top.bottom, [])
+        only_bottom = media['bottom']
+        self.assertEqual(only_bottom.top, [])
+        self.assertEqual(only_bottom.bottom, [])
+
+    def test_getitem_keyerror(self):
+        media = RegionMedia()
+        with self.assertRaises(KeyError):
+            media['xyz']
+
+    def test_asdict(self):
+        media = RegionMedia()
+        media.add_to_top('<style></style>')
+        media.add_to_bottom('<script></script>')
+        self.assertEqual(media._asdict(), {
+            'top': ['<style></style>'],
+            'bottom': ['<script></script>']
+        })
+
+    def test_deduplicate_on_add(self):
+        media = RegionMedia()
+        for x in range(0, 5):
+            media.add_to_top('<style></style>')
+        self.assertEqual(len(media.top), 1)
+        self.assertEqual(media.top, ['<style></style>'])
+
+        for x in range(0, 5):
+            media.add_to_bottom('<script></script>')
+        self.assertEqual(len(media.bottom), 1)
+        self.assertEqual(media.bottom, ['<script></script>'])
+
+    def test_remove(self):
+        media = RegionMedia()
+        for x in range(0, 5):
+            media.add_to_top('<style></style>')
+        media.remove_from_top('<style></style>')
+        self.assertEqual(len(media.top), 0)
+
+    def test_magicadd(self):
+        media = RegionMedia()
+        media.add_to_top('<style type="text/css"></style>')
+        media.add_to_top(2)
+        media.add_to_bottom(4)
+        media.add_to_bottom(3)
+
+        other_media = RegionMedia()
+        other_media.add_to_top(6)
+        other_media.add_to_bottom(7)
+
+        and_another_media = RegionMedia()
+        and_another_media.add_to_top('x')
+        and_another_media.add_to_top('x')
+
+        new_media = media + other_media + and_another_media
+        self.assertEqual(new_media.top, ['<style type="text/css"></style>',
+                                         '2', '6', 'x'])
+        self.assertEqual(new_media.bottom, ['4', '3', '7'])
+        self.assertEqual(new_media._asdict(), {
+            'top': ['<style type="text/css"></style>', '2', '6', 'x'],
+            'bottom': ['4', '3', '7']
+        })
+
+    def test_contains(self):
+        media = RegionMedia()
+        media.add_to_top('<style type="text/css"></style>')
+        self.assertIn('<style type="text/css"></style>', media)
+
+    def test_equality(self):
+        media = RegionMedia()
+        media.add_to_top('<style type="text/css"></style>')
+        media2 = RegionMedia()
+        media2.add_to_top('<style type="text/css"></style>')
+        self.assertEqual(media, media2)
+
+    def test_inequality(self):
+        media = RegionMedia()
+        media.add_to_top('<style type="text/css"></style>')
+        media2 = RegionMedia()
+        media2.add_to_top(2)
+        self.assertNotEqual(media, media2)
+
+    def test_truthiness(self):
+        media = RegionMedia()
+        media.add_to_top('<style type="text/css"></style>')
+        self.assertTrue(media)
+        self.assertFalse(RegionMedia())
+
+    def test_make(self):
+        media = RegionMedia._make([
+            ['<style type="text/css"></style>'],  # offset 0 is top
+            ['<script></script>']  # offset 1 is bottom
+        ])
+        self.assertEqual(media.top, ['<style type="text/css"></style>'])
+        self.assertEqual(media.bottom, ['<script></script>'])
+
+    def test_length(self):
+        media = RegionMedia()
+        media.add_to_top('<style type="text/css"></style>')
+        media.add_to_bottom('<script></script>')
+        self.assertEqual(len(media), 2)
+        self.assertEqual(len(media['top']), 1)
+        self.assertEqual(len(media['bottom']), 1)

@@ -4,8 +4,13 @@ import logging
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ImproperlyConfigured
 from django.template.context import BaseContext, Context
+try:
+    from django.utils.encoding import force_text
+except ImportError:
+    from django.utils.encoding import force_unicode as force_text
 from django.utils.functional import SimpleLazyObject
 from django.conf import settings
+
 try:
     from django.utils.six import string_types
 except ImportError:  # pragma: no cover
@@ -118,3 +123,92 @@ def healed_context(context):
                                                 ctx_length))
         context.pop()
         ctx_length = len(context.dicts)
+
+
+class RegionMedia(object):
+    __slots__ = ('top', 'bottom')
+
+    def __init__(self):
+        self.top = []
+        self.bottom = []
+
+    def __repr__(self):
+        return '<{mod}.{cls} top={top!r}, bottom={bottom!r}>'.format(
+            mod=self.__module__, cls=self.__class__.__name__, top=self.top,
+            bottom=self.bottom)
+
+    def _asdict(self):
+        return {'top': self.top, 'bottom': self.bottom}
+
+    @classmethod
+    def _make(cls, iterable):
+        new_cls = cls()
+        vals = tuple(iterable)
+        new_cls.top = list(vals[0])
+        new_cls.bottom = list(vals[1])
+        return new_cls
+
+    def __getitem__(self, name):
+        if name not in ('top', 'bottom'):
+            raise KeyError('{name} not available in {cls}'.format(
+                name=name, cls=self.__class__.__name__))
+        new_version = self.__class__()
+        old_vals = getattr(self, name)[:]
+        setattr(new_version, name, old_vals)
+        return new_version
+
+    def __nonzero__(self):
+        return len(self.top) > 0 or len(self.bottom) > 0
+
+    __bool__ = __nonzero__
+
+    def __eq__(self, other):
+        return self.top == other.top and self.bottom == other.bottom
+
+    def __contains__(self, item):
+        search_val = force_text(item).strip()
+        return search_val in self.top or search_val in self.bottom
+
+    def __len__(self):
+        return len(self.top) + len(self.bottom)
+
+    def add(self, position, data):
+        existing = getattr(self, position)
+        prepared_data = force_text(data).strip()
+        if prepared_data not in existing:
+            existing.append(prepared_data)
+            return True
+        return False
+
+    def remove(self, position, data):
+        existing = getattr(self, position)
+        prepared_data = force_text(data).strip()
+        if prepared_data in existing:
+            existing.remove(prepared_data)
+            return True
+        return False
+
+    def __add__(self, other):
+        new_version = self.__class__()
+        for field in ('top', 'bottom'):
+            for side in (self, other):
+                # copy my fields ...
+                this_field = getattr(side, field, ())[:]
+                for old_value in this_field:
+                    new_version.add(field, old_value)
+        return new_version
+
+    def render(self, position):
+        return getattr(self, position)
+
+    def add_to_top(self, data):
+        return self.add('top', data)
+
+    def add_to_bottom(self, data):
+        return self.add('bottom', data)
+
+    def remove_from_top(self, data):
+        return self.remove('top', data)
+
+    def remove_from_bottom(self, data):
+        return self.remove('bottom', data)
