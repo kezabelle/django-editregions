@@ -271,3 +271,8 @@ class RegionMediaTestCase(TestCase):
         self.assertEqual(len(media), 2)
         self.assertEqual(len(media['top']), 1)
         self.assertEqual(len(media['bottom']), 1)
+
+    def test_init(self):
+        media = RegionMedia(top=['b', 'a', 'c', 'a'], bottom=['d', 'd', 'd'])
+        self.assertEqual(media.top, ['b', 'a', 'c'])
+        self.assertEqual(media.bottom, ['d'])

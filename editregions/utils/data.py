@@ -128,9 +128,16 @@ def healed_context(context):
 class RegionMedia(object):
     __slots__ = ('top', 'bottom')
 
-    def __init__(self):
+    def __init__(self, top=None, bottom=None):
         self.top = []
         self.bottom = []
+        # apply and de-duplicate params.
+        if top is not None:
+            for val in top:
+                self.add_to_top(val)
+        if bottom is not None:
+            for val in bottom:
+                self.add_to_bottom(val)
 
     def __repr__(self):
         return '<{mod}.{cls} top={top!r}, bottom={bottom!r}>'.format(
@@ -198,8 +205,8 @@ class RegionMedia(object):
                     new_version.add(field, old_value)
         return new_version
 
-    def render(self, position):
-        return getattr(self, position)
+    # def render(self, position):
+    #     return getattr(self, position)
 
     def add_to_top(self, data):
         return self.add('top', data)
