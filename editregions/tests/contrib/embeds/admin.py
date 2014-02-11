@@ -1,7 +1,10 @@
 # -*- coding: utf-8 -*-
 from django.contrib import admin
+from django.contrib.admin.sites import NotRegistered
 from django.forms import Form
 from django.template import Context
+from editregions.utils.data import get_modeladmin
+
 try:
     from unittest.case import TestCase
 except ImportError:
@@ -24,11 +27,15 @@ class IframeAdminTestCase(TestCase):
 
 class FeedAdminTestCase(DjangoTestCase):
     def setUp(self):
-        self.admin = FeedAdmin
         self.model = Feed
+        try:
+            admin.site.unregister(self.model)
+        except NotRegistered:
+            pass
+        admin.site.register(self.model, FeedAdmin)
 
     def test_render_into_summary(self):
-        theadmin = self.admin(model=self.model, admin_site=admin.site)
+        theadmin = get_modeladmin(self.model)
         obj = self.model()
         obj.url = """<rss version="2.0">
         <channel>
@@ -39,7 +46,7 @@ class FeedAdminTestCase(DjangoTestCase):
                          'Sample Feed')
 
     def test_render_into_region(self):
-        theadmin = self.admin(model=self.model, admin_site=admin.site)
+        theadmin = get_modeladmin(self.model)
         obj = self.model()
         # fake the url into a string parse.
         obj.url = """<rss version="2.0">
@@ -57,7 +64,7 @@ class FeedAdminTestCase(DjangoTestCase):
                       theadmin.render_into_region(obj=obj, context=context))
 
     def test_save_model(self):
-        theadmin = self.admin(model=self.model, admin_site=admin.site)
+        theadmin = get_modeladmin(self.model)
         obj = self.model(position=1)
         obj.url = """<rss version="2.0">
         <channel>
@@ -75,17 +82,21 @@ class FeedAdminTestCase(DjangoTestCase):
 
 class JavascriptAdminTestCase(DjangoTestCase):
     def setUp(self):
-        self.admin = JavaScriptAdmin
         self.model = JavaScript
+        try:
+            admin.site.unregister(self.model)
+        except NotRegistered:
+            pass
+        admin.site.register(self.model, JavaScriptAdmin)
 
     def test_render_into_summary(self):
-        theadmin = self.admin(model=self.model, admin_site=admin.site)
+        theadmin = get_modeladmin(self.model)
         obj = self.model(content='var x;')
         self.assertEqual(theadmin.render_into_summary(obj=obj, context={}),
                          'var x;')
 
     def test_render_into_region(self):
-        theadmin = self.admin(model=self.model, admin_site=admin.site)
+        theadmin = get_modeladmin(self.model)
         obj = self.model(content='var x;')
         # fake the iteration context
         context = Context({
@@ -93,35 +104,42 @@ class JavascriptAdminTestCase(DjangoTestCase):
                 'object': obj,
             }
         })
-        self.assertIn('var x;',
-                      theadmin.render_into_region(obj=obj, context=context))
+        # nothing is output now, because we want to
+        # render_into_mediagroup instead
+        result = theadmin.render_into_region(obj=obj, context=context)
+        self.assertIsNone(result)
 
     def test_media(self):
-        theadmin = self.admin(model=self.model, admin_site=admin.site)
+        theadmin = get_modeladmin(self.model)
         self.assertEqual(theadmin.media._css,
                          {'screen': ['editregions/css/embeds.css']})
 
 
 class JavascriptAssetAdminTestCase(DjangoTestCase):
     def setUp(self):
-        self.admin = JavascriptAssetAdmin
         self.model = JavascriptAsset
+        try:
+            admin.site.unregister(self.model)
+        except NotRegistered:
+            pass
+        admin.site.register(self.model, JavascriptAssetAdmin)
 
     def test_render_into_summary(self):
-        theadmin = self.admin(model=self.model, admin_site=admin.site)
+        theadmin = get_modeladmin(self.model)
         obj = self.model(local='x/y')
         self.assertEqual(theadmin.render_into_summary(obj=obj, context={}),
                          'Local file: x/y')
 
     def test_render_into_region(self):
-        theadmin = self.admin(model=self.model, admin_site=admin.site)
+        theadmin = get_modeladmin(self.model)
         obj = self.model(local='x/y')
         context = Context()
-        self.assertEqual(theadmin.render_into_region(obj=obj, context=context),
-                         None)
+        # nothing is output now, because we want to
+        # render_into_mediagroup instead
+        self.assertIsNone(theadmin.render_into_region(obj=obj, context=context))
 
     def test_render_into_mediagroup(self):
-        theadmin = self.admin(model=self.model, admin_site=admin.site)
+        theadmin = get_modeladmin(self.model)
         obj = self.model(local='x/y')
         context = Context()
         self.assertIsNotNone(
@@ -130,5 +148,9 @@ class JavascriptAssetAdminTestCase(DjangoTestCase):
 
 class StylesheetAssetAdminTestCase(JavascriptAssetAdminTestCase):
     def setUp(self):
-        self.admin = StylesheetAssetAdmin
         self.model = StylesheetAsset
+        try:
+            admin.site.unregister(self.model)
+        except NotRegistered:
+            pass
+        admin.site.register(self.model, StylesheetAssetAdmin)
