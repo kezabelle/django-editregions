@@ -22,6 +22,7 @@ d(
         "django.contrib.staticfiles",
         "django.contrib.messages",
         "django.contrib.admin",
+        "django_ace",
         "debug_toolbar",
         "adminlinks",
         "editregions",
