@@ -11,9 +11,12 @@ from django.test.utils import override_settings
 from editregions.contrib.embeds.admin import IframeAdmin
 from editregions.contrib.embeds.models import Iframe
 from editregions.models import EditRegionChunk
-from editregions.templatetags.editregion import EditRegionTag
 from editregions.utils.data import get_content_type
 from editregions.utils.versioning import is_django_15plus
+from editregions.templatetags.editregion import (chunk_iteration_context,
+                                                 render_one_chunk,
+                                                 render_one_summary,
+                                                 render_all_chunks)
 
 
 class TestUserAdmin(UserAdmin):
@@ -38,10 +41,10 @@ class EditRegionTemplateTagTestCase(DjangoTestCase):
 
         request = RequestFactory().get('/')
         ctx = RequestContext(request)
-        iterdata = EditRegionTag.chunk_iteration_context(
+        iterdata = chunk_iteration_context(
             index=0, value=iframe, iterable=[iframe])
         ctx.update(iterdata)
-        output = EditRegionTag.render_one_chunk(context=ctx, chunk=iframe,
+        output = render_one_chunk(context=ctx, chunk=iframe,
                                                 extra=iterdata['chunkloop'],
                                                 renderer=None).strip()
         self.assertIn('<iframe ', output)
@@ -58,10 +61,10 @@ class EditRegionTemplateTagTestCase(DjangoTestCase):
 
         request = RequestFactory().get('/')
         ctx = RequestContext(request)
-        iterdata = EditRegionTag.chunk_iteration_context(
+        iterdata = chunk_iteration_context(
             index=0, value=iframe, iterable=[iframe])
         ctx.update(iterdata)
-        output = EditRegionTag.render_one_summary(context=ctx, chunk=iframe,
+        output = render_one_summary(context=ctx, chunk=iframe,
                                                   extra=iterdata['chunkloop'],
                                                   renderer=None).strip()
         self.assertEqual(output, 'https://news.bbc.co.uk/')
@@ -76,7 +79,7 @@ class EditRegionTemplateTagTestCase(DjangoTestCase):
             iframe.pk = x
             objs.append(iframe)
         ctx = Context()
-        chunks = EditRegionTag.render_all_chunks(context=ctx, found_chunks=objs)
+        chunks = render_all_chunks(context=ctx, found_chunks=objs)
         converted_chunks = list(chunks)
         self.assertEqual(10, len(converted_chunks))
 
@@ -95,7 +98,7 @@ class EditRegionTemplateTagTestCase(DjangoTestCase):
                   Iframe(pk=3, region='x'),
                   EditRegionChunk(pk=4, region='x'),
                   Iframe(pk=5, region='x')]
-        chunks2 = list(EditRegionTag.render_all_chunks(context=context,
+        chunks2 = list(render_all_chunks(context=context,
                                                        found_chunks=chunks))
         self.assertEqual(len(chunks2), len(chunks) - 1)
 
@@ -134,7 +137,7 @@ class EditRegionTemplateTagTestCase(DjangoTestCase):
         first = iterable[0]
         last = iterable[-1]
         for offset, obj in enumerate(iterable):
-            ctx = EditRegionTag.chunk_iteration_context(index=offset, value=obj,
+            ctx = chunk_iteration_context(index=offset, value=obj,
                                                         iterable=iterable)
             self.assertEqual(ctx['chunkloop'].counter, offset+1)
             self.assertEqual(ctx['chunkloop'].counter0, offset)

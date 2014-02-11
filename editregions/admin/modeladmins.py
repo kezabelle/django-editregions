@@ -3,7 +3,6 @@ from __future__ import unicode_literals
 from functools import update_wrapper
 import logging
 from django.conf import settings
-
 try:
     from django.utils.six.moves import urllib_parse
     urlsplit = urllib_parse.urlsplit
@@ -42,11 +41,12 @@ from editregions.constants import (REQUEST_VAR_REGION, REQUEST_VAR_CT,
                                    REQUEST_VAR_ID)
 from editregions.utils.data import (get_modeladmin, get_content_type,
                                     get_model_class)
-from editregions.templatetags.editregion import EditRegionTag
 from editregions.admin.changelist import EditRegionChangeList
 from editregions.admin.forms import MovementForm
 from editregions.admin.utils import (AdminChunkWrapper, shared_media,
                                      guard_querystring_m)
+from editregions.templatetags.editregion import (chunk_iteration_context,
+                                                 render_one_summary)
 from editregions.models import EditRegionChunk, EditRegionConfiguration
 from editregions.text import (admin_chunktype_label, admin_summary_label,
                               admin_position_label, admin_modified_label,
@@ -160,9 +160,9 @@ class EditRegionAdmin(ModelAdmin):
         :rtype: string
         """
         context = {'admin_summary': True}
-        iterdata = EditRegionTag.chunk_iteration_context(
+        iterdata = chunk_iteration_context(
             index=0, value=obj, iterable=(obj,))['chunkloop']
-        content = EditRegionTag.render_one_summary(context, obj, extra=iterdata)
+        content = render_one_summary(context, obj, extra=iterdata) or ''
         return self.get_changelist_link_html(obj, data=truncate_words(content,
                                                                       20))
     get_subclass_summary.allow_tags = True

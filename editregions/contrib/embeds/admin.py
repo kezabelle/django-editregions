@@ -82,8 +82,13 @@ class JavaScriptAdmin(ChunkAdmin, ModelAdmin):
     ]
 
     def render_into_region(self, obj, context, **kwargs):
-        return render_to_string('editregions/embeds/javascript.html',
-                                context_instance=context)
+        return None
+
+    def render_into_mediagroup(self, obj, context, **kwargs):
+        return {'bottom': [
+            render_to_string('editregions/embeds/javascript.html',
+                             context_instance=context)
+        ]}
 
     def render_into_summary(self, obj, context, **kwargs):
         return obj.content
@@ -94,8 +99,6 @@ class JavaScriptAdmin(ChunkAdmin, ModelAdmin):
         return media_instance + Media(css={'screen': [
             'editregions/css/embeds.css'
         ]})
-
-
 admin.site.register(JavaScript, JavaScriptAdmin)
 
 
@@ -107,9 +110,11 @@ class JavascriptAssetAdmin(ChunkAdmin, ModelAdmin):
     def render_into_region(self, obj, context, **kwargs):
         return None
 
-    def render_into_mediagroup(self, obj, context):
-        return render_to_string('editregions/embeds/javascript_src.html',
-                                context_instance=context)
+    def render_into_mediagroup(self, obj, context, **kwargs):
+        return {'bottom': [
+            render_to_string('editregions/embeds/javascript_src.html',
+                             context_instance=context)
+        ]}
 
     def render_into_summary(self, obj, context, **kwargs):
         return force_text(obj)
@@ -124,9 +129,11 @@ class StylesheetAssetAdmin(ChunkAdmin, ModelAdmin):
     def render_into_region(self, obj, context, **kwargs):
         return None
 
-    def render_into_mediagroup(self, obj, context):
-        return render_to_string('editregions/embeds/stylesheet_src.html',
-                                context_instance=context)
+    def render_into_mediagroup(self, obj, context, **kwargs):
+        return {'top': [
+            render_to_string('editregions/embeds/stylesheet_src.html',
+                             context_instance=context)
+        ]}
 
     def render_into_summary(self, obj, context, **kwargs):
         return force_text(obj)

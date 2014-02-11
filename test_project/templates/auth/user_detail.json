@@ -6,6 +6,9 @@
         "name": "A second test region",
         "models": {
             "embeds.IFrame": 1,
+            "embeds.StylesheetAsset": 3,
+            "embeds.JavascriptAsset": 3,
+            "embeds.Feed": 1,
             "embeds.Javascript": null
         }
     }

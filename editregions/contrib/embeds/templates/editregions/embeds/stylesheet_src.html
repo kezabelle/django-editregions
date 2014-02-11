@@ -1,5 +1,5 @@
 {% if chunkloop.object.external %}
-    <link rel="stylesheet" type="text/css" href="{{ chunkloop.object.external_scheme_relative }}" data-pk="{{ chunkloop.object.pk }}">
+<link rel="stylesheet" type="text/css" href="{{ chunkloop.object.external_scheme_relative }}" data-pk="{{ chunkloop.object.pk }}">
 {% else %}
 {% load static %}
 <link rel="stylesheet" type="text/css" href="{% static chunkloop.object.local %}" data-pk="{{ chunkloop.object.pk }}">

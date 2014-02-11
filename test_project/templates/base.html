@@ -9,6 +9,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <link rel="stylesheet" type="text/css" href="//netdna.bootstrapcdn.com/bootstrap/3.1.0/css/bootstrap.min.css">
         {% render_adminlinks_css %}
+        {% block extrahead %}{% endblock %}
     </head>
     <body>
     <div class="container">
@@ -27,5 +28,6 @@
     </div>
 
     {% render_adminlinks_js %}
+    {% block extrafoot %}{% endblock %}
     </body>
     </html>

@@ -1,6 +1,15 @@
 {% extends "list_users.html" %}
+{% load editregion %}
 
 {% block title %}{{ user }} &laquo; {{ block.super }}{% endblock %}
+
+{% block extrahead %}
+{% editregion_top "" user %}
+{% endblock %}
+
+{% block extrafoot %}
+{% editregion_bottom "" user %}
+{% endblock %}
 
 {% block breadcrumbs %}
 <li><a href="{% url 'list_users' %}">All users</a></li>
@@ -9,7 +18,6 @@
 
 
 {% load adminlinks_buttons %}
-{% load editregion %}
 {% block content %}
 <h1>Details for <a href="{% url 'show_user' user.pk %}">{{ user }}</a></h1>
 <table class="table table-striped">
