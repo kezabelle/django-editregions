@@ -1,3 +1,10 @@
+
+.. toctree::
+   :maxdepth: 5
+
+   getting_started
+   writing_chunks
+
 .. include:: ../README.rst
 
 .. image:: version.png
