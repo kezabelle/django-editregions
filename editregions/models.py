@@ -106,7 +106,7 @@ class EditRegionChunk(Model):
 
     def clean(self):
         super(EditRegionChunk, self).clean()
-        if self.position is None or self.position == 0:
+        if self.position == 0:
             self.position = 1
 
     class Meta:
