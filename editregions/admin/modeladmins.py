@@ -784,10 +784,16 @@ class ChunkAdmin(AdminlinksMixin):
 class SupportsEditRegions(object):
     editregion_template_name_suffix = '_detail'
 
+    def __init__(self, *args, **kwargs):
+        super(SupportsEditRegions, self).__init__(*args, **kwargs)
+        self.original_inlines = self.inlines[:]
+
     def get_inline_instances(self, request, *args, **kwargs):
         klass = EditRegionInline
-        if klass not in self.inlines:
-            self.inlines.append(klass)
+        new_inlines = []
+        if klass not in self.original_inlines:
+            new_inlines.append(klass)
+        self.inlines = new_inlines
         return super(SupportsEditRegions, self).get_inline_instances(
             request, *args, **kwargs)
 
