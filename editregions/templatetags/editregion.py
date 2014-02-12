@@ -70,10 +70,13 @@ def render_one_summary(context, chunk, extra, renderer=None):
         logger.debug('ModelAdmin instance has a `render_into_summary` '
                      'method, using it in preference to the '
                      '`render_one_chunk` fallback')
-        return strip_tags(renderer.render_into_summary(context=context,
-                                                       obj=chunk, extra=extra))
-    return strip_tags(renderer.render_into_region(context=context, chunk=chunk,
-                                                  extra=extra))
+        output = renderer.render_into_summary(context=context, obj=chunk,
+                                              extra=extra)
+    else:
+        output = renderer.render_into_region(context=context, chunk=chunk, extra=extra)
+    if output is not None:
+        output = strip_tags(output)
+    return output or ''
 
 
 def chunk_iteration_context(index, value, iterable):
