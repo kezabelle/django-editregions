@@ -3,6 +3,13 @@
 import os
 import sys
 from setuptools import setup, find_packages
+import warnings
+#warnings.resetwarnings()
+#warnings.simplefilter('error')
+warnings.filterwarnings("ignore", '.+', PendingDeprecationWarning,
+                                'django\.test\..*')
+warnings.filterwarnings("ignore", '.+', PendingDeprecationWarning,
+                                'django\.template\.base')
 try:
     from setuptest import test
     test_config = {
