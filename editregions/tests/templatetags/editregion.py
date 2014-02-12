@@ -187,7 +187,7 @@ class EditRegionTemplateTagTestCase(DjangoTestCase):
         user_content_type = get_content_type(User)
 
         # attach some chunks to the region in test
-        for x in range(0, 10):
+        for x in range(1, 11):
             iframe = Iframe(region='test', content_id=user.pk,
                             content_type=user_content_type,
                             url='https://news.bbc.co.uk/{0!s}'.format(x),
@@ -207,7 +207,10 @@ class EditRegionTemplateTagTestCase(DjangoTestCase):
         ctx = RequestContext(request)
         ctx.update({'obj': user})
         rendered = tmpl.render(ctx).strip()
-        self.assertEqual(2206, len(rendered))
+        for x in range(1, 11):
+            self.assertIn('name="chunk-iframe-{0}" data-pk="{0}" '
+                          'data-position="{0}" data-region="{1}"'.format(
+                              x, 'test'), rendered)
 
         tmpl = Template("""
         output:
@@ -217,11 +220,11 @@ class EditRegionTemplateTagTestCase(DjangoTestCase):
         """)
         rendered = tmpl.render(ctx).strip()
         self.assertIn('output:', rendered)
-        for x in range(0, 10):
+        for x in range(1, 11):
             self.assertIn('xxx:<iframe '.format(x), rendered)
             self.assertIn('src="https://news.bbc.co.uk/{0}"'.format(x),
                           rendered)
-            self.assertIn('name="chunk-iframe-{0}"'.format(x+1), rendered)
+            self.assertIn('name="chunk-iframe-{0}"'.format(x), rendered)
 
     @override_settings(DEBUG=True)
     def test_blank_content_object_debug(self):
@@ -316,7 +319,7 @@ class EditRegionTemplateTagTestCase(DjangoTestCase):
         parent_user.full_clean()
         parent_user.save()
 
-        for x in range(0, 10):
+        for x in range(1, 11):
             iframe = Iframe(region='test', content_id=parent_user.pk,
                             content_type=get_content_type(User),
                             url='https://news.bbc.co.uk/{0!s}'.format(x),
@@ -342,4 +345,7 @@ class EditRegionTemplateTagTestCase(DjangoTestCase):
         {% editregion "test" obj inherit %}
         """)
         rendered = tmpl.render(ctx).strip()
-        self.assertEqual(2206, len(rendered))
+        for x in range(1, 11):
+            self.assertIn('name="chunk-iframe-{0}" data-pk="{0}" '
+                          'data-position="{0}" data-region="{1}"'.format(
+                              x, 'test'), rendered)
