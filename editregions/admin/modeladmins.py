@@ -54,6 +54,7 @@ from editregions.text import (admin_chunktype_label, admin_summary_label,
 
 try:
     from django.utils.text import Truncator
+    
     def truncate_words(s, num):
         return Truncator(s).words(num, truncate='...')
 except ImportError as e:  # pragma: no cover

@@ -6,6 +6,7 @@ from django.contrib.admin.templatetags.admin_list import (result_headers,
 
 register = Library()
 
+
 @register.inclusion_tag("admin/editregions/change_list_results.html")
 def editregion_result_list(cl):
     """
