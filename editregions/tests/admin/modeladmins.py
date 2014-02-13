@@ -438,6 +438,11 @@ class MaybeFixRedirectionTestCase(DjangoTestCase):
 
 class EditRegionAdminTestCase(DjangoTestCase):
     def setUp(self):
+        try:
+            admin.site.unregister(EditRegionChunk)
+        except NotRegistered:
+            pass
+        admin.site.register(EditRegionChunk, EditRegionAdmin)
         self.admin = get_modeladmin(EditRegionChunk)
         try:
             admin.site.unregister(Iframe)

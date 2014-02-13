@@ -49,15 +49,6 @@ class GetModelClassTestCase(GetContentTypeTestCase):
 
 
 class GetModelAdminTestCase(GetContentTypeTestCase):
-    def setUp(self):
-        try:
-            admin.site.unregister(User)
-        except NotRegistered:
-            pass
-        admin.site.register(User, UserAdmin)
-        self.test_func = get_modeladmin
-        self.user_ct = admin.site._registry[User]
-
     @override_settings(DEBUG=True)
     def test_class_not_in_admin_debug(self):
         with self.assertRaises(ImproperlyConfigured):
