@@ -535,6 +535,95 @@ class EditRegionConfigurationTestCase(DjangoTestCase):
         with self.assertRaises(ImproperlyConfigured):
             EditRegionConfiguration(decoder='ghost')
 
+    def test_dissecting_subclasses(self):
+        args = (
+            'zzz__yyy__xxx',
+            'a',
+            'b',
+            'zzz__yyy',
+            'c',
+            'zzz',
+            'e',
+            'f',
+            'c__d',
+            'g',
+            'h',
+            'i',
+            'j',
+            'k',
+        )
+        expected = (
+            ('c', 'c__d'),
+            ('zzz', 'zzz__yyy', 'zzz__yyy__xxx'),
+            ('a', 'b', 'e', 'f', 'g', 'h', 'i'),
+            ('j', 'k'),
+        )
+        blank_conf = EditRegionConfiguration()
+        result = blank_conf._dissect_subclasses(args, split_after=7)
+        self.assertEqual(result, expected)
+
+    def test_dissecting_subclasses_not_enough(self):
+        args = ('a', 'b', 'c', 'd', 'e', 'f')
+        blank_conf = EditRegionConfiguration()
+        result = blank_conf._dissect_subclasses(args, split_after=7)
+        self.assertEqual(result, (args,))
+
+    def test_dissecting_subclasses_one_leftover(self):
+        args = ('a', 'b', 'c', 'd', 'e', 'f', 'g')
+        blank_conf = EditRegionConfiguration()
+        result = blank_conf._dissect_subclasses(args, split_after=3)
+        expected = (('a', 'b', 'c'), ('d', 'e', 'f', 'g'))
+        self.assertEqual(result, expected)
+
+    def test_dissecting_subclasses_one_leftover_crossing_relations(self):
+        args = ('a', 'b', 'c', 'a__b', 'd', 'e', 'f', 'g')
+        blank_conf = EditRegionConfiguration()
+        result = blank_conf._dissect_subclasses(args, split_after=5)
+        expected = (('a', 'a__b'), ('b', 'c', 'd', 'e', 'f', 'g'))
+        self.assertEqual(result, expected)
+
+    def test_dissecting_subclasses_with_stupid_skip(self):
+        """
+        with a split of 1, don't conjoin the last relation with the previous
+        eg, don't do: ('a', ('b', 'c')), instead do: (('a',), ('b',), ('c',))
+
+        grandparents and stuff are still all selected at once, you cretin.
+        """
+        args = ('a', 'b', 'c', 'a__b', 'd', 'e', 'f', 'g')
+        blank_conf = EditRegionConfiguration()
+        result = blank_conf._dissect_subclasses(args, split_after=1)
+        expected = (
+            ('a', 'a__b'),
+            ('b',),
+            ('c',),
+            ('d',),
+            ('e',),
+            ('f',),
+            ('g',)
+        )
+        self.assertEqual(result, expected)
+
+    def test_dissecting_subclasses_with_short_items(self):
+        args = ('a',)
+        blank_conf = EditRegionConfiguration()
+        result = blank_conf._dissect_subclasses(args, split_after=7)
+        expected = (args,)
+        self.assertEqual(result, expected)
+
+    def test_dissecting_subclasses_with_no_items(self):
+        args = ()
+        blank_conf = EditRegionConfiguration()
+        result = blank_conf._dissect_subclasses(args, split_after=7)
+        expected = ()
+        self.assertEqual(result, expected)
+
+    def test_dissecting_subclasses_with_only_deep_descendants(self):
+        args = ('a', 'b', 'a__c', 'b__d', 'b__d__e', 'a__e')
+        blank_conf = EditRegionConfiguration()
+        result = blank_conf._dissect_subclasses(args, split_after=7)
+        expected = (('a', 'a__c', 'a__e'), ('b', 'b__d', 'b__d__e'))
+        self.assertEqual(result, expected)
+
 
 class EditRegionConfigurationOperatorsTestCase(TestCase):
     def test_equality(self):

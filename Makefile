@@ -43,6 +43,9 @@ test-project:
 	pip install -r test_project/requirements.txt
 	python test_project/run.py
 
+shell:
+	python test_project/run.py shell
+
 requirements:
 	rm -f 'requirements.all.txt'
 	touch 'requirements.all.txt'

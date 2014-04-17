@@ -1,13 +1,15 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 from collections import defaultdict
+from itertools import groupby, chain
+from operator import attrgetter
 import logging
 import os
 import re
 from django.conf import settings
 try:
     from django.contrib.contenttypes.fields import GenericForeignKey
-except ImportError:
+except ImportError: # pragma: no cover ... Django < 1.7
     from django.contrib.contenttypes.generic import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ImproperlyConfigured
@@ -21,24 +23,27 @@ from django.utils.functional import cached_property
 
 try:
     from django.utils.six import string_types
+    from django.db.models.constants import LOOKUP_SEP
 except ImportError:  # pragma: no cover ... Python 2, Django < 1.5
-    string_types = basestring,
+    from django.db.models.sql.constants import LOOKUP_SEP
+    string_types = (basestring,)
 
 try:
     from collections import OrderedDict as SortedDict
-except ImportError:
+except ImportError: # pragma: no cover ... Python < 2.7, Django < 1.7
     from django.utils.datastructures import SortedDict
 try:
     from django.apps import apps
     get_model = apps.get_model
     get_app = apps.get_app_config
-except ImportError:
+except ImportError: # pragma: no cover ... Django < 1.7
     from django.db.models.loading import get_model, get_app
 from model_utils.managers import PassThroughManager, InheritanceManager
 from editregions.querying import EditRegionChunkQuerySet
 from editregions.text import chunk_v, chunk_vplural
 from editregions.utils.data import get_modeladmin, get_content_type
 from editregions.utils.regions import validate_region_name
+from editregions.constants import SPLIT_CHUNKS_EVERY
 
 logger = logging.getLogger(__name__)
 
@@ -346,20 +351,88 @@ class EditRegionConfiguration(object):
             kws.update(region__in=self._previous_fetched_chunks.keys())
 
         # populate the resultset, in the most efficient way possible for the
-        # given models. Should always be either 0 or 1 query to the database.
+        # given models.
         model_count = len(models)
         if model_count == 1:
             chunks = models[0].objects.filter(**kws)
         elif model_count > 1:
-            chunks = EditRegionChunk.polymorphs.filter(**kws).select_subclasses(*models)  # noqa
+            # this will do as few queries as possible. Ideally, just 1.
+            chunks = self._fetch_subclasses(lookups=kws, models=models)
         else:
             chunks = EditRegionChunk.objects.none()
 
         index = 0
-        for index, chunk in enumerate(chunks.iterator(), start=1):
+        for index, chunk in enumerate(chunks, start=1):
             self._previous_fetched_chunks[chunk.region].append(chunk)
         logger.info("Requesting chunks resulted in {0} items".format(index))
         return self._previous_fetched_chunks
+
+    def _fetch_subclasses(self, lookups, models):
+        """
+        If we have a lot of tables to join, to keep query time down, we
+        instead do multiple smaller queries, to avoid some of the
+        penalties described in https://github.com/elbaschid/mti-lightbulb
+        """
+        manager = EditRegionChunk.polymorphs
+        # let model-utils calculate the dependencies.
+        calculated_relations = manager.select_subclasses(*models).subclasses
+        split_after = getattr(settings, 'EDITREGIONS_SPLIT_EVERY',
+                              SPLIT_CHUNKS_EVERY)
+
+        # figure out how many tables are going to end up joined
+        tables_bases = (x.split('__') for x in calculated_relations)
+        tables = frozenset(chain(*tables_bases))
+
+        if len(tables) > split_after:
+            data = self._dissect_subclasses(relations=calculated_relations,
+                                            split_after=split_after)
+            # by this point, `data` should be a list of tuples, where
+            # each tuple represents a subset of subclasses to ask for.
+            chained_qs = chain(*(
+                manager.filter(**lookups).select_subclasses(*subclass_set)
+                for subclass_set in data if subclass_set))
+            # because we're now not asking for all the correct subclasses,
+            # we'll get back more results than we want, so we need to throw
+            # out those which haven't been cast down.
+            filtered_out_ercs = (x for x in chained_qs
+                                 if x.__class__ != EditRegionChunk)
+            sorted_qslike = sorted(filtered_out_ercs,
+                                   key=attrgetter('position'))
+            return sorted_qslike
+
+        # few enough tables needed joining that we can just do one.
+        return manager.filter(**lookups).select_subclasses(*models).iterator()
+
+    def _dissect_subclasses(self, relations, split_after):
+        """
+        takes a list of relations for select_related/select_subclasses and
+        splits them up based on a maximal number of tables to join at once.
+        """
+        def by_lookup_sep(x): return x.split(LOOKUP_SEP)  # noqa
+        def by_root_relation(x): return by_lookup_sep(x)[0]  # noqa
+
+        sorted_relations = sorted(relations, key=by_lookup_sep)
+        # re-group the subclasses based on root tables.
+        grouped_relations = groupby(sorted_relations, key=by_root_relation)
+        outgroups = []
+        still_available = []
+        for base_table, children in grouped_relations:
+            children = tuple(children)
+            if len(children) > 1:
+                outgroups.append(children)
+                logger.warning("You're being punished for using grandchildren "
+                               "or deeper: {0!r}".format(children))
+            else:
+                still_available.extend(children)
+        splitups = range(0, len(still_available), split_after)
+        chunked_available = (tuple(still_available[i:i+split_after])
+                             for i in splitups)
+        outgroups.extend(chunked_available)
+        # if there's only one left over, apply it to the previous one.
+        if len(outgroups) > 1 and len(outgroups[-1]) == 1 and split_after > 1:
+            last = outgroups.pop()
+            outgroups[-1] += last
+        return tuple(outgroups)
 
     def fetch_chunks(self):
         return self._fetch_chunks
