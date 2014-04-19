@@ -380,7 +380,7 @@ class EditRegionConfiguration(object):
                               SPLIT_CHUNKS_EVERY)
 
         # figure out how many tables are going to end up joined
-        tables_bases = (x.split('__') for x in calculated_relations)
+        tables_bases = (x.split(LOOKUP_SEP) for x in calculated_relations)
         tables = frozenset(chain(*tables_bases))
 
         if len(tables) > split_after:
