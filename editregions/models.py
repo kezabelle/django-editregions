@@ -414,7 +414,9 @@ class EditRegionConfiguration(object):
         sorted_relations = sorted(relations, key=by_lookup_sep)
         # re-group the subclasses based on root tables.
         grouped_relations = groupby(sorted_relations, key=by_root_relation)
+        # outgroups will contain tuples of relations for select_subclasses
         outgroups = []
+        # tracking those which aren't grandchildren. Should be most relations.
         still_available = []
         for base_table, children in grouped_relations:
             children = tuple(children)
@@ -424,11 +426,14 @@ class EditRegionConfiguration(object):
                                "or deeper: {0!r}".format(children))
             else:
                 still_available.extend(children)
+
+        # cut up the non-grandchildren+ relations into groups of length N
         splitups = range(0, len(still_available), split_after)
         chunked_available = (tuple(still_available[i:i+split_after])
                              for i in splitups)
         outgroups.extend(chunked_available)
-        # if there's only one left over, apply it to the previous one.
+        # if there's only one left over, apply it to the previous one, as lon
+        # as the split is greater than 1.
         if len(outgroups) > 1 and len(outgroups[-1]) == 1 and split_after > 1:
             last = outgroups.pop()
             outgroups[-1] += last
