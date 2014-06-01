@@ -56,3 +56,6 @@ class EditRegionInline(GenericInlineModelAdmin):
         """
         # res = super(EditRegionInline, self).get_fieldsets(*args, **kwargs)
         return [(None, {'fields': ['region', 'position']})]
+
+    def get_queryset(self, *args, **kwargs):
+        return self.model.objects.none()
