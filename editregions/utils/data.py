@@ -91,11 +91,7 @@ def attach_configuration(obj, config_class):
         logger.debug('__editregion_config not on {cls!r} for this template '
                      'rendering request, creating it'.format(cls=obj))
 
-        def _generate_config():
-            return config_class(obj)
-
-        config = SimpleLazyObject(_generate_config)
-        setattr(obj, '__editregion_config', config)
+        setattr(obj, '__editregion_config', config_class(obj))
         created = True
     return obj, created
 
