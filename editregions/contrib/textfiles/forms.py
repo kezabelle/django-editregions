@@ -2,7 +2,7 @@
 import logging
 from django.db.models import BLANK_CHOICE_DASH
 from django.forms.models import ModelForm
-from django.forms import ChoiceField, Select
+from django.forms import ChoiceField
 from django.forms.widgets import Select
 from django.utils.translation import ugettext_lazy as _
 from .utils import get_markdown_files
@@ -35,3 +35,4 @@ class MarkdownSelectionForm(ModelForm):
 
     class Meta:
         model = Markdown
+        fields = ['filepath']
