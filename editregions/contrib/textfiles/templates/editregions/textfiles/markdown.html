@@ -1,0 +1,5 @@
+{% comment %}
+It's valid to wrap spans around block elements (ie: p tags, etc) if the
+HTML5 doctype is in use: <!DOCTYPE html>
+{% endcomment %}
+<span data-pk="{{ chunkloop.object.pk }}" data-position="{{ chunkloop.counter }}" data-region="{{ chunkloop.region }}" data-modified="{{ chunkloop.object.modified|date:'r' }}">{{ chunkloop.object.rendered_content|safe }}</span>
