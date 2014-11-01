@@ -1,0 +1,2 @@
+django-template-finder>=0.5
+CommonMark>=0.5.4
