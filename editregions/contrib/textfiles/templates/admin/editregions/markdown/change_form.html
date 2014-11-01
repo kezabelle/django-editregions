@@ -51,8 +51,9 @@
 
         var on_change = function() {
             var value = $(this).val();
+            var preview_url = '{% url "admin:textfiles_markdown_changelist" %}preview/';
             if (value !== void(0) && value !== '') {
-                $.get('/a/textfiles/markdown/preview/' + value, success);
+                $.get(preview_url + value, success);
             } else {
                 preview_wrapper.hide();
                 return fire_resize_event();
