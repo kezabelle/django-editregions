@@ -17,7 +17,7 @@ from django.db.models import (ForeignKey, Model, CharField,
                               PositiveIntegerField, DateTimeField)
 from django.template import TemplateDoesNotExist
 from django.template.loader import select_template
-from django.template.context import Context, BaseContext
+from django.template.context import Context
 from django.utils.encoding import python_2_unicode_compatible, force_text
 from django.utils.functional import cached_property
 
@@ -229,7 +229,7 @@ class EditRegionConfiguration(object):
             return {}
         # avoid generating an empty Context instance by not calling .render()
         rendered_template = template_instance._render(
-            context=BaseContext()).strip()
+            context=Context()).strip()
         if len(rendered_template) == 0:
             logger.warning("Template was empty after being rendered")
             return {}
