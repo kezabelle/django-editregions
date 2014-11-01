@@ -1,0 +1,68 @@
+{% extends "admin/change_form.html" %}
+
+{% block extrastyle %}
+    {{ block.super }}
+    <style type="text/css">
+        form .form-filepath-preview p,
+        form .form-filepath-preview ul {
+            margin-left: 0;
+            padding-left: 0;
+        }
+        form .form-filepath-preview ol {
+            margin-left: 0;
+        }
+    </style>
+{% endblock %}
+
+{% block field_sets %}
+{{ block.super }}
+<fieldset class="module aligned form-filepath-preview-wrapper" {% if not original %}style="display:none;"{% endif %}>
+<div class="form-row form-filepath-preview">{% if original %}{{ original.rendered_content|safe }}{% endif %}</div>
+</fieldset>
+{% endblock %}
+
+{% block after_related_objects %}
+<script type="text/javascript">
+(function($, undefined) {
+    var ready_up = function() {
+
+        var fire_resize_event = function() {
+            var inside_frame = parent !== void(0) && parent.window !== void(0);
+            var frame_has_jquery = inside_frame && parent.window.jQuery !== void(0);
+            if (frame_has_jquery) {
+                parent.window.jQuery(parent.document).trigger('fancyiframe-resize');
+                return true;
+            }
+            return false;
+        };
+
+        var preview_wrapper = $('.form-filepath-preview-wrapper');
+        var preview = $('.form-filepath-preview');
+
+        var success = function(response) {
+            preview.html(response);
+            if (response !== void(0) && response !== '') {
+                preview_wrapper.show();
+                return fire_resize_event();
+            }
+            preview_wrapper.hide();
+            return fire_resize_event();
+        };
+
+        var on_change = function() {
+            var value = $(this).val();
+            if (value !== void(0) && value !== '') {
+                $.get('/a/textfiles/markdown/preview/' + value, success);
+            } else {
+                preview_wrapper.hide();
+                return fire_resize_event();
+            }
+        };
+        if ($.fn.on !== void(0)) {
+            $('#id_filepath').on('change', on_change);
+        }
+    }
+    $(document).ready(ready_up);
+})(django.jQuery);
+</script>
+{% endblock %}
