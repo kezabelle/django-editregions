@@ -365,6 +365,9 @@ class EditRegionAdmin(ModelAdmin):
         parent_id = request.GET[REQUEST_VAR_ID]
         obj = get_model_class(parent_ct).objects.get(pk=parent_id)
         extra_context = extra_context or {}
+        if request.is_ajax():
+            return HttpResponse(
+                self.render_changelists_for_object(request=request, obj=obj))
         context = self.changelists_as_context_data(request, obj)
         opts = self.model._meta
         app_label = opts.app_label
