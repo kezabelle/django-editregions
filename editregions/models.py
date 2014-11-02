@@ -136,6 +136,7 @@ class EditRegionConfiguration(object):
 
     def __init__(self, obj=None, decoder='json'):
         self.config = {}
+        self.valid_templates = ()
         self.has_configuration = False
         self._previous_fetched_chunks = None
         self.obj = None
@@ -204,8 +205,9 @@ class EditRegionConfiguration(object):
         self.obj = obj
         self.ct = get_content_type(obj)
         modeladmin = get_modeladmin(self.obj)
-        self.valid_templates = modeladmin.get_editregions_template_choices(
-            obj=self.obj)
+        if hasattr(modeladmin, 'get_editregions_template_choices'):
+            self.valid_templates = modeladmin.get_editregions_template_choices(
+                obj=self.obj)
         possible_templates = modeladmin.get_editregions_templates(
             obj=self.obj)
         template = self.get_first_valid_template(
