@@ -23,7 +23,10 @@ class MarkdownAdmin(ChunkAdmin, ModelAdmin):
                                 context_instance=context)
 
     def render_into_summary(self, obj, context, **kwargs):
-        return striptags(obj.rendered_content).strip()
+        data = striptags(obj.rendered_content).strip()
+        if data:
+            return data
+        return '[missing content]'
 
     def get_urls(self):
         default_urls = super(MarkdownAdmin, self).get_urls()
