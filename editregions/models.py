@@ -4,6 +4,7 @@ from collections import defaultdict
 from itertools import groupby, chain
 from operator import attrgetter
 import logging
+from django.core.urlresolvers import reverse, NoReverseMatch
 import os
 import re
 from django.conf import settings
@@ -30,13 +31,13 @@ except ImportError:  # pragma: no cover ... Python 2, Django < 1.5
 
 try:
     from collections import OrderedDict as SortedDict
-except ImportError: # pragma: no cover ... Python < 2.7, Django < 1.7
+except ImportError:  # pragma: no cover ... Python < 2.7, Django < 1.7
     from django.utils.datastructures import SortedDict
 try:
     from django.apps import apps
     get_model = apps.get_model
     get_app = apps.get_app_config
-except ImportError: # pragma: no cover ... Django < 1.7
+except ImportError:  # pragma: no cover ... Django < 1.7
     from django.db.models.loading import get_model, get_app
 from model_utils.managers import PassThroughManager, InheritanceManager
 from editregions.querying import EditRegionChunkQuerySet
@@ -44,6 +45,8 @@ from editregions.text import chunk_v, chunk_vplural
 from editregions.utils.data import get_modeladmin, get_content_type
 from editregions.utils.regions import validate_region_name
 from editregions.constants import SPLIT_CHUNKS_EVERY
+from editregions.constants import REQUEST_VAR_CT
+from editregions.constants import REQUEST_VAR_ID
 
 logger = logging.getLogger(__name__)
 
@@ -129,7 +132,7 @@ fallback_region_name_re = re.compile(r'[_\W]+')
 class EditRegionConfiguration(object):
 
     __slots__ = ('config', 'has_configuration', '_previous_fetched_chunks',
-                 'obj', 'decoder',  'decoder_func')
+                 'obj', 'ct', 'decoder',  'decoder_func', 'valid_templates')
 
     def __init__(self, obj=None, decoder='json'):
         self.config = {}
@@ -187,9 +190,22 @@ class EditRegionConfiguration(object):
 
     __bool__ = __nonzero__
 
+    def get_absolute_url(self):
+        try:
+            url = reverse('admin:editregions_editregionchunk_changelist')
+        except NoReverseMatch:
+            return None
+        return '{url}?{ct_name}={ct_value}&{obj_name}={obj_value}'.format(
+            ct_name=REQUEST_VAR_CT, ct_value=self.ct.pk,
+            obj_name=REQUEST_VAR_ID, obj_value=self.obj.pk,
+            url=url)
+
     def configure(self, obj):
         self.obj = obj
+        self.ct = get_content_type(obj)
         modeladmin = get_modeladmin(self.obj)
+        self.valid_templates = modeladmin.get_editregions_template_choices(
+            obj=self.obj)
         possible_templates = modeladmin.get_editregions_templates(
             obj=self.obj)
         template = self.get_first_valid_template(

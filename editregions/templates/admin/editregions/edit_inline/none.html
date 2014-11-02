@@ -1,7 +1,7 @@
-<div class="region-inline-wrapper">
+<div class="region-inline-wrapper" data-changelist-url="{{ inline_admin_formset.formset.editregion_config.get_absolute_url }}">
     {% load i18n %}
     {% if change and original %}
-        {% if not inline_admin_formset.formset.has_editregions %}
+        {% if not inline_admin_formset.formset.editregion_config.has_configuration %}
         <div class="errors">
             <p>{% trans "No configuration found for the current template." %}</p>
         </div>
