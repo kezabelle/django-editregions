@@ -4,6 +4,12 @@ import functools
 import logging
 from django.core.exceptions import SuspiciousOperation, ValidationError
 from django.core.urlresolvers import reverse
+try:
+    from django.apps import apps
+    get_app_config = apps.get_app_config
+except ImportError:
+    def get_app_config(path):
+        return path
 from django.forms import Media
 from django.http import QueryDict
 from django.template.defaultfilters import truncatewords
@@ -104,6 +110,13 @@ def guard_querystring(function):
 guard_querystring_m = method_decorator(guard_querystring)
 
 
+def get_app_config_verbose_name(app):
+    try:
+        return get_app_config(app).verbose_name
+    except AttributeError:
+        return app
+
+
 @python_2_unicode_compatible
 class AdminChunkWrapper(object):
     """
@@ -117,7 +130,7 @@ class AdminChunkWrapper(object):
     """
     __slots__ = ['opts', 'admin_namespace', 'label', 'exists', 'chunk',
                  'content_type', 'content_id', 'region', 'module', 'url_parts',
-                 'querydict']
+                 'querydict', 'verbose_name']
 
     def __init__(self, opts, namespace, content_id=None, content_type=None,
                  region=None, obj=None):
@@ -141,6 +154,7 @@ class AdminChunkWrapper(object):
         self.content_id = content_id
         self.region = region
         self.module = opts.app_label
+        self.verbose_name = get_app_config_verbose_name(opts.app_label)
 
         # if the object already exists in the database, we're probably safe
         # to assume it's data is the most trustworthy.
@@ -149,6 +163,7 @@ class AdminChunkWrapper(object):
             self.content_id = self.chunk.content_id
             self.region = self.chunk.region
             self.module = obj._meta.app_label
+            self.verbose_name = get_app_config_verbose_name(obj._meta.app_label)
         else:
             try:
                 # attempt to accept either ContentType instances or primary keys
