@@ -3,7 +3,7 @@ from __future__ import unicode_literals
 import functools
 import logging
 from django.core.exceptions import SuspiciousOperation, ValidationError
-from django.core.urlresolvers import reverse
+from django.core.urlresolvers import reverse, NoReverseMatch
 try:
     from django.apps import apps
     get_app_config = apps.get_app_config
@@ -283,9 +283,14 @@ class AdminChunkWrapper(object):
         return self._get_admin_url(view='move')
 
     def get_absolute_url(self):
-        if self.exists:
-            return self._get_admin_url(view='change')
-        return self._get_admin_url(view='add')
+        try:
+            if self.exists:
+                return self._get_admin_url(view='change')
+            return self._get_admin_url(view='add')
+        except NoReverseMatch:
+            logger.warning("{me!r} couldn't find get the URL for the "
+                           "necessary modeladmin".format(me=self), exc_info=1)
+            return None
 
     def __getattr__(self, attr):
         """Pass lookups back to the object, if provided."""
