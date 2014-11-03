@@ -20,7 +20,6 @@ from django.template import TemplateDoesNotExist
 from django.template.loader import select_template
 from django.template.context import Context
 from django.utils.encoding import python_2_unicode_compatible, force_text
-from django.utils.functional import cached_property
 
 try:
     from django.utils.six import string_types
