@@ -36,5 +36,5 @@ class MetaElement(EditRegionChunk):
             name=self.name, content=self.content)
 
     class Meta:
-        verbose_name = _("Metadata tag")
-        verbose_name_plural = _("Metadata tags")
+        verbose_name = _("Meta tag")
+        verbose_name_plural = _("Meta tags")
