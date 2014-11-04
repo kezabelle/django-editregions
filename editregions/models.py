@@ -252,6 +252,7 @@ class EditRegionConfiguration(object):
             return {}
         # Allow decoding to bubble up an error.
         parsed_template = self.decoder_func(rendered_template)
+        parsed_template = SortedDict(sorted(parsed_template.items()))
         for key, config in parsed_template.items():
             if 'models' in parsed_template[key]:
                 parsed_template[key]['models'] = self.get_enabled_chunks_for_region(parsed_template[key]['models'])
