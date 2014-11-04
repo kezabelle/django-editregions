@@ -13,7 +13,7 @@ from django.utils.html import strip_tags
 from django.core.exceptions import ImproperlyConfigured
 import operator
 from editregions.models import EditRegionChunk, EditRegionConfiguration
-from editregions.text import ttag_no_obj, ttag_not_model, ttag_no_ancestors
+from editregions.text import ttag_no_obj, ttag_not_model
 from editregions.utils.regions import validate_region_name
 from editregions.utils.data import (get_content_type, get_modeladmin,
                                     attach_configuration, get_configuration,
