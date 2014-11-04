@@ -204,6 +204,12 @@ class AdminChunkWrapper(object):
             }
         return self.label
 
+    def __repr__(self):
+        return ('<{x.__module__}.{x.__class__.__name__} '
+                'admin={x.admin_namespace}, label="{x.label}", '
+                'exists={x.exists!r}, region={x.region}, module={x.module}, '
+                'content_id={x.content_id}>').format(x=self)
+
     def __eq__(self, other):
         return all([
             self.content_type == other.content_type,

@@ -35,6 +35,13 @@ class EditRegionChangeList(ChangeList):
         configured_region = parent_erc.config.get(self.region, {})
         self.get_region_display = configured_region.get('name', 'ERROR')
 
+    def __repr__(self):
+        return ('<{x.__module__}.{x.__class__.__name__} '
+                'region={x.region}, '
+                'parent_content_type={x.parent_content_type}, '
+                'parent_content_id={x.parent_content_id}, '
+                'region_display={x.get_region_display}>').format(x=self)
+
     def get_changelist_filters(self, request_querydict, obj, conf):
         """
         Get the list of chunks for the changelist sidebar.
