@@ -380,7 +380,8 @@ class EditRegionConfiguration(object):
 
         index = 0
         for index, chunk in enumerate(chunks, start=1):
-            self._previous_fetched_chunks[chunk.region].append(chunk)
+            if chunk.__class__ != EditRegionChunk:
+                self._previous_fetched_chunks[chunk.region].append(chunk)
         logger.info("Requesting chunks resulted in {0} items".format(index))
         return self._previous_fetched_chunks
 
