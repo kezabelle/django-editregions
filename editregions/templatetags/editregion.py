@@ -5,6 +5,7 @@ import logging
 from classytags.helpers import AsTag
 from django import template
 from django.conf import settings
+from django.contrib.admin.sites import NotRegistered
 from django.contrib.contenttypes.models import ContentType
 from classytags.core import Options
 from classytags.arguments import Argument, StringArgument, Flag
@@ -281,7 +282,6 @@ class EditRegionTag(AsTag):
         erc = get_configuration(content_object)
         results = self.fetch(erc, region=name)
         chunks = tuple(self.do_render(context, results))
-
         if inherit and len(chunks) < 1:
             chunks = self.get_ancestors_instead(context, name, content_object)
         return chunks
@@ -291,21 +291,28 @@ class EditRegionTag(AsTag):
         try:
             parents = content_object.get_ancestors()
         except AttributeError as e:
+            parents = None
+        if parents is None:
+            try:
+                modeladmin = get_modeladmin(content_object)
+                parents = modeladmin.get_ancestors(obj=content_object)
+            except (NotRegistered, AttributeError) as e:
+                # parents will remain None
+                pass
+        if parents is None:
             # doesn't have ancestors conforming to the mptt/treebeard
             # API, so it's probably a custom model that is BROKEN.
-            error = ttag_no_ancestors % {
-                'obj': content_object.__class__.__name__,
-                'attr': 'get_ancestors',
-                'thing': '?',
-            }
+            error = ("{cls!r}, or the ModelAdmin for it, should implement "
+                     "`get_ancestors` to use the 'inherit' argument for "
+                     "this template tag".format(
+                         cls=content_object.__class__))
             if settings.DEBUG:
                 raise ImproperlyConfigured(error)
-            else:
-                logger.error(error)
-                return ()
+            logger.error(error, exc_info=1)
+            return ()
 
         # if there are parents, see if we can get values from them.
-        for distance, parent in enumerate(parents, start=1):
+        for distance, parent in enumerate(reversed(parents), start=1):
             attach_configuration(parent, EditRegionConfiguration)
             parent_erc = get_configuration(parent)
             parent_results = self.fetch(parent_erc, region=region_name)
