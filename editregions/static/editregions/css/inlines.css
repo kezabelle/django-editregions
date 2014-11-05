@@ -3,6 +3,10 @@
     background: white url('../../admin/img/changelist-bg.gif') top right repeat-y !important;
 }
 
+.ui-sortable-disabled {
+    opacity: 0.3;
+}
+
 .changelist-as-inline table {
     width: 100%;
 }
