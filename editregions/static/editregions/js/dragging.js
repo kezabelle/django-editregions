@@ -29,10 +29,20 @@
     var target_region;
     var target_position;
 
+    var is_valid_drop_target = function(e, ui, target_element) {
+        var unique_type_class = get_subclass_type(ui.item);
+        // `this` is assumed to be the drop-target.
+        var tbody = $(target_element).find('tbody');
+        return (tbody.length === 1 && tbody.hasClass(unique_type_class));
+    };
     // just sets some variables into the parent scope when they might've changed,
     // so that `finish_changelist_changes` can decide whether or not
     // to bother calling `update_remote_object`
     var maybe_move_region = function(e, ui){
+        if (is_valid_drop_target.call(this, e, ui, this) !== true) {
+            $(ui.sender).sortable("cancel");
+            return false;
+        }
         $(this).find("tbody").append(ui.item);
         // rebinds the region to the parent scope
         target_region = $(this).parent().attr('data-region');
@@ -96,6 +106,22 @@
         }
     };
 
+    var get_subclass_type = function(element) {
+        var my_type = element.find('a').map(function() {
+            var _class = $(this).attr('class').split(' ');
+            for (var i = 0; i < _class.length; i++) {
+                var _just_this_class = _class[i];
+                if (_just_this_class.indexOf('chunktype-') === 0) {
+                    return _just_this_class;
+                }
+            }
+        });
+        var unique_type_classes = $.unique(my_type);
+        if (unique_type_classes.length !== 1) {
+            return false;
+        }
+        return unique_type_classes[0];
+    };
     var start_changelist_changes = function(e, ui) {
         // into parent scope.
         start_position = ui.item.index();
