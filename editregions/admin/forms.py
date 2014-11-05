@@ -12,7 +12,7 @@ try:
     from django.utils.encoding import force_text
 except ImportError:  # pragma: no cover ... < Django 1.5
     from django.utils.encoding import force_unicode as force_text
-from editregions.utils.db import get_maximum_pk, get_next_chunks, set_new_position
+from editregions.utils.db import get_maximum_pk, get_next_chunks, set_new_position, get_chunks_in_region_count
 from editregions.utils.data import attach_configuration, get_configuration
 from editregions.utils.versioning import is_django_15plus
 from editregions.models import EditRegionChunk, EditRegionConfiguration
@@ -110,9 +110,14 @@ class MovementForm(Form):
         """
         obj = self.cleaned_data['pk']
         old_position = obj.position
-        obj.position = self.cleaned_data['position']
-        old_region = obj.region
         new_region = self.cleaned_data.get('region', obj.region)
+
+        maximum_position = get_chunks_in_region_count(
+            EditRegionChunk, content_type=obj.content_type,
+            obj_id=obj.content_id, region=new_region) + 1
+
+        obj.position = min(self.cleaned_data['position'], maximum_position)
+        old_region = obj.region
 
         if old_region == new_region and old_position == obj.position:
             logger.debug("Invalid movement, possibly trying to move to an "

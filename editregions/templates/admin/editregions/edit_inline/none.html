@@ -13,7 +13,7 @@
     {% endif %}
     {% load editregion_result_list %}
     {% for cl in inline_admin_formset.formset.region_changelists %}
-        <div class="module filtered changelist-as-inline" id="changelist-{{ forloop.counter }}" data-region="{{ cl.region }}">
+        <div class="module filtered changelist-as-inline {% for chunk in cl.available_chunks %} chunktype-{{ chunk.url_parts.app }}-{{ chunk.url_parts.module }}{% endfor %}" id="changelist-{{ forloop.counter }}" data-region="{{ cl.region }}">
         {% include "admin/editregions/change_list_filters.html" with available_chunks=cl.available_chunks iterating=forloop.counter %}
         <p class="paginator">
             <b>{{ cl.get_region_display }}:</b>
