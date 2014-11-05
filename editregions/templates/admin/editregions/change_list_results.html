@@ -13,8 +13,8 @@ This exists to fix the following things:
         {% for item in result_hidden_fields %}{{ item }}{% endfor %}
     </div>
 {% endif %}
-    <div class="results">
-        <table id="result_list">
+    <div class="results" data-region="{{ cl.region }}">
+        <table class="result_list" data-region="{{ cl.region }}">
             <thead>
             <tr>
                 {% for header in result_headers %}
