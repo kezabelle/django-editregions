@@ -7,47 +7,22 @@
             // no additional data was provided.
         if (arguments.length === 1) {
             return;
-        };
+        }
 
         if (data.html !== void(0) && data.html !== '') {
             $(all_inlines).replaceWith(data.html);
             ready_up();
-        };
+        }
     };
 
     // for dragging and dropping
     var handle = 'div.drag_handle';
-    var sortable_targets = '.results';
+    var sortable_targets = '.result_list tbody';
     var all_inlines = 'div.region-inline-wrapper';
     var progress_wrapper = 'div.region-inline-progress-wrapper';
     var wait = 'div.region-inline-progress-wrapper div.waiting';
     var success = 'div.region-inline-progress-wrapper div.success';
 
-    // variables hoisted up here for tracking whether things got changed.
-    var start_region;
-    var start_position;
-    var target_region;
-    var target_position;
-
-    var is_valid_drop_target = function(e, ui, target_element) {
-        var unique_type_class = get_subclass_type(ui.item);
-        // `this` is assumed to be the drop-target.
-        var tbody = $(target_element).find('tbody');
-        return (tbody.length === 1 && tbody.hasClass(unique_type_class));
-    };
-    // just sets some variables into the parent scope when they might've changed,
-    // so that `finish_changelist_changes` can decide whether or not
-    // to bother calling `update_remote_object`
-    var maybe_move_region = function(e, ui){
-        if (is_valid_drop_target.call(this, e, ui, this) !== true) {
-            $(ui.sender).sortable("cancel");
-            return false;
-        }
-        $(this).find("tbody").append(ui.item);
-        // rebinds the region to the parent scope
-        target_region = $(this).parent().attr('data-region');
-        target_position = ui.item.index();
-    };
 
     var table_helper = function(e, tr) {
         var $originals = tr.children();
@@ -65,7 +40,11 @@
             var $wait = $(wait);
             var $old_progress = $(progress_wrapper);
             $wait.show();
-            var data = {pk: id, position: position, region: region};
+            var data = {
+                pk: id,
+                position: position,
+                region: region
+            };
             $.get(url, data, function(resp, status) {
                 // frameElement indicates we're in the popup iframe, so we want
                 // to traverse back to the parent window and set a shared
@@ -79,6 +58,8 @@
                 $wait.fadeOut(750, function(evt) {
                     $old_progress.remove();
                 });
+                $(sortable_targets).sortable('enable');
+                $(sortable_targets).sortable('refresh');
 
                 // refresh the view itself with updated data.
                 $(all_inlines).replaceWith(resp['html']);
@@ -88,6 +69,8 @@
     };
 
     var finish_changelist_changes = function(e, ui) {
+        // this fires for both sides of a drag-between-tables ...
+
         var tbody = ui.item.parent();
         var rows = tbody.find('tr');
         rows.each(function (i) {
@@ -97,16 +80,27 @@
         });
 
         var obj_id = ui.item.find(handle).eq(0).attr('data-pk');
-        // in case of undefined after `maybe_move_region`, test again here.
-        target_region = target_region || $(this).parent().attr('data-region');
-        target_position = target_position || ui.item.index();
 
-        if (target_position !== start_position || target_region !== start_region) {
-            update_remote_object(this, e, ui, obj_id, target_position+1, target_region);
+        var target_region = $(this).attr('data-region');
+        var target_position = ui.item.index()+1;
+
+        var exists = $(this).find(ui.item).length === 1;
+        if (exists === true) {
+            console.log(target_position);
+            // something has changed, either DOM index or region, or both.
+            update_remote_object(this, e, ui, obj_id, target_position, target_region);
+        } else {
+            // nothing has changed ...
         }
     };
 
     var get_subclass_type = function(element) {
+        /*
+        Takes `element`, (typically a `tr`) and finds all links within it,
+        reducing the css classes to those which are related to chunk variants.
+
+        If more than one unique chunktype value is found, that's an error.
+         */
         var my_type = element.find('a').map(function() {
             var _class = $(this).attr('class').split(' ');
             for (var i = 0; i < _class.length; i++) {
@@ -123,23 +117,33 @@
         return unique_type_classes[0];
     };
     var start_changelist_changes = function(e, ui) {
-        // into parent scope.
-        start_position = ui.item.index();
-        start_region = $(this).parent().attr('data-region');
-
+        var selected_subclass = get_subclass_type(ui.item);
+        var all_sortables = $(sortable_targets);
+        all_sortables.sortable('disable');
+        var to_enable = all_sortables.filter('.' + selected_subclass);
+        to_enable.sortable('enable');
+        all_sortables.sortable('refresh');
+        // set placeholder contents ...
         var html = ui.item.html();
         ui.placeholder.html(html);
+    };
+
+    var restore_changelists = function(e, ui) {
+        var all_sortables = $(sortable_targets);
+        all_sortables.sortable('enable');
+        all_sortables.sortable('refresh');
     };
 
     var sortable_options = {
         axis: 'y',
         helper: table_helper,
-        stop: finish_changelist_changes,
+        stop: restore_changelists,
         start: start_changelist_changes,
-        receive: maybe_move_region,
+        update: finish_changelist_changes,
+//        receive: swapped_changelist,
         forcePlaceholderSize: true,
         containment: '.region-inline-wrapper, #changelist-form',
-        items: 'tbody > tr',
+        items: 'tr',
         connectWith: sortable_targets,
         dropOnEmpty: true,
         handle: handle,
@@ -150,12 +154,11 @@
     // this exists as a non-anonymous function so that once we've updated an
     // object we can dynamically re-bind everything we need to.
     var ready_up = function() {
+        debugger;
         var jqSortables = $(sortable_targets);
         jqSortables.sortable(sortable_options);
         jqSortables.sortable("option", "disabled", false);
         jqSortables.disableSelection();
-
-        $(sortable_targets).sortable(sortable_options).disableSelection();
 
         $(document).bind('fancyiframe-close', on_popup_close);
 
