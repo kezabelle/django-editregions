@@ -150,6 +150,11 @@
     // this exists as a non-anonymous function so that once we've updated an
     // object we can dynamically re-bind everything we need to.
     var ready_up = function() {
+        var jqSortables = $(sortable_targets);
+        jqSortables.sortable(sortable_options);
+        jqSortables.sortable("option", "disabled", false);
+        jqSortables.disableSelection();
+
         $(sortable_targets).sortable(sortable_options).disableSelection();
 
         $(document).bind('fancyiframe-close', on_popup_close);
