@@ -119,8 +119,12 @@ class EditRegionAdmin(ModelAdmin):
                                         content_id=obj.content_id,
                                         content_type=obj.content_type,
                                         region=obj.region)
-        return ('<a href="{url}" data-adminlinks="autoclose" data-no-turbolink>'
-                '{data}</a>').format(url=wrapped_obj.get_absolute_url(), **kwargs)
+        return ('<a href="{url}" data-adminlinks="autoclose" '
+                'class="chunktype-{app}-{model}" '
+                'data-no-turbolink>{data}</a>').format(
+                    url=wrapped_obj.get_absolute_url(),
+                    app=wrapped_obj.url_parts['app'],
+                    model=wrapped_obj.url_parts['module'], **kwargs)
 
     def get_region_name(self, obj):
         """

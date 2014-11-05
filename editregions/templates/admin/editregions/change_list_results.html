@@ -33,7 +33,7 @@ This exists to fix the following things:
                     </th>{% endfor %}
             </tr>
             </thead>
-            <tbody>
+            <tbody class="{% for chunk in cl.available_chunks %} chunktype-{{ chunk.url_parts.app }}-{{ chunk.url_parts.module }}{% endfor %}">
             {% for result in results %}
                 {% if result.form.non_field_errors %}
                     <tr><td colspan="{{ result|length }}">{{ result.form.non_field_errors }}</td></tr>
