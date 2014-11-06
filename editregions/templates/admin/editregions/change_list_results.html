@@ -2,10 +2,8 @@
 Yeah, great, Django doesn't provide any blocks. Guess we'll just copy
 paste everything shall we?
 
-This exists to fix the following things:
-    1. The lack of a tbody if no results are found :( We need this for the jQuery
-       UI sortable to work.
-    2. To fix the URLs not just being 1/ 2/ 3/ etc... sigh.
+This exists because using a table/tbody and jquery-ui sortables are grim in
+various ways.
 {% endcomment %}
 {% load i18n admin_static %}
 {% if result_hidden_fields %}
@@ -14,34 +12,11 @@ This exists to fix the following things:
     </div>
 {% endif %}
     <div class="results" data-region="{{ cl.region }}">
-        <table class="result_list" data-region="{{ cl.region }}">
-            <thead>
-            <tr>
-                {% for header in result_headers %}
-                    <th scope="col" {{ header.class_attrib }}>
-                        {% if header.sortable %}
-                            {% if header.sort_priority > 0 %}
-                                <div class="sortoptions">
-                                    <a class="sortremove" href="{{ header.url_remove }}" title="{% trans "Remove from sorting" %}"></a>
-                                    {% if num_sorted_fields > 1 %}<span class="sortpriority" title="{% blocktrans with priority_number=header.sort_priority %}Sorting priority: {{ priority_number }}{% endblocktrans %}">{{ header.sort_priority }}</span>{% endif %}
-                                    <a href="{{ header.url_toggle }}" class="toggle {% if header.ascending %}ascending{% else %}descending{% endif %}" title="{% trans "Toggle sorting" %}"></a>
-                                </div>
-                            {% endif %}
-                        {% endif %}
-                        <div class="text">{% if header.sortable %}<a href="{{ header.url_primary }}">{{ header.text|capfirst }}</a>{% else %}<span>{{ header.text|capfirst }}</span>{% endif %}</div>
-                        <div class="clear"></div>
-                    </th>{% endfor %}
-            </tr>
-            </thead>
-            <tbody class="{% for chunk in cl.available_chunks %} chunktype-{{ chunk.url_parts.app }}-{{ chunk.url_parts.module }}{% endfor %}">
-            <tr style="font-size: 1px; line-height: 0;"><td  style="font-size: 1px; line-height: 0;" colspan="5">&nbsp;</td></tr>
+        <ol class="results-list{% for chunk in cl.available_chunks %} chunktype-{{ chunk.url_parts.app }}-{{ chunk.url_parts.module }}{% endfor %}" data-region="{{ cl.region }}">
             {% for result in results %}
-                {% if result.form.non_field_errors %}
-                    <tr><td colspan="{{ result|length }}">{{ result.form.non_field_errors }}</td></tr>
-                {% endif %}
-                <tr class="{% cycle 'row1' 'row2' %}">{% for item in result %}{{ item }}{% endfor %}</tr>
+            <li class="results-list-item {% cycle 'row1' 'row2' %}">
+                {% for item in result %}{{ item }}{% endfor %}
+            </li>
             {% endfor %}
-
-            </tbody>
-        </table>
+        </ol>
     </div>

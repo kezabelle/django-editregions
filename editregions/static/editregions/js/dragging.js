@@ -17,21 +17,12 @@
 
     // for dragging and dropping
     var handle = 'div.drag_handle';
-    var sortable_targets = '.result_list tbody';
+    var sortable_targets = '.results-list';
     var all_inlines = 'div.region-inline-wrapper';
     var progress_wrapper = 'div.region-inline-progress-wrapper';
     var wait = 'div.region-inline-progress-wrapper div.waiting';
     var success = 'div.region-inline-progress-wrapper div.success';
 
-
-    var table_helper = function(e, tr) {
-        var $originals = tr.children();
-        var $helper = tr.clone();
-        $helper.children().each(function(index) {
-            $(this).width($originals.eq(index).width())
-        });
-        return $helper;
-    };
 
     var update_remote_object = function(sortable, event, ui, id, position, region) {
         var url = ui.item.find(handle).eq(0).attr('data-href');
@@ -136,14 +127,12 @@
 
     var sortable_options = {
         axis: 'y',
-        helper: table_helper,
         stop: restore_changelists,
         start: start_changelist_changes,
         update: finish_changelist_changes,
-//        receive: swapped_changelist,
         forcePlaceholderSize: true,
         containment: '.region-inline-wrapper, #changelist-form',
-        items: 'tr',
+        items: 'li',
         connectWith: sortable_targets,
         dropOnEmpty: true,
         handle: handle,
@@ -154,7 +143,6 @@
     // this exists as a non-anonymous function so that once we've updated an
     // object we can dynamically re-bind everything we need to.
     var ready_up = function() {
-        debugger;
         var jqSortables = $(sortable_targets);
         jqSortables.sortable(sortable_options);
         jqSortables.sortable("option", "disabled", false);

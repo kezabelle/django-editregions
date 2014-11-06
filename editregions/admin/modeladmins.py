@@ -77,13 +77,10 @@ class EditRegionAdmin(ModelAdmin):
     change_list_template = 'admin/editregions/change_list.html'
 
     list_display = [
-        'get_position',
-        # 'get_region_name',
-        'get_subclass_type',
-        'get_subclass_summary',
-        'get_last_modified',
         # this should always be last, and not be in the list_display_links
         'get_object_tools',
+        'get_subclass_type',
+        'get_subclass_summary',
     ]
     list_display_links = ()
     list_filter = [
@@ -120,7 +117,7 @@ class EditRegionAdmin(ModelAdmin):
                                         content_type=obj.content_type,
                                         region=obj.region)
         return ('<a href="{url}" data-adminlinks="autoclose" '
-                'class="chunktype-{app}-{model}" '
+                'class="chunktype-{app}-{model} chunk-metadata-{caller}" '
                 'data-no-turbolink>{data}</a>').format(
                     url=wrapped_obj.get_absolute_url(),
                     app=wrapped_obj.url_parts['app'],
@@ -134,7 +131,8 @@ class EditRegionAdmin(ModelAdmin):
         """
         erc = EditRegionConfiguration(obj.content_object)
         region_name = erc.config[obj.region]['name']
-        return self.get_changelist_link_html(obj, data=region_name)
+        return self.get_changelist_link_html(obj, data=region_name,
+                                             caller='name')
     get_region_name.allow_tags = True
     get_region_name.short_description = region_v
 
@@ -149,7 +147,8 @@ class EditRegionAdmin(ModelAdmin):
         :return: the subclass object's verbose name
         :rtype: string
         """
-        return self.get_changelist_link_html(obj, data=obj._meta.verbose_name)
+        return self.get_changelist_link_html(obj, data=obj._meta.verbose_name,
+                                             caller='subclass')
     get_subclass_type.allow_tags = True
     get_subclass_type.short_description = admin_chunktype_label
 
@@ -168,25 +167,11 @@ class EditRegionAdmin(ModelAdmin):
         iterdata = chunk_iteration_context(
             index=0, value=obj, iterable=(obj,))['chunkloop']
         content = render_one_summary(context, obj, extra=iterdata) or ''
-        return self.get_changelist_link_html(obj, data=truncate_words(content,
-                                                                      20))
+        return self.get_changelist_link_html(
+            obj, data=truncate_words(content, 50), caller='summary')
     get_subclass_summary.allow_tags = True
     get_subclass_summary.short_description = admin_summary_label
 
-    def get_position(self, obj):
-        """
-        Show the position of the object when it is rendered on the frontend.
-
-        .. note::
-            By using this callable, we avoid the problem of being able to
-            sort by headers in the changelists (including on the change form)
-
-        :return: the order this will be shown in.
-        :rtype: integer
-        """
-        return self.get_changelist_link_html(obj, data=obj.position)
-    get_position.allow_tags = True
-    get_position.short_description = admin_position_label
 
     def get_last_modified(self, obj):
         """
@@ -226,10 +211,11 @@ class EditRegionAdmin(ModelAdmin):
         delete_url = AdminChunkWrapper(opts=obj._meta,
                                        namespace=self.admin_site.name,
                                        obj=obj).get_delete_url()
-        html = ('<div class="drag_handle" data-pk="%(pk)s" data-href="%(url)s">'
+        html = ('<div class="chunk-object-tools">'
+                '<div class="drag_handle" data-pk="%(pk)s" data-href="%(url)s">'
                 '</div>&nbsp;<a class="delete_handle" href="%(delete_url)s" '
                 'data-adminlinks="autoclose" data-no-turbolink>'
-                '%(delete)s</a>' % {
+                '%(delete)s</a></div>' % {
                     'pk': obj.pk,
                     'url': url_to_move2,
                     'delete_url': delete_url,
