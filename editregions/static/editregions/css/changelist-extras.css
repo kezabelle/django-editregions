@@ -15,12 +15,12 @@ django-feincms
     cursor: row-resize;
 }
 
+.ui-sortable-ok .results-list {
+    background-color: #DFD !important;
+}
+
 .ui-sortable .ui-sortable-placeholder {
     background: #ffe761;
-    -moz-opacity: 0.40;
-    -khtml-opacity: 0.40;
-    opacity: 0.40;
-    -ms-filter:"progid:DXImageTransform.Microsoft.Alpha"(Opacity=40);
     visibility: visible !important;
 }
 
@@ -37,11 +37,13 @@ django-feincms
     margin: 0;
     padding: 0 0 0 0;
     list-style: none;
+    min-height: 3em;
 }
 
 .results-list-item {
     padding: 0.5em 0.5em 0.5em 1em;
     position: relative;
+    border-bottom: 1px solid #eee;
 }
 
 .chunk-object-tools {

@@ -21,7 +21,7 @@ def get_next_chunks(pagemodel, obj, position, **kwargs):
     return pagemodel.objects.filter(content_type=obj.content_type,
                                     content_id=obj.content_id,
                                     position__gte=position,
-                                    **kwargs)
+                                    **kwargs).exclude(pk=obj.pk)
 
 
 def get_chunks_in_region_count(pagemodel, content_type, obj_id, region):

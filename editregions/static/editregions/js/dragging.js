@@ -1,6 +1,6 @@
 ;(function($, undefined) {
     // for fancyiframe
-    var fancyiframe_links = '.results.ui-sortable tbody a, .changelist-filter .add-chunks__available a';
+    var fancyiframe_links = '.ui-sortable .results-list-item a, .changelist-filter .add-chunks__available a';
 //    var $nominated_template = $('[rel="current_template"]').eq(0);
 
     var on_popup_close = function(event, data) {
@@ -18,11 +18,10 @@
     // for dragging and dropping
     var handle = 'div.drag_handle';
     var sortable_targets = '.results-list';
+    var each_changelist = '.changelist-as-inline';
     var all_inlines = 'div.region-inline-wrapper';
     var progress_wrapper = 'div.region-inline-progress-wrapper';
     var wait = 'div.region-inline-progress-wrapper div.waiting';
-    var success = 'div.region-inline-progress-wrapper div.success';
-
 
     var update_remote_object = function(sortable, event, ui, id, position, region) {
         var url = ui.item.find(handle).eq(0).attr('data-href');
@@ -46,7 +45,7 @@
                     parent.window.__data_changed__ = true;
                 }
                 // wait a bit then remove the progress element from the DOM
-                $wait.fadeOut(750, function(evt) {
+                $wait.fadeOut(1100, function(evt) {
                     $old_progress.remove();
                 });
                 $(sortable_targets).sortable('enable');
@@ -60,24 +59,23 @@
     };
 
     var finish_changelist_changes = function(e, ui) {
-        // this fires for both sides of a drag-between-tables ...
-
-        var tbody = ui.item.parent();
-        var rows = tbody.find('tr');
-        rows.each(function (i) {
-            var target_class = (i % 2) + 1;
-            $(this).removeClass('row1 row2').addClass('row'+ target_class);
-            $('td:nth-child(1)', this).html(i+1);
-        });
-
-        var obj_id = ui.item.find(handle).eq(0).attr('data-pk');
-
-        var target_region = $(this).attr('data-region');
-        var target_position = ui.item.index()+1;
-
+        // this fires for both sides of a drag-between-tables so we find out
+        // which side is firing, and only update when running the endpoint.
         var exists = $(this).find(ui.item).length === 1;
         if (exists === true) {
-            console.log(target_position);
+
+            var parent_obj = ui.item.parent();
+            var obj_lines = parent_obj.find('li');
+            obj_lines.each(function (i) {
+                var target_class = (i % 2) + 1;
+                $(this).removeClass('row1 row2').addClass('row'+ target_class);
+            });
+
+            var obj_id = ui.item.find(handle).eq(0).attr('data-pk');
+
+            var target_region = $(this).attr('data-region');
+            var target_position = ui.item.index()+1;
+
             // something has changed, either DOM index or region, or both.
             update_remote_object(this, e, ui, obj_id, target_position, target_region);
         } else {
@@ -112,7 +110,7 @@
         var all_sortables = $(sortable_targets);
         all_sortables.sortable('disable');
         var to_enable = all_sortables.filter('.' + selected_subclass);
-        to_enable.sortable('enable');
+        to_enable.sortable('enable').parents(each_changelist).addClass('ui-sortable-ok');
         all_sortables.sortable('refresh');
         // set placeholder contents ...
         var html = ui.item.html();
@@ -122,6 +120,7 @@
     var restore_changelists = function(e, ui) {
         var all_sortables = $(sortable_targets);
         all_sortables.sortable('enable');
+        $(each_changelist).removeClass('ui-sortable-ok');
         all_sortables.sortable('refresh');
     };
 

@@ -114,9 +114,7 @@ class MovementForm(Form):
 
         maximum_position = get_chunks_in_region_count(
             EditRegionChunk, content_type=obj.content_type,
-            obj_id=obj.content_id, region=new_region)
-        if maximum_position == 0:
-            maximum_position = 1
+            obj_id=obj.content_id, region=new_region) + 1
 
         obj.position = min(self.cleaned_data['position'], maximum_position)
         old_region = obj.region
