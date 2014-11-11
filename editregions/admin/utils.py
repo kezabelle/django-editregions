@@ -17,8 +17,7 @@ from django.utils.decorators import method_decorator, available_attrs
 from django.utils.encoding import python_2_unicode_compatible
 from editregions.constants import (REQUEST_VAR_REGION, REQUEST_VAR_ID,
                                    REQUEST_VAR_CT)
-from editregions.templatetags.editregion import (chunk_iteration_context,
-                                                 render_one_summary)
+from editregions.templatetags.editregion import chunk_iteration_context
 from editregions.utils.versioning import is_django_16plus
 from editregions.utils.regions import validate_region_name
 from editregions.models import EditRegionChunk
@@ -197,11 +196,6 @@ class AdminChunkWrapper(object):
                 self.querydict.update({field: getattr(self, field) or 0})
 
     def __str__(self):
-        if self.exists:
-            return '%(label)s: %(object)s' % {
-                'label': self.label,
-                'object': self.summary()
-            }
         return self.label
 
     def __repr__(self):
@@ -241,17 +235,6 @@ class AdminChunkWrapper(object):
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         return self
-
-    def summary(self):
-        if self.exists:
-            context = {
-                'admin_summary': True,
-            }
-            iterdata = chunk_iteration_context(
-                index=0, value=self.chunk, iterable=(self.chunk,))['chunkloop']
-            return truncatewords(
-                render_one_summary(context, self.chunk, extra=iterdata), 20)
-        return ''
 
     def _get_admin_url(self, view='add'):
         self.url_parts.update(view=view)

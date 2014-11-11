@@ -3,6 +3,7 @@ import logging
 
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
+from editregions.admin.utils import AdminChunkWrapper
 from editregions.constants import (REQUEST_VAR_REGION, REQUEST_VAR_CT,
                                    REQUEST_VAR_ID)
 from django.contrib.admin.views.main import ChangeList
@@ -49,7 +50,6 @@ class EditRegionChangeList(ChangeList):
 
         :return: list of available chunk types
         """
-        AdminChunkWrapper = self.model_admin.get_admin_wrapper_class()
         filters = ()
         # make sure the region exists, that it has values, and that it has
         # a models key.
