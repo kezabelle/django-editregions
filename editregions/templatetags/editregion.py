@@ -62,24 +62,6 @@ def render_one_mediagroup(context, chunk, extra, renderer=None):
     return None
 
 
-def render_one_summary(context, chunk, extra, renderer=None):
-    if renderer is None:
-        logger.debug('No renderer given as an argument, fetching the '
-                     'ModelAdmin instance for the first time')
-        renderer = get_modeladmin(chunk)
-    if hasattr(renderer, 'render_into_summary'):
-        logger.debug('ModelAdmin instance has a `render_into_summary` '
-                     'method, using it in preference to the '
-                     '`render_one_chunk` fallback')
-        output = renderer.render_into_summary(context=context, obj=chunk,
-                                              extra=extra)
-    else:
-        output = renderer.render_into_region(context=context, chunk=chunk, extra=extra)
-    if output is not None:
-        output = strip_tags(output)
-    return output or ''
-
-
 def chunk_iteration_context(index, value, iterable):
     """
     Each time we render a chunk, we should also inject an additional set of

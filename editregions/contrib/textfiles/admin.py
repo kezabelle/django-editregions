@@ -6,6 +6,14 @@ from django.core.exceptions import ValidationError, PermissionDenied
 from django.http import HttpResponse
 from django.template.defaultfilters import striptags
 from django.template.loader import render_to_string
+try:
+    from django.utils.text import Truncator
+
+    def truncate_words(s, num):
+        return Truncator(s).words(num, truncate='...')
+except ImportError as e:  # pragma: no cover
+    from django.utils.text import truncate_words
+
 from editregions.admin.modeladmins import ChunkAdmin
 from editregions.contrib.textfiles.utils import valid_md_file
 from .models import Markdown
@@ -25,7 +33,7 @@ class MarkdownAdmin(ChunkAdmin, ModelAdmin):
     def render_into_summary(self, obj, context, **kwargs):
         data = striptags(obj.rendered_content).strip()
         if data:
-            return data
+            return truncate_words(data, 50)
         return '[missing content]'
 
     def get_urls(self):

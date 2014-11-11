@@ -653,10 +653,6 @@ class EditRegionAdminTestCase(DjangoTestCase):
     def test_get_changelist(self):
         self.assertEqual(self.admin.get_changelist(), EditRegionChangeList)
 
-    def test_get_admin_wrapper_class(self):
-        self.assertEqual(self.admin.get_admin_wrapper_class(),
-                         AdminChunkWrapper)
-
     def test_changelist_view(self):
         request = RequestFactory().get('/')
         with self.assertRaises(MultiValueDictKeyError):

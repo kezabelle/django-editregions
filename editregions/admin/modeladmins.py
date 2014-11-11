@@ -3,6 +3,8 @@ from __future__ import unicode_literals
 from functools import update_wrapper
 import logging
 from django.conf import settings
+from django.utils.html import strip_tags
+
 try:
     from django.utils.six.moves import urllib_parse
     urlsplit = urllib_parse.urlsplit
@@ -45,8 +47,7 @@ from editregions.admin.changelist import EditRegionChangeList
 from editregions.admin.forms import MovementForm
 from editregions.admin.utils import (AdminChunkWrapper, shared_media,
                                      guard_querystring_m)
-from editregions.templatetags.editregion import (chunk_iteration_context,
-                                                 render_one_summary)
+from editregions.templatetags.editregion import chunk_iteration_context
 from editregions.models import EditRegionChunk, EditRegionConfiguration
 from editregions.text import (admin_chunktype_label, admin_summary_label,
                               admin_position_label, admin_modified_label,
@@ -110,7 +111,6 @@ class EditRegionAdmin(ModelAdmin):
         return self.list_display[:]
 
     def get_changelist_link_html(self, obj, **kwargs):
-        AdminChunkWrapper = self.get_admin_wrapper_class()
         wrapped_obj = AdminChunkWrapper(opts=obj._meta, obj=obj,
                                         namespace=self.admin_site.name,
                                         content_id=obj.content_id,
@@ -123,19 +123,6 @@ class EditRegionAdmin(ModelAdmin):
                     app=wrapped_obj.url_parts['app'],
                     model=wrapped_obj.url_parts['module'], **kwargs)
 
-    def get_region_name(self, obj):
-        """
-        get the prettified name of this region, if possible.
-        :return: the region name
-        :rtype: string
-        """
-        erc = EditRegionConfiguration(obj.content_object)
-        region_name = erc.config[obj.region]['name']
-        return self.get_changelist_link_html(obj, data=region_name,
-                                             caller='name')
-    get_region_name.allow_tags = True
-    get_region_name.short_description = region_v
-
     def get_subclass_type(self, obj):
         """
         get the verbose name of the given object, which is likely a subclass
@@ -147,7 +134,12 @@ class EditRegionAdmin(ModelAdmin):
         :return: the subclass object's verbose name
         :rtype: string
         """
-        return self.get_changelist_link_html(obj, data=obj._meta.verbose_name,
+        modeladmin = get_modeladmin(obj)
+        if hasattr(modeladmin, 'get_editregions_subclass_type'):
+            value = modeladmin.get_editregions_subclass_type(obj=obj)
+        else:
+            value = obj._meta.verbose_name
+        return self.get_changelist_link_html(obj, data=strip_tags(value),
                                              caller='subclass')
     get_subclass_type.allow_tags = True
     get_subclass_type.short_description = admin_chunktype_label
@@ -163,31 +155,20 @@ class EditRegionAdmin(ModelAdmin):
         :return: short representation of the data, HTML included.
         :rtype: string
         """
-        context = {'admin_summary': True}
-        iterdata = chunk_iteration_context(
-            index=0, value=obj, iterable=(obj,))['chunkloop']
-        content = render_one_summary(context, obj, extra=iterdata) or ''
-        return self.get_changelist_link_html(
-            obj, data=truncate_words(content, 50), caller='summary')
+        modeladmin = get_modeladmin(obj)
+        if hasattr(modeladmin, 'get_editregions_subclass_summary'):
+            value = modeladmin.get_editregions_subclass_summary(obj=obj)
+        elif hasattr(modeladmin, 'render_into_summary'):
+            context = chunk_iteration_context(index=0, value=obj,
+                                               iterable=(obj,))
+            context.update({'admin_summary': True})
+            value = modeladmin.render_into_summary(obj=obj, context=context)
+        else:
+            value = '[missing]'
+        return self.get_changelist_link_html(obj, data=strip_tags(value),
+                                             caller='summary')
     get_subclass_summary.allow_tags = True
     get_subclass_summary.short_description = admin_summary_label
-
-
-    def get_last_modified(self, obj):
-        """
-        Show when this was last changed.
-
-        .. note::
-            By using this callable, we avoid the problem of being able to
-            sort by headers in the changelists (including on the change form)
-
-        :return: the date and time this was last changed, formatted in the
-                 standard admin style
-        :rtype: string
-        """
-        fld = obj._meta.get_field_by_name('modified')[0]
-        return display_for_field(obj.modified, fld)
-    get_last_modified.short_description = admin_modified_label
 
     def get_object_tools(self, obj):
         """
@@ -197,31 +178,13 @@ class EditRegionAdmin(ModelAdmin):
         :return: the list of actions or tools available for this object
         :rtype: string
         """
-        if hasattr(self.model._meta, 'model_name'):
-            model_name = self.model._meta.model_name
+        modeladmin = get_modeladmin(obj)
+        if hasattr(modeladmin, 'get_editregions_subclass_tools'):
+            value = modeladmin.get_editregions_subclass_tools(obj=obj)
         else:
-            model_name = self.model._meta.module_name
-        url_to_move = '%(admin)s:%(app)s_%(chunkhandler)s_move' % {
-            'admin': self.admin_site.name,
-            'app': self.model._meta.app_label,
-            'chunkhandler': model_name,
-        }
-        url_to_move2 = reverse(url_to_move)
-        AdminChunkWrapper = self.get_admin_wrapper_class()
-        delete_url = AdminChunkWrapper(opts=obj._meta,
-                                       namespace=self.admin_site.name,
-                                       obj=obj).get_delete_url()
-        html = ('<div class="chunk-object-tools">'
-                '<div class="drag_handle" data-pk="%(pk)s" data-href="%(url)s">'
-                '</div>&nbsp;<a class="delete_handle" href="%(delete_url)s" '
-                'data-adminlinks="autoclose" data-no-turbolink>'
-                '%(delete)s</a></div>' % {
-                    'pk': obj.pk,
-                    'url': url_to_move2,
-                    'delete_url': delete_url,
-                    'delete': _('Delete'),
-                })
-        return html
+            value = ''
+        return '<div class="chunk-object-tools">{value!s}</div>'.format(
+            value=value)
     get_object_tools.allow_tags = True
     get_object_tools.short_description = ''
 
@@ -346,9 +309,6 @@ class EditRegionAdmin(ModelAdmin):
 
     def get_changelist(self, *args, **kwargs):
         return EditRegionChangeList
-
-    def get_admin_wrapper_class(self):
-        return AdminChunkWrapper
 
     def changelist_view(self, request, extra_context=None):
         parent_ct = request.GET[REQUEST_VAR_CT]
@@ -769,6 +729,31 @@ class ChunkAdmin(AdminlinksMixin):
             raise NotImplementedError(msg)
         logger.warning(msg)
         return None
+
+    def get_editregions_subclass_tools(self, obj):
+        if hasattr(EditRegionChunk._meta, 'model_name'):
+            model_name = EditRegionChunk._meta.model_name
+        else:
+            model_name = EditRegionChunk._meta.module_name
+        url_to_move = '%(admin)s:%(app)s_%(chunkhandler)s_move' % {
+            'admin': self.admin_site.name,
+            'app': EditRegionChunk._meta.app_label,
+            'chunkhandler': model_name,
+        }
+        url_to_move2 = reverse(url_to_move)
+        delete_url = AdminChunkWrapper(opts=obj._meta,
+                                       namespace=self.admin_site.name,
+                                       obj=obj).get_delete_url()
+        value = ('<div class="drag_handle" data-pk="%(pk)s" '
+                 'data-href="%(url)s"></div>&nbsp;<a class="delete_handle" '
+                 'href="%(delete_url)s" data-adminlinks="autoclose" '
+                 'data-no-turbolink>%(delete)s</a>' % {
+                     'pk': obj.pk,
+                     'url': url_to_move2,
+                     'delete_url': delete_url,
+                     'delete': _('Delete'),
+                 })
+        return value
 
     @property
     def media(self):
