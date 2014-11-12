@@ -5,6 +5,7 @@ from CommonMark import DocParser
 from CommonMark import HTMLRenderer
 from django.template import TemplateDoesNotExist
 from django.template.loader import render_to_string
+from django.utils.encoding import python_2_unicode_compatible
 from django.utils.functional import cached_property
 from django.utils.translation import ugettext_lazy as _
 from django.db.models import CharField
@@ -15,9 +16,13 @@ from editregions.models import EditRegionChunk
 logger = logging.getLogger(__name__)
 
 
+@python_2_unicode_compatible
 class Markdown(EditRegionChunk):
     filepath = CharField(max_length=255, verbose_name=_('filename'),
                          validators=[valid_md_file])
+
+    def __str__(self):
+        return self.filepath
 
     @cached_property
     def content(self):
