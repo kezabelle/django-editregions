@@ -11,7 +11,6 @@ try:
     urlunsplit = urllib_parse.urlunsplit
 except (ImportError, AttributeError) as e:  # Python 2, < Django 1.5
     from urlparse import urlsplit, urlunsplit
-import warnings
 from django.forms import Media
 from django.template.response import TemplateResponse
 from adminlinks.admin import AdminlinksMixin
@@ -139,7 +138,8 @@ class EditRegionAdmin(ModelAdmin):
             value = modeladmin.get_editregions_subclass_type(obj=obj)
         else:
             value = obj._meta.verbose_name
-        return self.get_changelist_link_html(obj, data=strip_tags(value),
+        value = strip_tags(force_text(value))
+        return self.get_changelist_link_html(obj, data=value,
                                              caller='subclass')
     get_subclass_type.allow_tags = True
     get_subclass_type.short_description = admin_chunktype_label
@@ -165,7 +165,8 @@ class EditRegionAdmin(ModelAdmin):
             value = modeladmin.render_into_summary(obj=obj, context=context)
         else:
             value = '[missing]'
-        return self.get_changelist_link_html(obj, data=strip_tags(value),
+        value = strip_tags(force_text(value))
+        return self.get_changelist_link_html(obj, data=value,
                                              caller='summary')
     get_subclass_summary.allow_tags = True
     get_subclass_summary.short_description = admin_summary_label
