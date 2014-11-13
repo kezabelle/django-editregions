@@ -6,7 +6,7 @@ chunk_v = _('content block')
 chunk_vplural = _('content blocks')
 
 position_label = _('position')
-position_help = _('position in which this content appears. 1 is highest.')
+position_help = _('position in which this content appears. 0 is highest.')
 render_label = _('renderer')
 render_help = _('how to render this chunk.')
 # datetimes_fieldset_label = _('dates')

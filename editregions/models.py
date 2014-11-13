@@ -38,8 +38,8 @@ try:
     get_app = apps.get_app_config
 except ImportError:  # pragma: no cover ... Django < 1.7
     from django.db.models.loading import get_model, get_app
-from model_utils.managers import PassThroughManager, InheritanceManager
-from editregions.querying import EditRegionChunkQuerySet
+from model_utils.managers import InheritanceManager
+from editregions.querying import EditRegionChunkManager
 from editregions.text import chunk_v, chunk_vplural
 from editregions.utils.data import get_modeladmin, get_content_type
 from editregions.utils.regions import validate_region_name
@@ -90,7 +90,7 @@ class EditRegionChunk(Model):
     region = CharField(max_length=75, validators=[validate_region_name])
     position = PositiveIntegerField(default=None, db_index=True)
 
-    objects = PassThroughManager.for_queryset_class(EditRegionChunkQuerySet)()
+    objects = EditRegionChunkManager()
     polymorphs = InheritanceManager()
 
     def __repr__(self):
@@ -110,11 +110,6 @@ class EditRegionChunk(Model):
             return form.save()
         return form.errors
     move.alters_data = True
-
-    def clean(self):
-        super(EditRegionChunk, self).clean()
-        if self.position == 0:
-            self.position = 1
 
     class Meta:
         abstract = False

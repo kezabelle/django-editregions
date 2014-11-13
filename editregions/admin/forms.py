@@ -12,9 +12,7 @@ try:
     from django.utils.encoding import force_text
 except ImportError:  # pragma: no cover ... < Django 1.5
     from django.utils.encoding import force_unicode as force_text
-from editregions.utils.db import get_maximum_pk, get_next_chunks, set_new_position, get_chunks_in_region_count
 from editregions.utils.data import attach_configuration, get_configuration
-from editregions.utils.versioning import is_django_15plus
 from editregions.models import EditRegionChunk, EditRegionConfiguration
 from editregions.admin.utils import shared_media
 from editregions.utils.regions import validate_region_name
@@ -72,27 +70,31 @@ class MovementForm(Form):
     Move a chunk from one place to another.
     """
     pk = IntegerField(min_value=1)
-    position = IntegerField(min_value=1)
+    position = IntegerField(min_value=0)
     #: if region is set, then we're probably in an inline'd changelist, and
     #: we may be wanting to move region ...
     region = CharField(required=False, validators=[validate_region_name])
-    obj_cache = None
 
     def __init__(self, *args, **kwargs):
         super(MovementForm, self).__init__(*args, **kwargs)
-        self.fields['pk'].max_value = get_maximum_pk(self.Meta.model)
+        self.fields['pk'].max_value = self.get_model().objects.all().count()
+
+    def get_model(self):
+        return EditRegionChunk
 
     def clean(self):
         cd = super(MovementForm, self).clean()
         pk = cd.get('pk', None)
+        model = self.get_model()
         try:
             if pk is None:
-                raise self.Meta.model.DoesNotExist("Don't even bother querying")
-            cd['pk'] = self.Meta.model.polymorphs.get_subclass(pk=pk)
-        except ObjectDoesNotExist as e:
+                raise model.DoesNotExist("Don't even bother querying")
+            cd['pk'] = model.objects.get(pk=pk)
+        except model.DoesNotExist as e:
             cd['pk'] = None
-            self._errors['pk'] = '{0} does not exist'.format(
-                force_text(self.Meta.model._meta.verbose_name))
+            name = force_text(self.get_model()._meta.verbose_name)
+            msg = '{0} does not exist'.format(name)
+            self._errors['pk'] = msg
 
         # rather than raise an error for an invalid region, just set it
         # back to whatever the region says it should be. Trust no-one.
@@ -110,66 +112,12 @@ class MovementForm(Form):
         """
         obj = self.cleaned_data['pk']
         old_position = obj.position
-        new_region = self.cleaned_data.get('region', obj.region)
-
-        maximum_position = get_chunks_in_region_count(
-            EditRegionChunk, content_type=obj.content_type,
-            obj_id=obj.content_id, region=new_region) + 1
-
-        obj.position = min(self.cleaned_data['position'], maximum_position)
         old_region = obj.region
-
-        if old_region == new_region and old_position == obj.position:
-            logger.debug("Invalid movement, possibly trying to move to an "
-                         "invalid region")
-            return obj
-
-        next_chunks = get_next_chunks(EditRegionChunk, obj=obj,
-                                      position=obj.position, region=new_region)
-
-        logger.debug('Push objects which should be affected, including the one '
-                     'we in the position we need.')
-        next_chunks.update(position=F('position') + 1)
-        del next_chunks  # not required hereafter.
-
-        # if we've moved region, we need to update at least a partial set of
-        # positions on the old region ... we do it here, before saving the
-        # new object into position, then handle updating the old region
-        # last of all...
-        old_chunks = None
-        if old_region != new_region:
-            logger.debug('object moved from {old} to {new}'.format(
-                         old=old_region, new=new_region))
-            obj.region = new_region
-            old_chunks = get_next_chunks(EditRegionChunk, obj=obj,
-                                         position=old_position,
-                                         region=old_region)
-
-        kwargs = {}
-        if is_django_15plus():  # pragma: no cover ... tests cover this.
-            kwargs.update(update_fields=['region', 'position'])
-        obj.save(**kwargs)
-
-        if old_chunks is not None:
-            logger.debug('all chunks in old region, which were after our moved '
-                         'object, need to be shifted up by 1 to try and force '
-                         'the positions into being contiguous again.')
-            old_chunks.update(position=F('position') - 1)
-        del old_chunks, old_region  # we're finished handling the previous.
-
-        new_chunks = get_next_chunks(EditRegionChunk, obj=obj,
-                                     position=0, region=new_region)
-        # find all the existing objects and iterate over each of them,
-        # doing an update (rather than save, to avoid changing the `modified`
-        # field) if they're not in the correct position.
-        for new_position, _obj in enumerate(new_chunks.iterator(), 1):
-            if _obj.position != new_position:
-                logger.debug('{obj!r} out of position, moving from'
-                             '{obj.position} to {new_position}'.format(
-                                 obj=_obj, new_position=new_position))
-                set_new_position(EditRegionChunk, pk=_obj.pk,
-                                 position=new_position)
-        return obj
+        new_position = max(self.cleaned_data['position'], 0)
+        new_region = self.cleaned_data.get('region', old_region)
+        return self.get_model().objects.move(
+            obj=obj, from_position=old_position, to_position=new_position,
+            from_region=old_region, to_region=new_region)
 
     def change_message(self):
         obj = self.cleaned_data['pk']
@@ -184,6 +132,3 @@ class MovementForm(Form):
                                              obj=obj)
         logger.info(msg)
         return obj.content_object, msg
-
-    class Meta:
-        model = EditRegionChunk

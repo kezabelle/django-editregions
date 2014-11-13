@@ -74,7 +74,7 @@
             var obj_id = ui.item.find(handle).eq(0).attr('data-pk');
 
             var target_region = $(this).attr('data-region');
-            var target_position = ui.item.index()+1;
+            var target_position = ui.item.index();
 
             // something has changed, either DOM index or region, or both.
             update_remote_object(this, e, ui, obj_id, target_position, target_region);
