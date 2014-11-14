@@ -480,12 +480,13 @@ class ChunkAdmin(AdminlinksMixin):
         obj.region = request.GET[REQUEST_VAR_REGION]
         # This is a new object, so let's put it in the last available position
         if obj.position is None:
-            found = get_chunks_in_region_count(EditRegionChunk,
-                                               content_type=obj.content_type,
-                                               obj_id=obj.content_id,
-                                               region=obj.region)
-            found2 = max(0, found)
-            obj.position = found2 + 1
+            found = EditRegionChunk.objects.get_region_chunks(
+                content_type=obj.content_type, content_id=obj.content_id,
+                region=obj.region).count()
+            if found < 1:
+                obj.position = 0
+            else:
+                obj.position = found + 1
         super(ChunkAdmin, self).save_model(request, obj, form, change)
 
     def response_max(self, request, context):
@@ -525,10 +526,11 @@ class ChunkAdmin(AdminlinksMixin):
                              'cls': self.model,
                              'region': region,
                          })
-            already_created = get_chunks_in_region_count(self.model,
-                                                         content_type=parent_ct,
-                                                         obj_id=parent_id,
-                                                         region=region)
+            created_objs_count = (self.model.objects.filter(
+                content_type=parent_ct, content_id=parent_id,
+                region=region).only('pk').count())
+            already_created = max(0, created_objs_count)
+            
             if already_created >= limit:
                 logger.info('Already hit limit of %(limit)d, found %(exists)d '
                             'objects in the database' % {

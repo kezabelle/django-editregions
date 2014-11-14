@@ -12,9 +12,7 @@ try:
     from django.utils.encoding import force_text
 except ImportError:  # pragma: no cover ... < Django 1.5
     from django.utils.encoding import force_unicode as force_text
-from editregions.utils.db import get_maximum_pk, get_next_chunks, set_new_position, get_chunks_in_region_count
 from editregions.utils.data import attach_configuration, get_configuration
-from editregions.utils.versioning import is_django_15plus
 from editregions.models import EditRegionChunk, EditRegionConfiguration
 from editregions.admin.utils import shared_media
 from editregions.utils.regions import validate_region_name
@@ -72,27 +70,31 @@ class MovementForm(Form):
     Move a chunk from one place to another.
     """
     pk = IntegerField(min_value=1)
-    position = IntegerField(min_value=1)
+    position = IntegerField(min_value=0)
     #: if region is set, then we're probably in an inline'd changelist, and
     #: we may be wanting to move region ...
     region = CharField(required=False, validators=[validate_region_name])
-    obj_cache = None
 
     def __init__(self, *args, **kwargs):
         super(MovementForm, self).__init__(*args, **kwargs)
-        self.fields['pk'].max_value = get_maximum_pk(self.Meta.model)
+        self.fields['pk'].max_value = self.get_model().objects.all().count()
+
+    def get_model(self):
+        return EditRegionChunk
 
     def clean(self):
         cd = super(MovementForm, self).clean()
         pk = cd.get('pk', None)
+        model = self.get_model()
         try:
             if pk is None:
-                raise self.Meta.model.DoesNotExist("Don't even bother querying")
-            cd['pk'] = self.Meta.model.polymorphs.get_subclass(pk=pk)
-        except ObjectDoesNotExist as e:
+                raise model.DoesNotExist("Don't even bother querying")
+            cd['pk'] = model.objects.get(pk=pk)
+        except model.DoesNotExist as e:
             cd['pk'] = None
-            self._errors['pk'] = '{0} does not exist'.format(
-                force_text(self.Meta.model._meta.verbose_name))
+            name = force_text(self.get_model()._meta.verbose_name)
+            msg = '{0} does not exist'.format(name)
+            self._errors['pk'] = msg
 
         # rather than raise an error for an invalid region, just set it
         # back to whatever the region says it should be. Trust no-one.
@@ -111,13 +113,11 @@ class MovementForm(Form):
         obj = self.cleaned_data['pk']
         old_position = obj.position
         old_region = obj.region
-        new_position = max(self.cleaned_data['position'], 1)
+        new_position = max(self.cleaned_data['position'], 0)
         new_region = self.cleaned_data.get('region', old_region)
-        import pdb; pdb.set_trace()
-        return obj.__class__.objects.move(obj=obj, from_position=old_position,
-                                          to_position=new_position,
-                                          from_region=old_region,
-                                          to_region=new_region)
+        return self.get_model().objects.move(
+            obj=obj, from_position=old_position, to_position=new_position,
+            from_region=old_region, to_region=new_region)
 
     def change_message(self):
         obj = self.cleaned_data['pk']
@@ -132,6 +132,3 @@ class MovementForm(Form):
                                              obj=obj)
         logger.info(msg)
         return obj.content_object, msg
-
-    class Meta:
-        model = EditRegionChunk

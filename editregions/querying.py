@@ -2,109 +2,107 @@
 from collections import namedtuple
 import logging
 from django.db.models import Manager
-from django.db.models import F
-from editregions.utils.versioning import is_django_15plus
+from django.utils.timezone import now
+from editregions.signals import different_region_move_completed
+from editregions.signals import same_region_move_completed
+from editregions.signals import move_completed
 
 
 logger = logging.getLogger(__name__)
 
 
-ReflowedData = namedtuple('ReflowedData', 'obj moved moved_pks from_position')
+ReflowedPositions = namedtuple('ReflowPositions',
+                               'before after moved_from moved_to')
+ReflowedData = namedtuple('ReflowedData', 'obj positions')
 MultipleReflowedData = namedtuple('MultipleReflowedData', 'old new')
 
 
 class EditRegionChunkManager(Manager):
+    use_for_related_fields = True
 
     def get_region_chunks(self, content_type, content_id, region):
         return self.filter(content_type=content_type, content_id=content_id,
-                           region=region)
-
-    def get_region_chunks_from_position(self, content_type, content_id, region,
-                                        position):
-        region_chunks = self.get_region_chunks(content_type=content_type,
-                                               content_id=content_id,
-                                               region=region)
-        return region_chunks.filter(position__gte=position)
+                           region=region).order_by('position', '-modified')
 
     def move(self, obj, from_position, to_position, from_region, to_region):
+        if to_position < 0:
+            raise ValueError("Invalid target position; minimum position is 0")
+
         same_region = from_region == to_region
         same_position = from_position == to_position
+
         if same_region and same_position:
-            raise ValueError("Cannot move `{pk!s}` because the given arguments "
-                             "wouldn't do trigger a movement.")
+            raise ValueError("Cannot move `{obj!r}` because the given "
+                             "arguments wouldn't do trigger a "
+                             "movement.".format(obj=obj))
 
         if not same_region:
             logger.debug("Moving into a different region")
-            return self.move_between_regions(obj=obj,
-                                             from_position=from_position,
-                                             to_position=to_position,
-                                             from_region=from_region,
-                                             to_region=to_region)
-        logger.debug("Moving within the same region")
-        return self.move_within_region(obj=obj, region=from_region,
-                                       from_position=from_position,
-                                       to_position=to_position)
+            moved = self.move_between_regions(
+                obj=obj, to_position=to_position, from_region=from_region,
+                to_region=to_region)
+            different_region_move_completed.send(sender=self.model,
+                                                 instance=obj,
+                                                 reflowed_previous=moved.old,
+                                                 reflowed_current=moved.new)
+        else:
+            logger.debug("Moving within the same region")
+            moved = self.move_within_region(obj=obj, region=from_region,
+                                            insert_position=to_position)
+            same_region_move_completed.send(sender=self.model, instance=obj,
+                                            reflowed=moved)
+        move_completed.send(sender=self.model, instance=obj)
+        return moved
 
-    def move_between_regions(self, obj, from_position, to_position, from_region,
+    def _calculate_positions(self, obj, region, insert_position=None):
+        region_chunks = list(self.get_region_chunks(
+            content_type=obj.content_type, content_id=obj.content_id,
+            region=region))
+        pks_by_index = tuple(x.pk for x in region_chunks)
+
+        to_remove = None
+        if obj.pk in pks_by_index:
+            to_remove = pks_by_index.index(obj.pk)
+        if to_remove is not None:
+            del region_chunks[to_remove]
+
+        if insert_position is not None:
+            region_chunks.insert(insert_position, obj)
+        pks_by_index_after_moving = tuple(x.pk for x in region_chunks)
+
+        return ReflowedPositions(before=pks_by_index, moved_from=to_remove,
+                                 moved_to=insert_position,
+                                 after=pks_by_index_after_moving)
+
+    def move_between_regions(self, obj, to_position, from_region,
                              to_region):
-        reflow_new_region = self.reflow_region(from_position=to_position,
-                                               region=to_region,
-                                               obj=obj)
-
-        obj.region = to_region
-        obj.position = to_position
-        kwargs = {}
-        if is_django_15plus():  # pragma: no cover ... tests cover this.
-            kwargs.update(update_fields=['position', 'region'])
-        obj.save(**kwargs)
-
-        reflow_old_region = self.reflow_region(from_position=from_position,
-                                               region=from_region,
-                                               obj=obj)
-
-        return MultipleReflowedData(old=reflow_old_region,
-                                    new=reflow_new_region)
-
-    def move_within_region(self, obj, region, from_position, to_position):
         """
-        shift everything greaterthan /equal to `to_permission` by 1
-        insert into position `to_permission`
-        reflow everything starting at `from_position`
+        find the chunk in the old region and remove it, reflowing those left.
+        find and insert the chunk into the new region and reflow those ...
         """
-        next_chunks = self.get_region_chunks_from_position(
-            content_type=obj.content_type, content_id=obj.content_id,
-            region=region, position=to_position)
-        next_chunks.update(position=F('position') + 1)
+        previous_reflow = self.move_within_region(obj=obj, region=from_region,
+                                                  insert_position=None)
 
-        obj.position = to_position
-        kwargs = {}
-        if is_django_15plus():  # pragma: no cover ... tests cover this.
-            kwargs.update(update_fields=['position'])
-        obj.save(**kwargs)
+        new_reflow = self.move_within_region(obj=obj, region=to_region,
+                                             insert_position=to_position)
+        reflow_container = MultipleReflowedData(old=previous_reflow,
+                                                new=new_reflow)
+        return reflow_container
 
-        return self.reflow_region(obj=obj, from_position=from_position)
+    def move_within_region(self, obj, region, insert_position):
+        positions = self._calculate_positions(obj=obj, region=region,
+                                              insert_position=insert_position)
 
-    def reflow_region(self, obj, region, from_position):
-        """
-        Starting at `from_position` for a given region, iterate over each one
-        and restore correct ordering, falling back to the modified date should
-        I somehow let multiple objects end up with the same position.
-        """
-        need_reflowing = self.get_region_chunks_from_position(
-            content_type=obj.content_type, content_id=obj.content_id,
-            region=region, position=from_position)
-        need_reflowing_ordered = need_reflowing.order_by('position', '-modified')  # noqa
+        self._reflow_pks(pks=positions.after, moved_pk=obj.pk,
+                         region=region)
+        reflow = ReflowedData(obj=obj, positions=positions)
+        return reflow
 
-        moved = set()
-        reflow_iterable = enumerate(iterable=need_reflowing_ordered.iterator(),
-                                    start=from_position)
-        for to_position, _obj in reflow_iterable:
-            if _obj.position == to_position:
-                continue
-            msg = '{obj!r} moving from `{obj.position}` to `{new_position}`'
-            logger.debug(msg.format(obj=_obj, new_position=to_position))
-            self.filter(pk=_obj.pk).update(position=to_position)
-            moved.add(_obj.pk)
-
-        return ReflowedData(obj=obj, moved=bool(moved), moved_pks=moved,
-                            from_position=from_position)
+    def _reflow_pks(self, pks, moved_pk, region):
+        for offset, chunk_pk in enumerate(pks, 0):
+            kwargs = {'position': offset, 'region': region}
+            # only "modify" the requested one.
+            if chunk_pk == moved_pk:
+                kwargs.update(modified=now())
+            self.model.objects.filter(pk=chunk_pk).update(**kwargs)
+        return True

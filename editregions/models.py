@@ -111,11 +111,6 @@ class EditRegionChunk(Model):
         return form.errors
     move.alters_data = True
 
-    def clean(self):
-        super(EditRegionChunk, self).clean()
-        if self.position == 0:
-            self.position = 1
-
     class Meta:
         abstract = False
         ordering = ['position']
