@@ -90,15 +90,6 @@ class EditRegionChunk(Model):
         return 'pk={x.pk}, region={x.region}, position={x.position}'.format(
             x=self)
 
-    def move(self, requested_position):
-        from editregions.admin.forms import MovementForm
-        form = MovementForm(data={'position': requested_position,
-                                  'pk': self.pk})
-        if form.is_valid():
-            return form.save()
-        return form.errors
-    move.alters_data = True
-
     class Meta:
         abstract = False
         ordering = ['position', '-modified']
