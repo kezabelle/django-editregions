@@ -22,7 +22,7 @@ class EditRegionChunkManager(Manager):
 
     def get_region_chunks(self, content_type, content_id, region):
         return self.filter(content_type=content_type, content_id=content_id,
-                           region=region).order_by('position', '-modified')
+                           region=region)
 
     def move(self, obj, from_position, to_position, from_region, to_region):
         if to_position < 0:

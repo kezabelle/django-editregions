@@ -101,7 +101,7 @@ class EditRegionChunk(Model):
 
     class Meta:
         abstract = False
-        ordering = ['position']
+        ordering = ['position', '-modified']
         db_table = 'editregions_editregionchunk'
         verbose_name = chunk_v
         verbose_name_plural = chunk_vplural
