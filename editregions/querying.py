@@ -6,6 +6,7 @@ from django.utils.timezone import now
 from editregions.signals import different_region_move_completed
 from editregions.signals import same_region_move_completed
 from editregions.signals import move_completed
+from editregions.utils.regions import validate_region_name
 
 
 logger = logging.getLogger(__name__)
@@ -30,6 +31,9 @@ class EditRegionChunkManager(Manager):
 
         same_region = from_region == to_region
         same_position = from_position == to_position
+
+        validate_region_name(from_region)
+        validate_region_name(to_region)
 
         if same_region and same_position:
             raise ValueError("Cannot move `{obj!r}` because the given "
