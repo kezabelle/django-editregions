@@ -100,8 +100,7 @@ class MovementFormTestCase(DjangoTestCase):
             pass
         admin.site.register(User, TestUserAdmin)
         form.is_valid()
-        expected_query_count = 12 if is_django_15plus() else 13
-        with self.assertNumQueries(expected_query_count):
+        with self.assertNumQueries(12):
             result = form.save()
         # TODO: compare results?
 
@@ -116,8 +115,7 @@ class MovementFormTestCase(DjangoTestCase):
             pass
         admin.site.register(User, TestUserAdmin)
         form.is_valid()
-        expected_query_count = 13 if is_django_15plus() else 14
-        with self.assertNumQueries(expected_query_count):
+        with self.assertNumQueries(13):
             result = form.save()
         # TODO: compare results?
 
