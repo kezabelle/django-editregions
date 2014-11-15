@@ -57,18 +57,6 @@ except ImportError:  # Haven't got an ultrajson package
     except ImportError:  # pragma: no cover ... Python < 2.6, Django < 1.6?
         from django.utils import simplejson as json
 
-try:
-    import yaml
-    CAN_USE_YAML_DECODER = True
-except ImportError:  # pragma: no cover ... will raise an exception later.
-    CAN_USE_YAML_DECODER = False
-
-try:
-    import toml
-    CAN_USE_TOML_DECODER = True
-except ImportError:  # pragma: no cover ... will raise an exception later.
-    CAN_USE_TOML_DECODER = False
-
 
 @python_2_unicode_compatible
 class EditRegionChunk(Model):
@@ -128,23 +116,14 @@ class EditRegionConfiguration(object):
     __slots__ = ('config', 'has_configuration', '_previous_fetched_chunks',
                  'obj', 'ct', 'decoder',  'decoder_func', 'valid_templates')
 
-    def __init__(self, obj=None, decoder='json'):
+    def __init__(self, obj=None):
         self.config = {}
         self.valid_templates = ()
         self.has_configuration = False
         self._previous_fetched_chunks = None
         self.obj = None
-        self.decoder = decoder
-
-        if self.decoder == 'json':
-            self.decoder_func = json.loads
-        elif self.decoder == 'yaml' and CAN_USE_YAML_DECODER:
-            self.decoder_func = yaml.safe_load
-        elif self.decoder == 'toml' and CAN_USE_TOML_DECODER:
-            self.decoder_func = toml.loads
-        else:
-            raise ImproperlyConfigured("Unable to use the requested "
-                                       "deserialization format")
+        self.decoder = 'json'
+        self.decoder_func = json.loads
         if obj is not None and getattr(self, 'obj', None) is None:
             self.configure(obj=obj)
 

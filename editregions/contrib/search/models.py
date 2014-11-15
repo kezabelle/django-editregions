@@ -48,7 +48,7 @@ class SearchConfigBase(Model):
 
 
 @python_2_unicode_compatible
-class MoreLikeThis(EditRegionChunk, SearchConfigBase):
+class MoreLikeThis(SearchConfigBase, EditRegionChunk):
     """For mounting this chunk on the Django admin"""
     def __str__(self):
         return '{o.max_num!s} from "{o.connection!s}"'.format(o=self)
@@ -92,7 +92,7 @@ class SearchResultsBase(SearchConfigBase):
 
 
 @python_2_unicode_compatible
-class SearchResults(EditRegionChunk, SearchResultsBase):
+class SearchResults(SearchResultsBase, EditRegionChunk):
     """For mounting this chunk on the Django admin"""
     def __str__(self):
         if self.max_num < 1:

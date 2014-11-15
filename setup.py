@@ -13,19 +13,21 @@ warnings.filterwarnings("ignore", '.+', PendingDeprecationWarning,
 try:
     from setuptest import test
     test_config = {
-        'cmdclass': {'test': test}
+        'cmdclass': {'test': test},
+        'tests_require': (),
     }
 except ImportError:
     test_config = {
-    'tests_require': (
-        'django-setuptest',
-        ),
-    'test_suite': 'setuptest.setuptest.SetupTestSuite'
+        'tests_require': ('django-setuptest>=0.1.5',),
+        'test_suite': 'setuptest.setuptest.SetupTestSuite'
     }
     for argument in ('--failfast', '--autoreload', '--label'):
         if argument in sys.argv:
             sys.argv.remove(argument)
-
+test_config['tests_require'] += (
+    'django-tinymce>=1.5.2',
+    'django-wymeditor>=1.0',
+)
 
 HERE = os.path.abspath(os.path.dirname(__file__))
 

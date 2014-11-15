@@ -1,76 +1,46 @@
 # -*- coding: utf-8 -*-
-from south.utils import datetime_utils as datetime
-from south.db import db
-from south.v2 import SchemaMigration
-from django.db import models
+from __future__ import unicode_literals
+
+from django.db import models, migrations
+import django.core.validators
+import editregions.contrib.search.models
 
 
-class Migration(SchemaMigration):
+class Migration(migrations.Migration):
 
-    def forwards(self, orm):
-        # Adding model 'MoreLikeThis'
-        db.create_table(u'search_morelikethis', (
-            (u'editregionchunk_ptr', self.gf('django.db.models.fields.related.OneToOneField')(to=orm['editregions.EditRegionChunk'], unique=True, primary_key=True)),
-            ('max_num', self.gf('django.db.models.fields.PositiveIntegerField')(default=3)),
-            ('connection', self.gf('django.db.models.fields.CharField')(default=u'default', max_length=50)),
-            ('request_objects', self.gf('django.db.models.fields.BooleanField')(default=False)),
-        ))
-        db.send_create_signal(u'search', ['MoreLikeThis'])
+    dependencies = [
+        ('editregions', '0001_initial'),
+    ]
 
-        # Adding model 'SearchResults'
-        db.create_table(u'search_searchresults', (
-            (u'editregionchunk_ptr', self.gf('django.db.models.fields.related.OneToOneField')(to=orm['editregions.EditRegionChunk'], unique=True, primary_key=True)),
-            ('max_num', self.gf('django.db.models.fields.PositiveIntegerField')(default=3)),
-            ('connection', self.gf('django.db.models.fields.CharField')(default=u'default', max_length=50)),
-            ('request_objects', self.gf('django.db.models.fields.BooleanField')(default=False)),
-            ('query', self.gf('django.db.models.fields.CharField')(max_length=255)),
-            ('boost', self.gf('django.db.models.fields.CharField')(max_length=255)),
-        ))
-        db.send_create_signal(u'search', ['SearchResults'])
-
-
-    def backwards(self, orm):
-        # Deleting model 'MoreLikeThis'
-        db.delete_table(u'search_morelikethis')
-
-        # Deleting model 'SearchResults'
-        db.delete_table(u'search_searchresults')
-
-
-    models = {
-        u'contenttypes.contenttype': {
-            'Meta': {'ordering': "('name',)", 'unique_together': "(('app_label', 'model'),)", 'object_name': 'ContentType', 'db_table': "'django_content_type'"},
-            'app_label': ('django.db.models.fields.CharField', [], {'max_length': '100'}),
-            u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'model': ('django.db.models.fields.CharField', [], {'max_length': '100'}),
-            'name': ('django.db.models.fields.CharField', [], {'max_length': '100'})
-        },
-        u'editregions.editregionchunk': {
-            'Meta': {'ordering': "[u'position']", 'object_name': 'EditRegionChunk'},
-            'content_id': ('django.db.models.fields.CharField', [], {'max_length': '255', 'db_index': 'True'}),
-            'content_type': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'+'", 'to': u"orm['contenttypes.ContentType']"}),
-            'created': ('django.db.models.fields.DateTimeField', [], {'auto_now_add': 'True', 'blank': 'True'}),
-            u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'modified': ('django.db.models.fields.DateTimeField', [], {'auto_now': 'True', 'blank': 'True'}),
-            'position': ('django.db.models.fields.PositiveIntegerField', [], {'default': 'None', 'db_index': 'True'}),
-            'region': ('django.db.models.fields.CharField', [], {'max_length': '75'})
-        },
-        u'search.morelikethis': {
-            'Meta': {'ordering': "[u'position']", 'object_name': 'MoreLikeThis', '_ormbases': [u'editregions.EditRegionChunk']},
-            'connection': ('django.db.models.fields.CharField', [], {'default': "u'default'", 'max_length': '50'}),
-            u'editregionchunk_ptr': ('django.db.models.fields.related.OneToOneField', [], {'to': u"orm['editregions.EditRegionChunk']", 'unique': 'True', 'primary_key': 'True'}),
-            'max_num': ('django.db.models.fields.PositiveIntegerField', [], {'default': '3'}),
-            'request_objects': ('django.db.models.fields.BooleanField', [], {'default': 'False'})
-        },
-        u'search.searchresults': {
-            'Meta': {'ordering': "[u'position']", 'object_name': 'SearchResults', '_ormbases': [u'editregions.EditRegionChunk']},
-            'boost': ('django.db.models.fields.CharField', [], {'max_length': '255'}),
-            'connection': ('django.db.models.fields.CharField', [], {'default': "u'default'", 'max_length': '50'}),
-            u'editregionchunk_ptr': ('django.db.models.fields.related.OneToOneField', [], {'to': u"orm['editregions.EditRegionChunk']", 'unique': 'True', 'primary_key': 'True'}),
-            'max_num': ('django.db.models.fields.PositiveIntegerField', [], {'default': '3'}),
-            'query': ('django.db.models.fields.CharField', [], {'max_length': '255'}),
-            'request_objects': ('django.db.models.fields.BooleanField', [], {'default': 'False'})
-        }
-    }
-
-    complete_apps = ['search']
+    operations = [
+        migrations.CreateModel(
+            name='MoreLikeThis',
+            fields=[
+                ('editregionchunk_ptr', models.OneToOneField(parent_link=True, auto_created=True, primary_key=True, serialize=False, to='editregions.EditRegionChunk')),
+                ('max_num', models.PositiveIntegerField(default=3, help_text='maximum number of items to render.', verbose_name='display', validators=[django.core.validators.MinValueValidator(0), django.core.validators.MaxValueValidator(1000)])),
+                ('connection', models.CharField(default='default', help_text='which of the available search connections to use', max_length=50, verbose_name='connection', validators=[editregions.contrib.search.models.configured_haystack_connection])),
+                ('request_objects', models.BooleanField(default=False, help_text='if the template requires access to the database objects, tick this to efficiently fetch the objects up front.', verbose_name='fetch objects')),
+            ],
+            options={
+                'verbose_name': 'More like this',
+                'verbose_name_plural': 'More like this',
+            },
+            bases=('editregions.editregionchunk', models.Model),
+        ),
+        migrations.CreateModel(
+            name='SearchResults',
+            fields=[
+                ('editregionchunk_ptr', models.OneToOneField(parent_link=True, auto_created=True, primary_key=True, serialize=False, to='editregions.EditRegionChunk')),
+                ('max_num', models.PositiveIntegerField(default=3, help_text='maximum number of items to render.', verbose_name='display', validators=[django.core.validators.MinValueValidator(0), django.core.validators.MaxValueValidator(1000)])),
+                ('connection', models.CharField(default='default', help_text='which of the available search connections to use', max_length=50, verbose_name='connection', validators=[editregions.contrib.search.models.configured_haystack_connection])),
+                ('request_objects', models.BooleanField(default=False, help_text='if the template requires access to the database objects, tick this to efficiently fetch the objects up front.', verbose_name='fetch objects')),
+                ('query', models.CharField(help_text='the search terms (or complex query) to use when finding the best matches.', max_length=255, verbose_name='search for')),
+                ('boost', models.CharField(blank=True, help_text='comma separated list of words which should be considered more important, when sorting the best matches.', max_length=255, verbose_name='prioritise', validators=[editregions.contrib.search.models.csv_validator])),
+            ],
+            options={
+                'verbose_name': 'Search results',
+                'verbose_name_plural': 'Search results',
+            },
+            bases=('editregions.editregionchunk', models.Model),
+        ),
+    ]

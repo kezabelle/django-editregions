@@ -17,7 +17,6 @@ from model_utils.managers import (PassThroughManager, InheritanceManager,
                                   InheritanceQuerySet)
 from editregions.contrib.embeds.models import Iframe
 from editregions.models import EditRegionChunk, EditRegionConfiguration
-from editregions.querying import EditRegionChunkQuerySet
 from editregions.utils.data import get_content_type
 from django.contrib.auth.models import User, Group, Permission
 
@@ -116,9 +115,6 @@ class EditRegionChunkTestCase(DjangoTestCase):
     def test_has_managers(self):
         self.assertIsInstance(getattr(EditRegionChunk, 'objects', None),
                               PassThroughManager)
-
-        self.assertIsInstance(EditRegionChunk.objects.all(),
-                              EditRegionChunkQuerySet)
 
         self.assertIsInstance(getattr(EditRegionChunk, 'polymorphs', None),
                               InheritanceManager)

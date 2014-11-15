@@ -3,7 +3,9 @@ source = editregions
 omit =
     editregions/tests/*
     editregions/migrations/*
+    editregions/south_migrations/*
     editregions/contrib/*/migrations/*
+    editregions/contrib/*/south_migrations/*
     *__init__*
 branch = True
 data_file = .coverage
@@ -18,7 +20,9 @@ show_missing = True
 omit =
     editregions/tests/*
     editregions/migrations/*
+    editregions/south_migrations/*
     editregions/contrib/*/migrations/*
+    editregions/contrib/*/south_migrations/*
     *__init__*
 
 [xml]

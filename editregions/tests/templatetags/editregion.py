@@ -15,7 +15,6 @@ from editregions.utils.data import get_content_type
 from editregions.utils.versioning import is_django_15plus
 from editregions.templatetags.editregion import (chunk_iteration_context,
                                                  render_one_chunk,
-                                                 render_one_summary,
                                                  render_all_chunks)
 
 
@@ -53,21 +52,6 @@ class EditRegionTemplateTagTestCase(DjangoTestCase):
         self.assertIn('data-pk="1"', output)
         self.assertIn('data-region="test"', output)
         self.assertIn('</iframe>', output)
-
-    def test_render_one_summary(self):
-        iframe = Iframe(region='test', content_id=1, content_type=self.ct,
-                        url='https://news.bbc.co.uk/', position=1)
-        iframe.full_clean()
-
-        request = RequestFactory().get('/')
-        ctx = RequestContext(request)
-        iterdata = chunk_iteration_context(
-            index=0, value=iframe, iterable=[iframe])
-        ctx.update(iterdata)
-        output = render_one_summary(context=ctx, chunk=iframe,
-                                                  extra=iterdata['chunkloop'],
-                                                  renderer=None).strip()
-        self.assertEqual(output, 'https://news.bbc.co.uk/')
 
     def test_render_all_chunks(self):
         objs = []
