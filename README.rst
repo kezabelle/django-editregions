@@ -42,6 +42,9 @@ Tests all pass locally on ``python2.6``, ``python2.7``, ``python3.3``
 and ``pypy``. The same test suite fails on `Travis`_, and I've no idea
 why. YMMV. Alpha-quality stuff here, folks.
 
+.. image:: https://travis-ci.org/kezabelle/django-editregions.svg?branch=master
+  :target: https://travis-ci.org/kezabelle/django-editregions
+
 .. _Travis: https://travis-ci.org/
 
 Bundled "chunks"
