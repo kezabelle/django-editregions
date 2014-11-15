@@ -60,14 +60,26 @@ class GetModelAdminTestCase(GetContentTypeTestCase):
             get_modeladmin(Permission)
 
 
+class TestUserAdmin(UserAdmin):
+    def get_editregions_templates(self, obj):
+        return ['sample_editregion_template.html']
+
+
 class AttachConfigurationTestCase(TestCase):
+    def setUp(cls):
+        try:
+            admin.site.unregister(User)
+        except NotRegistered:
+            pass
+        admin.site.register(User, TestUserAdmin)
+
     def test_attaching(self):
         user = User()
         obj, created = attach_configuration(user, EditRegionConfiguration)
         self.assertTrue(hasattr(user, '__editregion_config'))
         self.assertTrue(created)
         self.assertIsInstance(getattr(user, '__editregion_config'),
-                              SimpleLazyObject)
+                              EditRegionConfiguration)
 
     def test_reattaching(self):
         user = User()
@@ -81,11 +93,12 @@ class GetConfigurationTestCase(TestCase):
     def test_getting(self):
         user = User()
         obj, created = attach_configuration(user, EditRegionConfiguration)
-        self.assertIsInstance(get_configuration(user), SimpleLazyObject)
+        self.assertIsInstance(get_configuration(user), EditRegionConfiguration)
 
     def test_getting_without_having_attached(self):
         user = User()
-        self.assertNotIsInstance(get_configuration(user), SimpleLazyObject)
+        self.assertNotIsInstance(get_configuration(user),
+                                 EditRegionConfiguration)
         self.assertIsNone(get_configuration(user))
 
 

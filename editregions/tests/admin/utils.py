@@ -70,10 +70,11 @@ class AdminChunkWrapperTestCase(DjangoTestCase):
         self.assertEqual({'app': 'editregions', 'namespace': 'admin',
                           'module': 'editregionchunk',
                           'view': '__error__'}, wrapped.url_parts)
-
-        self.assertEqual(force_text(wrapped), 'content block: pk=1, '
-                                              'region=test, position=1')
-        self.assertEqual(wrapped.summary(), 'pk=1, region=test, position=1')
+        self.assertEqual(force_text(wrapped), 'content block')
+        self.assertEqual(repr(wrapped),
+                         '<editregions.admin.utils.AdminChunkWrapper '
+                         'admin=admin, label="content block", exists=True, '
+                         'region=test, module=editregions, content_id=1>')
 
     def test_urls_for_raw_chunk(self):
         wrapped = AdminChunkWrapper(opts=self.base_obj._meta, obj=self.base_obj,

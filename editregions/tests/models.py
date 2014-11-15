@@ -6,6 +6,7 @@ from django.contrib.auth.admin import UserAdmin
 from django.core.exceptions import ImproperlyConfigured
 from django.template import Template, TemplateDoesNotExist
 from django.test.utils import override_settings
+from editregions.querying import EditRegionChunkManager
 from editregions.utils.versioning import is_django_17plus
 
 try:
@@ -64,57 +65,29 @@ class EditRegionChunkTestCase(DjangoTestCase):
             'other': other,
         }
 
-    def test_cleaning(self):
+    def test_cleaning_doesnt_change_position_anymore(self):
         erc = EditRegionChunk(region='test', position=0,
                               content_id=str(uuid4()),
                               content_type=get_content_type(User))
         erc.full_clean()
-        self.assertEqual(erc.position, 1)
+        self.assertEqual(erc.position, 0)
 
     def test_repr(self):
         user_ct = get_content_type(self.model_dependencies['user'])
         expected = ('<editregions.models.EditRegionChunk pk=1, region=test, '
                     'parent_type={USER.pk}, parent_id=1, '
-                    'position=1>'.format(USER=user_ct))
+                    'position=0>'.format(USER=user_ct))
         received = repr(self.chunks['base'])
         self.assertEqual(expected, received)
 
     def test_str(self):
-        expected = 'pk=1, region=test, position=1'
+        expected = 'pk=1, region=test, position=0'
         received = force_text(self.chunks['base'])
         self.assertEqual(expected, received)
 
-    def test_move(self):
-        expected = self.chunks['base']
-        expected.position = 2
-
-        # do the move
-        received = self.chunks['base'].move(requested_position=2)
-        self.assertEqual(expected, received)
-        expected = (self.chunks['other'], self.chunks['base'])
-        received = tuple(EditRegionChunk.objects.all())
-        self.assertEqual(expected, received)
-
-        # move back to first position ...
-        self.chunks['base'].move(requested_position=1)
-        expected = (
-            self.chunks['base'],
-            self.chunks['other'],
-        )
-        received = tuple(EditRegionChunk.objects.all())
-        self.assertEqual(expected, received)
-
-    def test_move_bad_position(self):
-        expected = self.chunks['base']
-        expected.position = 2
-        errors = self.chunks['base'].move(requested_position=-1)
-        self.assertEqual(errors, {
-            'position': [u'Ensure this value is greater than or equal to 1.']
-        })
-
     def test_has_managers(self):
         self.assertIsInstance(getattr(EditRegionChunk, 'objects', None),
-                              PassThroughManager)
+                              EditRegionChunkManager)
 
         self.assertIsInstance(getattr(EditRegionChunk, 'polymorphs', None),
                               InheritanceManager)
@@ -387,7 +360,7 @@ class EditRegionConfigurationTestCase(DjangoTestCase):
 
     def test_json_serializer(self):
         user, created = User.objects.get_or_create(username='test')
-        blank_conf = EditRegionConfiguration(obj=user, decoder='json')
+        blank_conf = EditRegionConfiguration(obj=user)
         template = Template('''{
             "test": {
                 "name": "whee!",
@@ -432,104 +405,6 @@ class EditRegionConfigurationTestCase(DjangoTestCase):
         })
         results = blank_conf.fetch_chunks()
         self.assertEqual(dict(results), {'test': [], 'test3': [], 'test2': []})
-
-    def test_yaml_serializer(self):
-        try:
-            import yaml
-        except ImportError:
-            self.skipTest("YAML not available ...")
-        user, created = User.objects.get_or_create(username='test')
-        blank_conf = EditRegionConfiguration(obj=user, decoder='yaml')
-        template = Template('''---
-          test:
-            name: "whee!"
-            models:
-              embeds.Iframe: 2
-          test2:
-            name: "oh my goodness, another test region"
-            models:
-              embeds.Iframe: 1
-          test3:
-            name: "oh my goodness, yet another test region"
-            models:
-              embeds.Iframe: null
-        ''')
-        blank_conf.config = blank_conf.get_template_region_configuration(
-            template_instance=template)
-        self.assertEqual(dict(blank_conf.config), {
-            'test': {
-                'models': {
-                    Iframe: 2
-                },
-                'name': 'whee!'
-            },
-            'test2': {
-                'models': {
-                    Iframe: 1
-                },
-                'name': 'oh my goodness, another test region'
-            },
-            'test3': {
-                'models': {
-                    Iframe: None,
-                },
-                'name': 'oh my goodness, yet another test region'
-            }
-        })
-        results = blank_conf.fetch_chunks()
-        self.assertEqual(dict(results), {'test': [], 'test3': [], 'test2': []})
-
-    def test_toml_serializer(self):
-        try:
-            import toml
-        except ImportError:
-            self.skipTest("toml not available ...")
-        user, created = User.objects.get_or_create(username='test')
-        blank_conf = EditRegionConfiguration(obj=user, decoder='toml')
-        template = Template('''
-        [test]
-        name = "whee!"
-        [test.models]
-        embeds.Iframe = 2
-
-        [test2]
-        name = "oh my goodness, another test region"
-        [test2.models]
-        embeds.Iframe = 1
-
-        [test3]
-        name = "oh my goodness, yet another test region"
-        [test3.models]
-        embeds.Iframe = false
-        ''')
-        blank_conf.config = blank_conf.get_template_region_configuration(
-            template_instance=template)
-        self.assertEqual(dict(blank_conf.config), {
-            'test': {
-                'models': {
-                    Iframe: 2
-                },
-                'name': 'whee!'
-            },
-            'test2': {
-                'models': {
-                    Iframe: 1
-                },
-                'name': 'oh my goodness, another test region'
-            },
-            'test3': {
-                'models': {
-                    Iframe: None,
-                },
-                'name': 'oh my goodness, yet another test region'
-            }
-        })
-        results = blank_conf.fetch_chunks()
-        self.assertEqual(dict(results), {'test': [], 'test3': [], 'test2': []})
-
-    def test_bad_serializer_serializer(self):
-        with self.assertRaises(ImproperlyConfigured):
-            EditRegionConfiguration(decoder='ghost')
 
     def test_dissecting_subclasses(self):
         args = (

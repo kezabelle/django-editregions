@@ -39,7 +39,7 @@ class SetNewPositionTestCase(DjangoTestCase):
             base.full_clean()
             base.save()
 
-        existing = list(EditRegionChunk.objects.all().order_by('position')
+        existing = list(EditRegionChunk.objects.all()
                         .values_list('pk', flat=True))
         self.assertEqual(existing, list(range(1, 11)))
 
@@ -47,7 +47,7 @@ class SetNewPositionTestCase(DjangoTestCase):
         self.assertEqual(last, 10)
 
         set_new_position(EditRegionChunk, last, 0)
-        existing = list(EditRegionChunk.objects.all().order_by('position')
+        existing = list(EditRegionChunk.objects.all()
                         .values_list('pk', flat=True))
         self.assertEqual(existing, [10, 1, 2, 3, 4, 5, 6, 7, 8, 9])
 

@@ -463,9 +463,8 @@ class EditRegionAdminTestCase(DjangoTestCase):
 
     def test_get_list_display(self):
         request = RequestFactory().get('/')
-        expected = [u'get_position', u'get_subclass_type',
-                    u'get_subclass_summary', u'get_last_modified',
-                    u'get_object_tools']
+        expected = ['get_object_tools', 'get_subclass_type',
+                    'get_subclass_summary']
         received = self.admin.get_list_display(request=request)
         self.assertEqual(expected, received)
 
@@ -497,20 +496,8 @@ class EditRegionAdminTestCase(DjangoTestCase):
                          '>x</a>'),
             'extra': {
                 'data': 'x',
+                'caller': 'test'
             }
-        }
-        self._test_changelist_display_methods(**kwargs)
-
-    def test_get_region_name(self):
-        kwargs = {
-            'func': 'get_region_name',
-            'expected': ('<a href="/admin_mountpoint/embeds/iframe/1/?',
-                         'region=test',
-                         'content_id=1',
-                         'content_type={0}'.format(get_content_type(User).pk),
-                         'data-adminlinks="autoclose"',
-                         '>whee!</a>'),
-            'extra': {}
         }
         self._test_changelist_display_methods(**kwargs)
 
@@ -539,22 +526,6 @@ class EditRegionAdminTestCase(DjangoTestCase):
             'extra': {}
         }
         self._test_changelist_display_methods(**kwargs)
-
-    def test_get_position(self):
-        kwargs = {
-            'func': 'get_position',
-            'expected': ('<a href="/admin_mountpoint/embeds/iframe/1/?',
-                         'region=test',
-                         'content_id=1',
-                         'content_type={0}'.format(get_content_type(User).pk),
-                         'data-adminlinks="autoclose"',
-                         '>2</a>'),
-            'extra': {}
-        }
-        self._test_changelist_display_methods(**kwargs)
-
-    def test_get_last_modified(self):
-        pass
 
     def test_get_object_tools(self):
         kwargs = {
@@ -605,7 +576,8 @@ class EditRegionAdminTestCase(DjangoTestCase):
 
         first_obj = EditRegionChunk.objects.all()[0]
         request = RequestFactory().get('/', {'position': 3,
-                                             'pk': first_obj.pk})
+                                             'pk': first_obj.pk,
+                                             'region': 'test'})
         request.user = user
         response = self.admin.move_view(request=request)
         self.assertEqual(response.status_code, 200)
@@ -614,7 +586,7 @@ class EditRegionAdminTestCase(DjangoTestCase):
         self.assertIn('action', json_data)
         self.assertIn('html', json_data)
         self.assertEqual('move', json_data['action'])
-        self.assertIn('<div class="region-inline-wrapper">',
+        self.assertIn('<div class="region-inline-wrapper"',
                       json_data['html'])
 
     def test_queryset(self):
@@ -722,7 +694,7 @@ class EditRegionAdminTestCase(DjangoTestCase):
         iframe.save()
         received = self.admin.render_changelists_for_object(request=request,
                                                             obj=user)
-        self.assertIn('<div class="region-inline-wrapper">', received)
+        self.assertIn('<div class="region-inline-wrapper"', received)
         self.assertIn('<h3>Embeds</h3>', received)
         self.assertIn('<div class="region-inline-progress-wrapper">', received)
 

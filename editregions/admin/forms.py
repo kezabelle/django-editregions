@@ -103,7 +103,8 @@ class MovementForm(Form):
                                  EditRegionConfiguration)
             erc = get_configuration(cd['pk'].content_object)
             if cd['region'] not in erc.config:
-                cd['region'] = cd['pk'].region
+                msg = '{0} is not a valid region'.format(cd['region'])
+                self._errors['region'] = msg
         return cd
 
     def save(self):
