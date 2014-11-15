@@ -12,12 +12,10 @@ except ImportError:
         return path
 from django.forms import Media
 from django.http import QueryDict
-from django.template.defaultfilters import truncatewords
 from django.utils.decorators import method_decorator, available_attrs
-from django.utils.encoding import python_2_unicode_compatible
+from django.utils.encoding import python_2_unicode_compatible, force_text
 from editregions.constants import (REQUEST_VAR_REGION, REQUEST_VAR_ID,
                                    REQUEST_VAR_CT)
-from editregions.templatetags.editregion import chunk_iteration_context
 from editregions.utils.versioning import is_django_16plus
 from editregions.utils.regions import validate_region_name
 from editregions.models import EditRegionChunk
@@ -196,7 +194,7 @@ class AdminChunkWrapper(object):
                 self.querydict.update({field: getattr(self, field) or 0})
 
     def __str__(self):
-        return self.label
+        return force_text(self.label)
 
     def __repr__(self):
         return ('<{x.__module__}.{x.__class__.__name__} '
