@@ -359,6 +359,10 @@ class MaybeFixRedirectionTestCase(DjangoTestCase):
         user.full_clean()
         user.save()
         admin_instance = get_modeladmin(Iframe)
+        # assert this here, because allegedly according to travis,
+        # it may not be
+        self.assertIsInstance(admin_instance, RealishAdmin)
+
         request = RequestFactory().get('/')
         request.user = user
         iframe_admin = reverse('admin:embeds_iframe_add')
@@ -384,6 +388,10 @@ class MaybeFixRedirectionTestCase(DjangoTestCase):
         user.full_clean()
         user.save()
         admin_instance = get_modeladmin(Iframe)
+        # assert this here, because allegedly according to travis,
+        # it may not be
+        self.assertIsInstance(admin_instance, RealishAdmin)
+
         request = RequestFactory().get('/', {
             '_autoclose': 1,
         })
@@ -416,6 +424,9 @@ class MaybeFixRedirectionTestCase(DjangoTestCase):
         user.full_clean()
         user.save()
         admin_instance = get_modeladmin(Iframe)
+        # assert this here, because allegedly according to travis,
+        # it may not be
+        self.assertIsInstance(admin_instance, RealishAdmin)
         request = RequestFactory().get('/', {
             '_continue': 1,
         })
