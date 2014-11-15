@@ -25,7 +25,6 @@ from django.http import HttpResponse, HttpResponseBadRequest, QueryDict
 from django.shortcuts import render_to_response
 from django.template import RequestContext
 from django.template.loader import render_to_string
-from editregions.utils.db import get_chunks_in_region_count
 
 try:
     import json
