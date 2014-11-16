@@ -321,10 +321,14 @@ class MaybeFixRedirectionTestCase(DjangoTestCase):
         new_response = admin_instance.maybe_fix_redirection(
             request=request, response=response_200)
         # returned unchanged
+        self.assertEqual(new_response['X-Chunkadmin-Response'], 'early')
         self.assertEqual(force_text('ok'), force_text(new_response.content))
         self.assertEqual(200, new_response.status_code)
 
     def test_returned_data_changed(self):
+        """
+        Just check that the `_data_changed` parameter is added the response.
+        """
         request = RequestFactory().get('/')
         admin_instance = get_modeladmin(Iframe)
         response_302 = HttpResponseRedirect(redirect_to='/admin_mountpoint/')
@@ -332,11 +336,16 @@ class MaybeFixRedirectionTestCase(DjangoTestCase):
             request=request, response=response_302)
         # returned early because it was a redirect, but we updated the
         # querystring anyway
+        self.assertEqual(new_response['X-Chunkadmin-Response'], 'early')
         self.assertEqual(302, new_response.status_code)
         self.assertEqual('/admin_mountpoint/?_data_changed=1',
                          new_response['Location'])
 
     def test_to_other_url(self):
+        """
+        Going to a non-chunkadmin URL should be ok, and should also put the
+        `_data_changed` parameter onto the URL.
+        """
         user = User(username='test', is_staff=True, is_superuser=True,
                     is_active=True)
         user.set_password('test')
@@ -347,7 +356,7 @@ class MaybeFixRedirectionTestCase(DjangoTestCase):
         admin_instance = get_modeladmin(Iframe)
         new_response = admin_instance.maybe_fix_redirection(
             request=request, response=response_302, obj=user)
-        # was a redirect, but not to a chunkadmin instance.
+        self.assertEqual(new_response['X-Chunkadmin-Response'], 'not-chunkadmin')  # noqa
         self.assertEqual(302, new_response.status_code)
         self.assertEqual('/admin_mountpoint/?_data_changed=1',
                          new_response['Location'])
@@ -359,8 +368,6 @@ class MaybeFixRedirectionTestCase(DjangoTestCase):
         user.full_clean()
         user.save()
         admin_instance = get_modeladmin(Iframe)
-        # assert this here, because allegedly according to travis,
-        # it may not be
         self.assertIsInstance(admin_instance, RealishAdmin)
 
         request = RequestFactory().get('/')
@@ -373,23 +380,26 @@ class MaybeFixRedirectionTestCase(DjangoTestCase):
                         content_id=user.pk, url='https://news.bbc.co.uk/')
         iframe.full_clean()
         iframe.save()
-
+        
         new_response = admin_instance.maybe_fix_redirection(
             request=request, response=response_301, obj=iframe)
+        self.assertEqual(new_response['X-Chunkadmin-Response'], 'test')
         # was a redirect, to a chunkadmin instance
         self.assertEqual(301, new_response.status_code)
         self.assertEqual('/admin_mountpoint/auth/user/1/?_data_changed=1',
                          new_response['Location'])
 
     def test_autoclose_chunkadmin(self):
+        """
+        If `_autoclose` is in the URL, that + `_data_changed` should propagate
+        to the next redirect URL for the purposes of our adminlinks JS.
+        """
         user = User(username='test', is_staff=True, is_superuser=True,
                     is_active=True)
         user.set_password('test')
         user.full_clean()
         user.save()
         admin_instance = get_modeladmin(Iframe)
-        # assert this here, because allegedly according to travis,
-        # it may not be
         self.assertIsInstance(admin_instance, RealishAdmin)
 
         request = RequestFactory().get('/', {
@@ -407,7 +417,8 @@ class MaybeFixRedirectionTestCase(DjangoTestCase):
 
         new_response = admin_instance.maybe_fix_redirection(
             request=request, response=response_301, obj=iframe)
-        # was a redirect, to a chunkadmin instance
+        self.assertEqual(new_response['X-Chunkadmin-Response'], 'autoclose')
+
         self.assertEqual(301, new_response.status_code)
         location, querystring = new_response['Location'].split('?')
         self.assertEqual('/admin_mountpoint/embeds/iframe/add/', location)
@@ -418,15 +429,18 @@ class MaybeFixRedirectionTestCase(DjangoTestCase):
         self.assertIn('content_id={0}'.format(iframe.pk), querystring)
 
     def test_continue_editing_parent_object(self):
+        """
+        if continue editing is hit, it should go back to the parent URL,
+        I think?
+        """
         user = User(username='test', is_staff=True, is_superuser=True,
                     is_active=True)
         user.set_password('test')
         user.full_clean()
         user.save()
         admin_instance = get_modeladmin(Iframe)
-        # assert this here, because allegedly according to travis,
-        # it may not be
         self.assertIsInstance(admin_instance, RealishAdmin)
+
         request = RequestFactory().get('/', {
             '_continue': 1,
         })
@@ -439,9 +453,12 @@ class MaybeFixRedirectionTestCase(DjangoTestCase):
                         content_id=user.pk, url='https://news.bbc.co.uk/')
         iframe.full_clean()
         iframe.save()
+
         new_response = admin_instance.maybe_fix_redirection(
             request=request, response=response_301, obj=iframe)
-        # was a redirect, to a chunkadmin instance
+        self.assertEqual(new_response['X-Chunkadmin-Response'],
+                         'redirect-to-parent')
+
         self.assertEqual(301, new_response.status_code)
         self.assertEqual('/admin_mountpoint/auth/user/1/?_data_changed=1',
                          new_response['Location'])

@@ -529,7 +529,7 @@ class ChunkAdmin(AdminlinksMixin):
                 content_type=parent_ct, content_id=parent_id,
                 region=region).only('pk').count())
             already_created = max(0, created_objs_count)
-            
+
             if already_created >= limit:
                 logger.info('Already hit limit of %(limit)d, found %(exists)d '
                             'objects in the database' % {
@@ -575,6 +575,7 @@ class ChunkAdmin(AdminlinksMixin):
             obj is None,
         )
         if any(return_early):
+            resp['X-Chunkadmin-Response'] = 'early'
             return resp
 
         # get the modeladmin in question, from the URL provided.
@@ -590,6 +591,7 @@ class ChunkAdmin(AdminlinksMixin):
         # redirect back to the parent.
         if (not hasattr(func, 'response_max')
                 and not hasattr(func, 'render_into_region')):
+            resp['X-Chunkadmin-Response'] = 'not-chunkadmin'
             return resp
 
         # set up reasons to go back to the parent object's edit view.
@@ -607,6 +609,7 @@ class ChunkAdmin(AdminlinksMixin):
                 url_params=[obj.content_id], query=resp.redirect_parts[3])
             resp.redirect_parts = list(urlsplit(abuse_adminlink['link']))
             resp['Location'] = urlunsplit(resp.redirect_parts)
+            resp['X-Chunkadmin-Response'] = 'redirect-to-parent'
             return resp
 
         # we either wanted to autoclose, or we wanted to continue/add another
@@ -623,6 +626,7 @@ class ChunkAdmin(AdminlinksMixin):
                             REQUEST_VAR_REGION: obj.region})
         resp.redirect_parts[3] = querystring.urlencode()
         resp['Location'] = urlunsplit(resp.redirect_parts)
+        resp['X-Chunkadmin-Response'] = 'autoclose'
         return resp
 
     @guard_querystring_m
