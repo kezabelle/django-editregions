@@ -71,6 +71,7 @@ class EditRegionChunk(Model):
     modified = DateTimeField(auto_now=True)
 
     content_type = ForeignKey(ContentType, related_name='+')
+    # TODO: Do we actually need this index, if we're using index_together
     content_id = CharField(max_length=255, db_index=True, blank=False,
                            null=False)
     content_object = GenericForeignKey('content_type', 'content_id')
@@ -93,6 +94,13 @@ class EditRegionChunk(Model):
     class Meta:
         abstract = False
         ordering = ['position', '-modified']
+        index_together = [
+            # this index allows us to get all the regions & chunks for a
+            # given object in one query without potentially doing a full
+            # table scan, even though that is cheap to many many thousands
+            # of chunks.
+            ['content_type', 'content_id', 'region'],
+        ]
         db_table = 'editregions_editregionchunk'
         verbose_name = chunk_v
         verbose_name_plural = chunk_vplural
