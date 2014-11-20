@@ -29,7 +29,7 @@ class MetaElement(EditRegionChunk):
         return self.name == 'title'
 
     def render_title(self):
-        return '<title>{content!s}</title>'.format(self.content)
+        return '<title>{content!s}</title>'.format(content=self.content)
 
     def render_meta(self):
         return '<meta name="{name!s}" content="{content!s}">'.format(
