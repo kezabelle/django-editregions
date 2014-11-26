@@ -7,7 +7,7 @@ from django import template
 from django.conf import settings
 from django.contrib.admin.sites import NotRegistered
 from django.contrib.contenttypes.models import ContentType
-from classytags.core import Options
+from classytags.core import Options, Tag
 from classytags.arguments import Argument, StringArgument, Flag
 from django.utils.html import strip_tags
 from django.core.exceptions import ImproperlyConfigured
@@ -122,6 +122,9 @@ def chunk_iteration_context(index, value, iterable):
     return {'chunkloop': IterationData(**iterdata)}
 
 
+RenderedChunk = namedtuple('RenderedChunk', ['index', 'chunk', 'output'])
+
+
 def render_all_chunks(context, found_chunks, iter_func=chunk_iteration_context,
                       render_func=render_one_chunk):
     logger.info('Rendering {0} chunks'.format(len(found_chunks)))
@@ -136,10 +139,10 @@ def render_all_chunks(context, found_chunks, iter_func=chunk_iteration_context,
         # rendering it doesn't implement the correct methods (instead
         # raising a warning to stderr), so we screen it all here.
         if output is not None:
-            yield output
+            yield RenderedChunk(index=index, chunk=chunk, output=output)
 
 
-class EditRegionTag(AsTag):
+class EditRegionTag(Tag):
     """
     Output the contents of a region in a region group::
 
@@ -163,7 +166,9 @@ class EditRegionTag(AsTag):
         Argument('content_object', required=True, default=None, resolve=True),
         Flag('inherit', true_values=['inherit'], case_sensitive=False,
              default=False),
-        'as', Argument('output_var', required=False, default=None, resolve=False)
+        blocks=[
+            ('endeditregion', 'nodelist'),
+        ]
     )
 
     def do_validate(self, region_name, content_object):
@@ -180,24 +185,20 @@ class EditRegionTag(AsTag):
             return False
         return True
 
-    def render_tag(self, context, name, content_object, inherit, **kwargs):
+    def render_tag(self, context, name, content_object, inherit, nodelist=None):
         is_valid = self.do_validate(region_name=name,
                                     content_object=content_object)
         if not is_valid:
             return ''
-
-        #: this is basically from the core :class:`~classytags.core.Tag`
-        #: implementation but changed to allow us to have different output
-        #: so that using it as an AS tag returns a *list* of chunks, while
-        #: doing it as a normal tag just outputs a string.
-        varname = kwargs.pop(self.varname_name)
-        if varname:
-            context[varname] = self.get_value(context, name, content_object,
-                                              inherit, **kwargs)
+        results = self.get_value(context=context, name=name,
+                                 content_object=content_object, inherit=inherit,
+                                 nodelist=nodelist)
+        # covers None and (), []
+        if not results:
+            if nodelist:
+                return nodelist.render(context)
             return ''
-        else:
-            return self.get_tag(context, name, content_object, inherit,
-                                **kwargs)
+        return u'\n'.join(x.output for x in results)
 
     def get_content_type(self, content_object):
         """
@@ -253,7 +254,7 @@ class EditRegionTag(AsTag):
         # this is the prefered one.
         return config.fetch_chunks_for(region=region)
 
-    def get_value(self, context, name, content_object, inherit, **kwargs):
+    def get_value(self, context, name, content_object, inherit, nodelist):
         content_type = self.get_content_type(content_object)
         if content_type is None:
             return ()
@@ -308,13 +309,37 @@ class EditRegionTag(AsTag):
                 return chunks
         logging.debug("Inheriting from an ancestor yielded nothing")
         return ()
-
-    def get_tag(self, context, name, content_object, inherit, **kwargs):
-        results = self.get_value(context, name, content_object, inherit, **kwargs)
-        if results is None:
-            return u''
-        return u'\n'.join(results)
 register.tag(EditRegionTag.name, EditRegionTag)
+
+
+class GetEditRegionAsTag(EditRegionTag, AsTag):
+    model = EditRegionChunk
+    name = 'get_editregion'
+    options = Options(
+        StringArgument('name', required=True, resolve=True),
+        Argument('content_object', required=True, default=None, resolve=True),
+        Flag('inherit', true_values=['inherit'], case_sensitive=False,
+             default=False),
+        'as',
+        Argument('varname', resolve=False, required=True),
+    )
+
+    def render_tag(self, context, name, content_object, inherit, **kwargs):
+        varname = kwargs.pop(self.varname_name)
+        is_valid = self.do_validate(region_name=name,
+                                    content_object=content_object)
+        if not varname:
+            raise RuntimeError("How did you do that?")
+
+        if not is_valid:
+            context[varname] = ()
+            return ''
+
+        context[varname] = self.get_value(context=context, name=name,
+                                          content_object=content_object,
+                                          inherit=inherit, nodelist=None)
+        return ''
+register.tag(GetEditRegionAsTag.name, GetEditRegionAsTag)
 
 
 class EditRegionMediaTag(EditRegionTag):
