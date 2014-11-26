@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from contextlib import contextmanager
 import logging
+from collections import namedtuple
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ImproperlyConfigured
 from django.template.context import BaseContext, Context
@@ -33,6 +34,21 @@ def get_model_class(obj):
     return get_content_type(obj).model_class()
 
 
+class AppModel(namedtuple('AppModel', ['app_label', 'model'])):
+    __slots__ = ()
+
+    @property
+    def app_label_natural_key(self):
+        return self.app_label.lower()
+
+    @property
+    def model_natural_key(self):
+        return self.model.lower()
+
+    def __str__(self):
+        return '{app!s}.{model!s}'.format(app=self.app_label, model=self.model)
+
+
 def get_content_type(input):
     """
     :param input:
@@ -48,13 +64,14 @@ def get_content_type(input):
     if isinstance(input, string_types) and input.count('.') == 1:
         logger.info('Input is a dotted string "appname.ModelName", splitting '
                     'into component parts for lookup `get_by_natural_key`')
-        parts = tuple(input.split('.')[0:2])
+        appmodel = AppModel._make(input.split('.')[0:2])
         try:
             return ContentType.objects.get_by_natural_key(
-                app_label=parts[0].lower(), model=parts[1].lower())
+                app_label=appmodel.app_label_natural_key,
+                model=appmodel.model_natural_key)
         except ContentType.DoesNotExist as e:
             # give a clearer indication wtf went wrong.
-            msg = 'Unable to find ContentType for app: %s, model: %s' % parts
+            msg = 'Unable to find ContentType for {0!s}'.format(appmodel)
             e.args = (msg,) + e.args[1:]
             raise
     logger.info('Input failed previous tests, assumed to be a ContentType `pk`')
