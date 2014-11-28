@@ -173,6 +173,12 @@ class EditRegionConfiguration(object):
             obj_name=REQUEST_VAR_ID, obj_value=self.obj.pk,
             url=url)
 
+    def set_template(self, template_name):
+        template = self.get_first_valid_template(template_name)
+        self.has_configuration = template is not None
+        self.config = self.get_template_region_configuration(
+            template_instance=template)
+
     def configure(self, obj):
         self.obj = obj
         self.ct = get_content_type(obj)
@@ -182,11 +188,7 @@ class EditRegionConfiguration(object):
                 obj=self.obj)
         possible_templates = modeladmin.get_editregions_templates(
             obj=self.obj)
-        template = self.get_first_valid_template(
-            possible_templates=possible_templates)
-        self.has_configuration = template is not None
-        self.config = self.get_template_region_configuration(
-            template_instance=template)
+        self.set_template(possible_templates)
 
     def get_first_valid_template(self, possible_templates):
         """

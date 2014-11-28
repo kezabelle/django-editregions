@@ -15,6 +15,18 @@
         }
     };
 
+    var on_template_change = function(evt, url, field_name, field_value) {
+        $(all_inlines).empty();
+        var endpoint = url += '&amp;' + field_name + '=' + field_value;
+        var handle = function(data, textStatus, jqXHR) {
+            $(all_inlines).replaceWith(data);
+            ready_up();
+        };
+        return $.ajax({success: handle, url: endpoint, dataType: 'html'});
+    };
+
+    $(document).bind('template_changed', on_template_change);
+
     // for dragging and dropping
     var handle = 'div.drag_handle';
     var sortable_targets = '.results-list';
