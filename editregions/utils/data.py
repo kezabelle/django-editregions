@@ -104,11 +104,11 @@ def attach_configuration(obj, config_class):
     .. testcase:: AttachConfigurationTestCase
     """
     created = False
-    if not hasattr(obj, '__editregion_config'):
-        logger.debug('__editregion_config not on {cls!r} for this template '
+    if not hasattr(obj, '__editregionconfig__'):
+        logger.debug('__editregionconfig__ not on {cls!r} for this template '
                      'rendering request, creating it'.format(cls=obj))
 
-        setattr(obj, '__editregion_config', config_class(obj))
+        setattr(obj, '__editregionconfig__', config_class(obj))
         created = True
     return obj, created
 
@@ -117,7 +117,7 @@ def get_configuration(obj):
     """
     .. testcase:: GetConfigurationTestCase
     """
-    return getattr(obj, '__editregion_config', None)
+    return getattr(obj, '__editregionconfig__', None)
 
 
 @contextmanager

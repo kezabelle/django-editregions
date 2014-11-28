@@ -40,7 +40,8 @@ from editregions.admin.inlines import EditRegionInline
 from editregions.constants import (REQUEST_VAR_REGION, REQUEST_VAR_CT,
                                    REQUEST_VAR_ID)
 from editregions.utils.data import (get_modeladmin, get_content_type,
-                                    get_model_class)
+                                    get_model_class, get_configuration,
+                                    attach_configuration)
 from editregions.admin.changelist import EditRegionChangeList
 from editregions.admin.forms import MovementForm
 from editregions.admin.utils import (AdminChunkWrapper, shared_media,
@@ -337,15 +338,15 @@ class EditRegionAdmin(ModelAdmin):
         return TemplateResponse(request, self.change_list_template,
                                 context, current_app=self.admin_site.name)
 
-    def get_changelists_for_object(self, request, obj, config=None, **kwargs):
+    def get_changelists_for_object(self, request, obj, **kwargs):
         changelists = []
 
         if obj is not None:
             logger.debug('Editing `{obj!r}`, so do '
                          '`get_changelists_for_object`'.format(obj=obj))
 
-            if config is None:
-                config = EditRegionConfiguration(obj)
+            attach_configuration(obj, EditRegionConfiguration)
+            config = get_configuration(obj)
 
             # Dynamic template changes ...
             obj_admin = get_modeladmin(admin_namespace=self.admin_site.name,
@@ -383,8 +384,8 @@ class EditRegionAdmin(ModelAdmin):
                 new_get[REQUEST_VAR_REGION] = region
                 request.GET = new_get
                 our_list_display = self.list_display[:]
-                our_list_links = self.get_list_display_links(request,
-                                                             our_list_display)
+                our_list_links = self.get_list_display_links(
+                    request=request, list_display=our_list_display)
                 ChangeList = self.get_changelist(request, **kwargs)
                 cl = ChangeList(request=request, model=self.model,
                                 list_display=our_list_display,
@@ -395,6 +396,7 @@ class EditRegionAdmin(ModelAdmin):
                                 list_max_show_all=100, list_editable=None,
                                 model_admin=self, parent_obj=obj,
                                 parent_conf=config)
+                cl.request_template = request_template
                 changelists.append(cl)
             # as the internal request.GET may be lossy, we restore the original
             # data here.

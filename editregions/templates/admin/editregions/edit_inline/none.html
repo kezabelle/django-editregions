@@ -1,7 +1,7 @@
-<div class="region-inline-wrapper" data-changelist-url="{{ inline_admin_formset.formset.editregion_config.get_absolute_url }}">
+<div class="region-inline-wrapper">
     {% load i18n %}
     {% if change and original %}
-        {% if not inline_admin_formset.formset.editregion_config.has_configuration %}
+        {% if inline_admin_formset.formset.region_changelists|length < 1 %}
         <div class="errors">
             <p>{% trans "No configuration found for the current template." %}</p>
         </div>
@@ -31,3 +31,19 @@
     {% endfor %}
 </div>
 {% include "admin/editregions/change_list_progress.html" with x=1 only %}
+{% for cl in inline_admin_formset.formset.region_changelists %}
+{% if forloop.first and cl.request_template %}
+<script type="text/javascript">
+(function($) {
+    var key = '{{ cl.request_template.kv.key }}';
+    $('[name="' + key + '"]').change(function(evt) {
+        evt.preventDefault();
+        evt.stopPropagation();
+        var value = $(this).val();
+        var url = '{{ inline_admin_formset.formset.editregion_config.get_absolute_url }}';
+        $(document).trigger('template_changed', [url, key, value]);
+    });
+})(django.jQuery);
+</script>
+{% endif %}
+{% endfor %}
