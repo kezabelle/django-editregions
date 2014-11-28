@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
+from collections import namedtuple
 import functools
 import logging
 from django.core.exceptions import SuspiciousOperation, ValidationError
@@ -23,6 +24,64 @@ from adminlinks.templatetags.utils import MODELADMIN_REVERSE
 
 
 logger = logging.getLogger(__name__)
+
+
+TemplateRequestKeyValue = namedtuple('TemplateRequestKeyValue', 'key value')
+TemplateRequestResult = namedtuple('TemplateRequestResult',
+                                   'success failure available kv')
+
+
+@python_2_unicode_compatible
+class TemplateFieldRequest(object):
+    """
+    Used to figure out if a template was in the request.GET, to figure out
+    what to return
+
+    API is (assuming bound to a class):
+        exists = self.editregions_template_field.exists(request.GET)
+        fieldname = self.editregions_template_field.name(
+        possible_templates = obj.get_template_names()
+        is_valid = self.editregions_template_field.is_valid(possible_templates)
+    """
+    __slots__ = ('fieldname',)
+
+    def __init__(self, fieldname=None):
+        self.fieldname = fieldname
+
+    def __get__(self, modeladmin, owner):
+        return self
+
+    def __str__(self):
+        if self.fieldname:
+            return self.fieldname
+        return ''
+
+    def __repr__(self):
+        return ('<{x.__module__}.{x.__class__.__name__} '
+                'fieldname={x.fieldname!r}>'.format(x=self))
+
+    def exists(self, query_dict):
+        if self.fieldname is None:
+            raise ValueError("No fieldname provided")
+        if not query_dict:
+            return False
+        return self.fieldname in query_dict
+
+    def get(self, query_dict):
+        return TemplateRequestKeyValue(
+            key=self.fieldname, value=query_dict.get(self.fieldname, None))
+
+    def check(self, query_dict, template_iterable):
+        kv = self.get(query_dict)
+        template_field = kv.key
+        template_selected = kv.value
+        if not template_field or not template_selected:
+            return TemplateRequestResult(success=False, failure=True,
+                                         available=frozenset(), kv=kv)
+        available = frozenset(template_iterable)
+        found = template_selected in available
+        return TemplateRequestResult(success=found, failure=not found,
+                                     available=available, kv=kv)
 
 
 def django_jqueryui_version():

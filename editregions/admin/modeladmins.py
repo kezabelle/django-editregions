@@ -341,7 +341,33 @@ class EditRegionAdmin(ModelAdmin):
         changelists = []
 
         if obj is not None:
-            logger.debug('Editing an object, so do `get_changelists_for_object`')
+            logger.debug('Editing `{obj!r}`, so do '
+                         '`get_changelists_for_object`'.format(obj=obj))
+
+            if config is None:
+                config = EditRegionConfiguration(obj)
+
+            # Dynamic template changes ...
+            obj_admin = get_modeladmin(admin_namespace=self.admin_site.name,
+                                       obj=obj)
+            request_template = None
+            if hasattr(obj_admin, 'editregions_template_field'):
+                ok_templates = obj_admin.get_editregions_template_choices(obj=obj)  # noqa
+                request_template = obj_admin.editregions_template_field.check(
+                    query_dict=request.GET, template_iterable=ok_templates)
+                logmsg = ("`{modeladmin!r}` had `{template_field!r}`, "
+                          "yielding `{result!r}`")
+                logger.debug(logmsg.format(
+                    modeladmin=obj_admin, result=request_template,
+                    template_field=obj_admin.editregions_template_field))
+
+            template_changed = (request_template is not None and
+                                request_template.success)
+            if template_changed:
+                logger.debug("Template field was in the request and was OK, so "
+                             "we're now swapping the configuration ...")
+                config.set_template(request_template.kv.value)
+
             # store the old get here, because it gets changed inside the region
             # loops, which is a lossy process.
             old_get = request.GET
@@ -352,8 +378,7 @@ class EditRegionAdmin(ModelAdmin):
             new_get = QueryDict('', mutable=True)
             new_get[REQUEST_VAR_CT] = get_content_type(obj).pk
             new_get[REQUEST_VAR_ID] = obj.pk
-            if config is None:
-                config = EditRegionConfiguration(obj)
+
             for region in config.config:
                 new_get[REQUEST_VAR_REGION] = region
                 request.GET = new_get
