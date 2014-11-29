@@ -421,6 +421,7 @@ class EditRegionAdmin(ModelAdmin):
                                                                           obj)
                 },
             },
+            'request_is_ajax': request.is_ajax(),
         }
 
     def render_changelists_for_object(self, request, obj):
