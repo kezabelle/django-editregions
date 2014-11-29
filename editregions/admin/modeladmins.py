@@ -45,7 +45,7 @@ from editregions.utils.data import (get_modeladmin, get_content_type,
 from editregions.admin.changelist import EditRegionChangeList
 from editregions.admin.forms import MovementForm
 from editregions.admin.utils import (AdminChunkWrapper, shared_media,
-                                     guard_querystring_m)
+                                     guard_querystring_m, TemplateFieldRequest)
 from editregions.templatetags.editregion import chunk_iteration_context
 from editregions.models import EditRegionChunk, EditRegionConfiguration
 from editregions.text import (admin_chunktype_label, admin_summary_label,
@@ -353,14 +353,17 @@ class EditRegionAdmin(ModelAdmin):
                                        obj=obj)
             request_template = None
             if hasattr(obj_admin, 'editregions_template_field'):
+                fieldname = obj_admin.editregions_template_field
+                template_field = TemplateFieldRequest(fieldname=fieldname)
                 ok_templates = obj_admin.get_editregions_template_choices(obj=obj)  # noqa
-                request_template = obj_admin.editregions_template_field.check(
+                request_template = template_field.check(
                     query_dict=request.GET, template_iterable=ok_templates)
+
                 logmsg = ("`{modeladmin!r}` had `{template_field!r}`, "
                           "yielding `{result!r}`")
                 logger.debug(logmsg.format(
                     modeladmin=obj_admin, result=request_template,
-                    template_field=obj_admin.editregions_template_field))
+                    template_field=template_field))
 
             template_changed = (request_template is not None and
                                 request_template.success)

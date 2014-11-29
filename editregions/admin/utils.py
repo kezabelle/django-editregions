@@ -48,9 +48,6 @@ class TemplateFieldRequest(object):
     def __init__(self, fieldname=None):
         self.fieldname = fieldname
 
-    def __get__(self, modeladmin, owner):
-        return self
-
     def __str__(self):
         if self.fieldname:
             return self.fieldname
@@ -75,10 +72,10 @@ class TemplateFieldRequest(object):
         kv = self.get(query_dict)
         template_field = kv.key
         template_selected = kv.value
+        available = frozenset(template_iterable)
         if not template_field or not template_selected:
             return TemplateRequestResult(success=False, failure=True,
-                                         available=frozenset(), kv=kv)
-        available = frozenset(template_iterable)
+                                         available=available, kv=kv)
         found = template_selected in available
         return TemplateRequestResult(success=found, failure=not found,
                                      available=available, kv=kv)
