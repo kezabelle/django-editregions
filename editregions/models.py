@@ -13,7 +13,7 @@ try:
 except ImportError: # pragma: no cover ... Django < 1.7
     from django.contrib.contenttypes.generic import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
-from django.core.exceptions import ImproperlyConfigured
+from django.core.exceptions import ImproperlyConfigured, ValidationError
 from django.db.models import (ForeignKey, Model, CharField,
                               PositiveIntegerField, DateTimeField)
 from django.template import TemplateDoesNotExist
@@ -172,6 +172,15 @@ class EditRegionConfiguration(object):
             ct_name=REQUEST_VAR_CT, ct_value=self.ct.pk,
             obj_name=REQUEST_VAR_ID, obj_value=self.obj.pk,
             url=url)
+
+    def is_valid_template(self, template_name):
+        if not template_name:
+            return False
+        if not self.valid_templates:
+            return False
+        if template_name not in self.valid_templates:
+            return False
+        return True
 
     def set_template(self, template_name):
         template = self.get_first_valid_template(template_name)

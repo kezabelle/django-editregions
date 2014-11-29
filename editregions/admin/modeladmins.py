@@ -45,7 +45,8 @@ from editregions.utils.data import (get_modeladmin, get_content_type,
 from editregions.admin.changelist import EditRegionChangeList
 from editregions.admin.forms import MovementForm
 from editregions.admin.utils import (AdminChunkWrapper, shared_media,
-                                     guard_querystring_m, TemplateFieldRequest)
+                                     guard_querystring_m,
+                                     TemplateRequestKeyValue)
 from editregions.templatetags.editregion import chunk_iteration_context
 from editregions.models import EditRegionChunk, EditRegionConfiguration
 from editregions.text import (admin_chunktype_label, admin_summary_label,
@@ -351,26 +352,16 @@ class EditRegionAdmin(ModelAdmin):
             # Dynamic template changes ...
             obj_admin = get_modeladmin(admin_namespace=self.admin_site.name,
                                        obj=obj)
-            request_template = None
+            fieldname = None
             if hasattr(obj_admin, 'editregions_template_field'):
                 fieldname = obj_admin.editregions_template_field
-                template_field = TemplateFieldRequest(fieldname=fieldname)
-                ok_templates = obj_admin.get_editregions_template_choices(obj=obj)  # noqa
-                request_template = template_field.check(
-                    query_dict=request.GET, template_iterable=ok_templates)
-
-                logmsg = ("`{modeladmin!r}` had `{template_field!r}`, "
-                          "yielding `{result!r}`")
-                logger.debug(logmsg.format(
-                    modeladmin=obj_admin, result=request_template,
-                    template_field=template_field))
-
-            template_changed = (request_template is not None and
-                                request_template.success)
-            if template_changed:
-                logger.debug("Template field was in the request and was OK, so "
-                             "we're now swapping the configuration ...")
-                config.set_template(request_template.kv.value)
+                template_name = request.GET.get(fieldname, None)
+                kv = TemplateRequestKeyValue(key=fieldname, value=template_name)
+                if config.is_valid_template(template_name):
+                    logger.debug("{kv!r} was valid for this {obj!r} "
+                                 "and {modeladmin!r}".format(
+                                     kv=kv, obj=obj, modeladmin=obj_admin))
+                    config.set_template(template_name)
 
             # store the old get here, because it gets changed inside the region
             # loops, which is a lossy process.
@@ -399,7 +390,9 @@ class EditRegionAdmin(ModelAdmin):
                                 list_max_show_all=100, list_editable=None,
                                 model_admin=self, parent_obj=obj,
                                 parent_conf=config)
-                cl.request_template = request_template
+                # this bind is necessary for the template to emit dynamic
+                # template changes.
+                cl.editregions_template_fieldname = fieldname
                 changelists.append(cl)
             # as the internal request.GET may be lossy, we restore the original
             # data here.
