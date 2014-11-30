@@ -35,8 +35,7 @@
 For normal, non-ajax page requests which have a known template field, output
 javascript to notify the window to do an AJAX request ...
 {% endcomment %}
-{% for cl in inline_admin_formset.formset.region_changelists %}
-{% if forloop.first and cl.editregions_template_fieldname and not request_is_ajax %}
+{% if inline_admin_formset.formset.editregions_template_fieldname and not request_is_ajax %}
 <script type="text/javascript">
 (function($, document) {
     var template_field_handler = function(evt) {
@@ -46,15 +45,14 @@ javascript to notify the window to do an AJAX request ...
         var url = '{{ inline_admin_formset.formset.editregion_config.get_absolute_url }}';
         var arguments_to_send = [
             url,
-            '{{ cl.editregions_template_fieldname }}',
+            '{{ inline_admin_formset.formset.editregions_template_fieldname }}',
             value,
             '{{ opts.model_name }}'
         ];
         $(document).trigger('template_changed', arguments_to_send);
     };
-    var selector = '#{{ opts.model_name }}_form [name="{{ cl.editregions_template_fieldname }}"]';
+    var selector = '#{{ opts.model_name }}_form [name="{{ inline_admin_formset.formset.editregions_template_fieldname }}"]';
     $(selector).eq(0).change(template_field_handler);
 })(django.jQuery, document);
 </script>
 {% endif %}
-{% endfor %}

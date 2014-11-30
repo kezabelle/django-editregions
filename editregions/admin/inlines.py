@@ -43,6 +43,11 @@ class EditRegionInline(GenericInlineModelAdmin):
         fset.region_changelists = modeladmin.get_changelists_for_object(
             request=request, obj=obj, config=None)
         fset.editregion_config = get_configuration(obj=obj)
+
+        # this bind is necessary for the template to emit dynamic
+        # template changes.
+        fset.editregions_template_fieldname = getattr(
+            get_modeladmin(obj), 'editregions_template_field', None)
         return fset
 
     def get_fieldsets(self, *args, **kwargs):

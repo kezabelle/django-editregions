@@ -352,7 +352,6 @@ class EditRegionAdmin(ModelAdmin):
             # Dynamic template changes ...
             obj_admin = get_modeladmin(admin_namespace=self.admin_site.name,
                                        obj=obj)
-            fieldname = None
             if hasattr(obj_admin, 'editregions_template_field'):
                 fieldname = obj_admin.editregions_template_field
                 template_name = request.GET.get(fieldname, None)
@@ -390,9 +389,6 @@ class EditRegionAdmin(ModelAdmin):
                                 list_max_show_all=100, list_editable=None,
                                 model_admin=self, parent_obj=obj,
                                 parent_conf=config)
-                # this bind is necessary for the template to emit dynamic
-                # template changes.
-                cl.editregions_template_fieldname = fieldname
                 changelists.append(cl)
             # as the internal request.GET may be lossy, we restore the original
             # data here.
