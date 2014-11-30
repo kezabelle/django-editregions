@@ -177,10 +177,12 @@ class EditRegionConfigurationTestCase(DjangoTestCase):
                 "name": "test"
             }
         }''')
-        result = blank_conf.get_template_region_configuration(
+        raw_config = blank_conf.decode_template_region_configuration(
             template_instance=template)
+        result = blank_conf.get_template_region_configuration(
+            raw_data=raw_config)
         self.assertEqual(result, {
-            'x': {'name': 'test'},
+            'x': {'name': 'test', 'models': {}},
         })
 
     def test_get_template_region_configuration_no_names_fallback(self):
@@ -188,10 +190,12 @@ class EditRegionConfigurationTestCase(DjangoTestCase):
         template = Template('''{
             "x": {}
         }''')
-        result = blank_conf.get_template_region_configuration(
+        raw_config = blank_conf.decode_template_region_configuration(
             template_instance=template)
+        result = blank_conf.get_template_region_configuration(
+            raw_data=raw_config)
         self.assertEqual(result, {
-            'x': {'name': 'x'},
+            'x': {'name': 'x', 'models': {}},
         })
 
     def test_get_template_region_configuration_failed_json_decoding(self):
@@ -199,7 +203,7 @@ class EditRegionConfigurationTestCase(DjangoTestCase):
         template = Template("xyz")
         with self.assertRaisesRegexp(ValueError,
                                      r'No JSON object could be decoded'):
-            blank_conf.get_template_region_configuration(
+            blank_conf.decode_template_region_configuration(
                 template_instance=template)
 
     def test_get_enabled_chunks_for_region_empty(self):
@@ -255,8 +259,10 @@ class EditRegionConfigurationTestCase(DjangoTestCase):
                 "name": "test"
             }
         }''')
-        blank_conf.config = blank_conf.get_template_region_configuration(
+        blank_conf.raw_config = blank_conf.decode_template_region_configuration(
             template_instance=template)
+        blank_conf.config = blank_conf.get_template_region_configuration(
+            raw_data=blank_conf.raw_config)
         result = blank_conf.get_limits_for(region='x', chunk=User)
         self.assertEqual(0, result)
 
@@ -272,8 +278,10 @@ class EditRegionConfigurationTestCase(DjangoTestCase):
                 }
             }
         }''')
-        blank_conf.config = blank_conf.get_template_region_configuration(
+        blank_conf.raw_config = blank_conf.decode_template_region_configuration(
             template_instance=template)
+        blank_conf.config = blank_conf.get_template_region_configuration(
+            raw_data=blank_conf.raw_config)
         result = blank_conf.get_limits_for(region='x', chunk=User)
         self.assertEqual(1, result)
         # 0 means don't show up!
@@ -289,8 +297,10 @@ class EditRegionConfigurationTestCase(DjangoTestCase):
                 "name": "test"
             }
         }''')
-        blank_conf.config = blank_conf.get_template_region_configuration(
+        blank_conf.raw_config = blank_conf.decode_template_region_configuration(
             template_instance=template)
+        blank_conf.config = blank_conf.get_template_region_configuration(
+            raw_data=blank_conf.raw_config)
         with self.settings(DEBUG=False):
             result = blank_conf.fetch_chunks_for(region='x')
             self.assertEqual([], result)
@@ -302,8 +312,10 @@ class EditRegionConfigurationTestCase(DjangoTestCase):
                 "name": "test"
             }
         }''')
-        blank_conf.config = blank_conf.get_template_region_configuration(
+        blank_conf.raw_config = blank_conf.decode_template_region_configuration(
             template_instance=template)
+        blank_conf.config = blank_conf.get_template_region_configuration(
+            raw_data=blank_conf.raw_config)
 
         with self.settings(DEBUG=True):
             with self.assertRaises(ImproperlyConfigured):
@@ -317,8 +329,10 @@ class EditRegionConfigurationTestCase(DjangoTestCase):
                 "name": "test"
             }
         }''')
-        blank_conf.config = blank_conf.get_template_region_configuration(
+        blank_conf.raw_config = blank_conf.decode_template_region_configuration(
             template_instance=template)
+        blank_conf.config = blank_conf.get_template_region_configuration(
+            raw_data=blank_conf.raw_config)
         results = blank_conf.fetch_chunks_for(region='x')
         self.assertEqual([], results)
 
@@ -327,8 +341,10 @@ class EditRegionConfigurationTestCase(DjangoTestCase):
         blank_conf = EditRegionConfiguration(obj=user)
         template = Template('''{
         }''')
-        blank_conf.config = blank_conf.get_template_region_configuration(
+        blank_conf.raw_config = blank_conf.decode_template_region_configuration(
             template_instance=template)
+        blank_conf.config = blank_conf.get_template_region_configuration(
+            raw_data=blank_conf.raw_config)
         results = blank_conf.fetch_chunks_for(region='x')
         self.assertEqual((), results)
 
@@ -340,8 +356,10 @@ class EditRegionConfigurationTestCase(DjangoTestCase):
             "y": {},
             "z": {}
         }''')
-        blank_conf.config = blank_conf.get_template_region_configuration(
+        blank_conf.raw_config = blank_conf.decode_template_region_configuration(
             template_instance=template)
+        blank_conf.config = blank_conf.get_template_region_configuration(
+            raw_data=blank_conf.raw_config)
         results = blank_conf.fetch_chunks_for(region='x')
         self.assertEqual([], results)
 
@@ -353,8 +371,10 @@ class EditRegionConfigurationTestCase(DjangoTestCase):
             "y": {},
             "z": {}
         }''')
-        blank_conf.config = blank_conf.get_template_region_configuration(
+        blank_conf.raw_config = blank_conf.decode_template_region_configuration(
             template_instance=template)
+        blank_conf.config = blank_conf.get_template_region_configuration(
+            raw_data=blank_conf.raw_config)
         results = blank_conf.fetch_chunks()
         self.assertEqual(dict(results), {u'y': [], u'x': [], u'z': []})
 
@@ -381,8 +401,10 @@ class EditRegionConfigurationTestCase(DjangoTestCase):
                 }
             }
         }''')
-        blank_conf.config = blank_conf.get_template_region_configuration(
+        blank_conf.raw_config = blank_conf.decode_template_region_configuration(
             template_instance=template)
+        blank_conf.config = blank_conf.get_template_region_configuration(
+            raw_data=blank_conf.raw_config)
         self.assertEqual(dict(blank_conf.config), {
             'test': {
                 'models': {

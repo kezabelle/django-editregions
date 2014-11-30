@@ -10,10 +10,10 @@ import re
 from django.conf import settings
 try:
     from django.contrib.contenttypes.fields import GenericForeignKey
-except ImportError: # pragma: no cover ... Django < 1.7
+except ImportError:  # pragma: no cover ... Django < 1.7
     from django.contrib.contenttypes.generic import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
-from django.core.exceptions import ImproperlyConfigured, ValidationError
+from django.core.exceptions import ImproperlyConfigured
 from django.db.models import (ForeignKey, Model, CharField,
                               PositiveIntegerField, DateTimeField)
 from django.template import TemplateDoesNotExist
@@ -112,11 +112,13 @@ fallback_region_name_re = re.compile(r'[_\W]+')
 @python_2_unicode_compatible
 class EditRegionConfiguration(object):
 
-    __slots__ = ('config', 'has_configuration', '_previous_fetched_chunks',
-                 'obj', 'ct', 'decoder',  'decoder_func', 'valid_templates')
+    __slots__ = ('config', 'raw_config', 'has_configuration',
+                 '_previous_fetched_chunks', 'obj', 'ct', 'decoder',
+                 'decoder_func', 'valid_templates')
 
     def __init__(self, obj=None):
         self.config = {}
+        self.raw_config = {}
         self.valid_templates = ()
         self.has_configuration = False
         self._previous_fetched_chunks = None
@@ -163,6 +165,9 @@ class EditRegionConfiguration(object):
 
     __bool__ = __nonzero__
 
+    def tolist(self):
+        return self.raw_config
+
     def get_absolute_url(self):
         try:
             url = reverse('admin:editregions_editregionchunk_changelist')
@@ -185,8 +190,10 @@ class EditRegionConfiguration(object):
     def set_template(self, template_name):
         template = self.get_first_valid_template(template_name)
         self.has_configuration = template is not None
-        self.config = self.get_template_region_configuration(
+        self.raw_config = self.decode_template_region_configuration(
             template_instance=template)
+        self.config = self.get_template_region_configuration(
+            raw_data=self.raw_config)
 
     def configure(self, obj):
         self.obj = obj
@@ -223,7 +230,7 @@ class EditRegionConfiguration(object):
             ))
             return None
 
-    def get_template_region_configuration(self, template_instance):
+    def decode_template_region_configuration(self, template_instance):
         # if in production (DEBUG=False) and no template was found,
         # play nicely and don't error the whole request.
         if template_instance is None:
@@ -236,18 +243,19 @@ class EditRegionConfiguration(object):
             return {}
         # Allow decoding to bubble up an error.
         parsed_template = self.decoder_func(rendered_template)
-        parsed_template = SortedDict(sorted(parsed_template.items()))
-        for key, config in parsed_template.items():
-            if 'models' in parsed_template[key]:
-                parsed_template[key]['models'] = self.get_enabled_chunks_for_region(parsed_template[key]['models'])
+        return SortedDict(sorted(parsed_template.items()))
 
-            if 'name' not in parsed_template[key]:
-                logbits = {'region': key}
-                logger.debug('No declared name for "%(region)s" in configuration, '
-                             'falling back to using a regular expression' % logbits)
-                parsed_template[key]['name'] = re.sub(
-                    pattern=fallback_region_name_re, string=key, repl=' ')
-        return parsed_template
+    def get_template_region_configuration(self, raw_data):
+        desired_config = SortedDict()
+        for key, config in raw_data.items():
+            models = {}
+            if 'models' in raw_data[key]:
+                models = self.get_enabled_chunks_for_region(raw_data[key]['models'])
+            fallback = re.sub(pattern=fallback_region_name_re, string=key,
+                              repl=' ')
+            name = raw_data[key].get('name', fallback)
+            desired_config[key] = {'name': name, 'models': models}
+        return desired_config
 
     def get_enabled_chunks_for_region(self, model_mapping):
         """
