@@ -76,16 +76,16 @@ class AttachConfigurationTestCase(TestCase):
     def test_attaching(self):
         user = User()
         obj, created = attach_configuration(user, EditRegionConfiguration)
-        self.assertTrue(hasattr(user, '__editregion_config'))
+        self.assertTrue(hasattr(user, '__editregionconfig__'))
         self.assertTrue(created)
-        self.assertIsInstance(getattr(user, '__editregion_config'),
+        self.assertIsInstance(getattr(user, '__editregionconfig__'),
                               EditRegionConfiguration)
 
     def test_reattaching(self):
         user = User()
         obj, created1 = attach_configuration(user, EditRegionConfiguration)
         obj, created2 = attach_configuration(user, EditRegionConfiguration)
-        self.assertTrue(hasattr(user, '__editregion_config'))
+        self.assertTrue(hasattr(user, '__editregionconfig__'))
         self.assertFalse(created2)
 
 

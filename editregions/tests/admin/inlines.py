@@ -27,7 +27,6 @@ class EditRegionInlineTestCase(DjangoTestCase):
         request = RequestFactory().get('/')
         formset = inline.get_formset(request=request)
         self.assertEqual(formset.region_changelists, [])
-        self.assertFalse(formset.has_editregions)
 
     def test_formset_has_obj(self):
         inline = EditRegionInline(parent_model=User, admin_site=admin.site)
@@ -48,5 +47,4 @@ class EditRegionInlineTestCase(DjangoTestCase):
         self.assertEqual(len(formset.region_changelists), 1)
         self.assertIsInstance(formset.region_changelists[0],
                               EditRegionChangeList)
-        self.assertTrue(formset.has_editregions)
         self.assertEqual(formset.region_changelists[0].region, 'test')

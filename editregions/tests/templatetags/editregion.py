@@ -67,8 +67,8 @@ class EditRegionTemplateTagTestCase(DjangoTestCase):
         converted_chunks = list(chunks)
         self.assertEqual(10, len(converted_chunks))
 
-        for num, obj in enumerate(converted_chunks):
-            testable = obj.strip()
+        for num, rendered_chunk in enumerate(converted_chunks):
+            testable = rendered_chunk.output.strip()
             pos = num + 1
             self.assertIn('src="https://news.bbc.co.uk/{0}"'.format(num),
                           testable)
@@ -158,8 +158,8 @@ class EditRegionTemplateTagTestCase(DjangoTestCase):
         tmpl = Template("""
         output:
         {% load editregion %}
-        {% editregion "test" obj %}
-        {% editregion "test" obj as exposed %}
+        {% editregion "test" obj %}fallback{% endeditregion %}
+        {% get_editregion "test" obj as exposed %}
         {% for chunk in exposed %}
         {% endfor %}
         """)
@@ -199,8 +199,8 @@ class EditRegionTemplateTagTestCase(DjangoTestCase):
         tmpl = Template("""
         output:
         {% load editregion %}
-        {% editregion "test" obj as exposed %}
-        {% for chunk in exposed %}xxx:{{ chunk }}{% endfor %}
+        {% get_editregion "test" obj as exposed %}
+        {% for chunk in exposed %}xxx:{{ chunk.output }}{% endfor %}
         """)
         rendered = tmpl.render(ctx).strip()
         self.assertIn('output:', rendered)
@@ -216,7 +216,7 @@ class EditRegionTemplateTagTestCase(DjangoTestCase):
         tmpl = Template("""
         output:
         {% load editregion %}
-        {% editregion "test" obj %}
+        {% editregion "test" obj %}fallback{% endeditregion %}
         """)
         with self.assertRaisesRegexp(ValueError, "content_object was probably "
                                                  "'', check the context "
@@ -227,11 +227,10 @@ class EditRegionTemplateTagTestCase(DjangoTestCase):
     def test_blank_content_object_production(self):
         """ in production, error silently to a logger """
         tmpl = Template("""
-        output:
         {% load editregion %}
-        {% editregion "test" obj %}
+        {% editregion "test" obj %}fallback{% endeditregion %}
         """)
-        self.assertEqual('output:', tmpl.render(Context()).strip())
+        self.assertEqual('fallback', tmpl.render(Context()).strip())
 
     @override_settings(DEBUG=True)
     def test_none_content_object_debug(self):
@@ -239,7 +238,7 @@ class EditRegionTemplateTagTestCase(DjangoTestCase):
         tmpl = Template("""
         output:
         {% load editregion %}
-        {% editregion "test" None %}
+        {% editregion "test" None %}fallback{% endeditregion %}
         """)
         if is_django_15plus():
             with self.assertRaisesRegexp(ImproperlyConfigured,
@@ -258,7 +257,7 @@ class EditRegionTemplateTagTestCase(DjangoTestCase):
         tmpl = Template("""
         output:
         {% load editregion %}
-        {% editregion "test" None %}
+        {% editregion "test" None %}fallback{% endeditregion %}
         """)
         self.assertEqual('output:', tmpl.render(Context()).strip())
 
@@ -280,16 +279,15 @@ class EditRegionTemplateTagTestCase(DjangoTestCase):
         ctx = RequestContext(request)
         ctx.update({'obj': user})
         tmpl = Template("""
-        output:
         {% load editregion %}
-        {% editregion "test" obj inherit %}
+        {% editregion "test" obj inherit %}fallback{% endeditregion %}
         """)
         with self.settings(DEBUG=True):
             with self.assertRaises(ImproperlyConfigured):
                 tmpl.render(ctx).strip()
         with self.settings(DEBUG=False):
             rendered = tmpl.render(ctx).strip()
-            self.assertEqual('output:', rendered)
+            self.assertEqual('fallback', rendered)
 
     def test_inheritance_with_get_ancestors(self):
         user = User(username='test', is_staff=True, is_active=True,
@@ -326,7 +324,7 @@ class EditRegionTemplateTagTestCase(DjangoTestCase):
         tmpl = Template("""
         output:
         {% load editregion %}
-        {% editregion "test" obj inherit %}
+        {% editregion "test" obj inherit %}fallback{% endeditregion %}
         """)
         rendered = tmpl.render(ctx).strip()
         for x in range(1, 11):
