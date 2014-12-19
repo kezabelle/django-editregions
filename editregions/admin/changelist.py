@@ -59,7 +59,7 @@ class EditRegionChangeList(ChangeList):
         if all(can_get_models):
             filters = list(AdminChunkWrapper(**{
                 'opts': x._meta,
-                'namespace': self.model_admin.admin_site.app_name,
+                'namespace': self.model_admin.admin_site.name,
                 'region': self.region,
                 'content_type': self.parent_content_type,
                 'content_id': obj.pk,
