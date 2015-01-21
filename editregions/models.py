@@ -236,8 +236,8 @@ class EditRegionConfiguration(object):
         if template_instance is None:
             return {}
         # avoid generating an empty Context instance by not calling .render()
-        rendered_template = template_instance._render(
-            context=Context()).strip()
+        rendered_template = template_instance.render(
+            context=Context({})).strip()
         if len(rendered_template) == 0:
             logger.warning("Template was empty after being rendered")
             return {}
